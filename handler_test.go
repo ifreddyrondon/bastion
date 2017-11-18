@@ -142,3 +142,28 @@ func TestSend(t *testing.T) {
 		t.Errorf("Expected response body to be '%v'. Got '%v'", expected.body, string(resBody))
 	}
 }
+
+func TestCreated(t *testing.T) {
+	expected := struct {
+		body, contentType string
+	}{
+		"{\"address\":\"test address\",\"lat\":1,\"lng\":1}\n",
+		"application/json",
+	}
+
+	a := address{"test address", 1, 1}
+	rr := httptest.NewRecorder()
+	gognar.Created(rr, a)
+
+	if 201 != rr.Code {
+		t.Errorf("Expected response code to be 201. Got '%v'", rr.Code)
+	}
+	if expected.contentType != rr.Header().Get("Content-type") {
+		t.Errorf("Expected response Content-type to be '%v'. Got '%v'",
+			expected.contentType, rr.Header().Get("Content-type"))
+	}
+	resBody, _ := ioutil.ReadAll(rr.Body)
+	if expected.body != string(resBody) {
+		t.Errorf("Expected response body to be '%v'. Got '%v'", expected.body, string(resBody))
+	}
+}

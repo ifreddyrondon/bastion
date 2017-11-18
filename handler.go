@@ -28,3 +28,8 @@ func Send(w http.ResponseWriter, response interface{}) {
 	ResponseJson(w, http.StatusOK, response)
 }
 
+// ResponseJson send a JSON-encoded response in the body of a request with the 201 code.
+func Created(w http.ResponseWriter, response interface{}) {
+	ResponseJson(w, http.StatusCreated, response)
+}
+
