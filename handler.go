@@ -33,3 +33,8 @@ func Created(w http.ResponseWriter, response interface{}) {
 	ResponseJson(w, http.StatusCreated, response)
 }
 
+// NoContent send a response without no content with the 204 status code.
+func NoContent(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
+}
+

@@ -167,3 +167,16 @@ func TestCreated(t *testing.T) {
 		t.Errorf("Expected response body to be '%v'. Got '%v'", expected.body, string(resBody))
 	}
 }
+
+func TestNoContent(t *testing.T) {
+	rr := httptest.NewRecorder()
+	gognar.NoContent(rr)
+
+	if 204 != rr.Code {
+		t.Errorf("Expected response code to be 204. Got '%v'", rr.Code)
+	}
+	resBody, _ := ioutil.ReadAll(rr.Body)
+	if "" != string(resBody) {
+		t.Errorf("Expected response body to be empty. Got '%v'", string(resBody))
+	}
+}
