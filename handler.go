@@ -63,3 +63,9 @@ func NotFound(w http.ResponseWriter, err error) {
 	Abort(w, http.StatusNotFound, http.StatusText(http.StatusNotFound), err.Error())
 }
 
+// MethodNotAllowed, sends a JSON-encoded error response in the body of a request with the 405 status code.
+// The response will contains the status 405 and error "Method Not Allowed".
+func MethodNotAllowed(w http.ResponseWriter, err error) {
+	Abort(w, http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed), err.Error())
+}
+

@@ -253,3 +253,22 @@ func TestNotFound(t *testing.T) {
 		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
 	}
 }
+
+func TestMethodNotAllowed(t *testing.T) {
+	err := errors.New("test")
+	rr := httptest.NewRecorder()
+	gognar.MethodNotAllowed(rr, err)
+
+	if 405 != rr.Code {
+		t.Errorf("Expected response code to be '405'. Got '%v'", rr.Code)
+	}
+	if "application/json" != rr.Header().Get("Content-type") {
+		t.Errorf("Expected response Content-type to be 'application/json'. Got '%v'",
+			rr.Header().Get("Content-type"))
+	}
+	expectedBody := responseErrorToString("test", "Method Not Allowed", 405)
+	resBody, _ := ioutil.ReadAll(rr.Body)
+	if expectedBody != string(resBody) {
+		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
+	}
+}
