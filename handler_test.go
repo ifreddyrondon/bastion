@@ -180,3 +180,37 @@ func TestNoContent(t *testing.T) {
 		t.Errorf("Expected response body to be empty. Got '%v'", string(resBody))
 	}
 }
+
+func responseErrorToString(message, error string, status int) string {
+	return fmt.Sprintf("{\"message\":\"%v\",\"error\":\"%v\",\"status\":%v}\n", message, error, status)
+}
+
+func TestAbort(t *testing.T) {
+	expected := struct {
+		contentType string
+		status      int
+		error       string
+		message     string
+	}{
+		"application/json",
+		http.StatusBadRequest,
+		"Not Found",
+		"Test message",
+	}
+
+	rr := httptest.NewRecorder()
+	gognar.Abort(rr, http.StatusBadRequest, expected.error, expected.message)
+
+	if expected.status != rr.Code {
+		t.Errorf("Expected response code to be '%v'. Got '%v'", expected.status, rr.Code)
+	}
+	if expected.contentType != rr.Header().Get("Content-type") {
+		t.Errorf("Expected response Content-type to be '%v'. Got '%v'",
+			expected.contentType, rr.Header().Get("Content-type"))
+	}
+	expectedBody := responseErrorToString(expected.message, expected.error, expected.status)
+	resBody, _ := ioutil.ReadAll(rr.Body)
+	if expectedBody != string(resBody) {
+		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
+	}
+}
