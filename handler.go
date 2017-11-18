@@ -39,7 +39,7 @@ func NoContent(w http.ResponseWriter) {
 }
 
 // Abort, sends a JSON-encoded error response in the body of a request with the HTTP status code.
-// The error response  contains:
+// The error response contains:
 //	* Message: (string) that contains message explaining the error.
 //	* Errors: (string) identifier of error messages.
 //	* Status: (int) HTTP response states. They can range from 400 (Client Errors) to 500 (Server Errors).
@@ -49,5 +49,11 @@ func Abort(w http.ResponseWriter, status int, err string, message string) {
 		Errors:  err,
 		Message: message,
 	})
+}
+
+// Abort, sends a JSON-encoded error response in the body of a request with the 404 status code.
+// The response will contains the status 404 and error "Not Found".
+func NotFound(w http.ResponseWriter, err error) {
+	Abort(w, http.StatusNotFound, http.StatusText(http.StatusNotFound), err.Error())
 }
 

@@ -2,6 +2,7 @@ package gognar_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -209,6 +210,25 @@ func TestAbort(t *testing.T) {
 			expected.contentType, rr.Header().Get("Content-type"))
 	}
 	expectedBody := responseErrorToString(expected.message, expected.error, expected.status)
+	resBody, _ := ioutil.ReadAll(rr.Body)
+	if expectedBody != string(resBody) {
+		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
+	}
+}
+
+func TestNotFound(t *testing.T) {
+	err := errors.New("test")
+	rr := httptest.NewRecorder()
+	gognar.NotFound(rr, err)
+
+	if 404 != rr.Code {
+		t.Errorf("Expected response code to be '404'. Got '%v'", rr.Code)
+	}
+	if "application/json" != rr.Header().Get("Content-type") {
+		t.Errorf("Expected response Content-type to be 'application/json'. Got '%v'",
+			rr.Header().Get("Content-type"))
+	}
+	expectedBody := responseErrorToString("test", "Not Found", 404)
 	resBody, _ := ioutil.ReadAll(rr.Body)
 	if expectedBody != string(resBody) {
 		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
