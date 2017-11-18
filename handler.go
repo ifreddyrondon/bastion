@@ -16,29 +16,29 @@ func ReadJSON(reader io.ReadCloser, model interface{}) error {
 	return nil
 }
 
-// ResponseJson, send a JSON-encoded response in the body of a request with the HTTP status code.
+// ResponseJson, sends a JSON-encoded response in the body of a request with the HTTP status code.
 func ResponseJson(w http.ResponseWriter, code int, response interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(response)
 }
 
-// ResponseJson, send a JSON-encoded response in the body of a request with the 200 status code.
+// ResponseJson, sends a JSON-encoded response in the body of a request with the 200 status code.
 func Send(w http.ResponseWriter, response interface{}) {
 	ResponseJson(w, http.StatusOK, response)
 }
 
-// Created, send a JSON-encoded response in the body of a request with the 201 status code.
+// Created, sends a JSON-encoded response in the body of a request with the 201 status code.
 func Created(w http.ResponseWriter, response interface{}) {
 	ResponseJson(w, http.StatusCreated, response)
 }
 
-// NoContent, send a response without no content with the 204 status code.
+// NoContent, sends a response without no content with the 204 status code.
 func NoContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Abort, send a JSON-encoded error response in the body of a request with the HTTP status code.
+// Abort, sends a JSON-encoded error response in the body of a request with the HTTP status code.
 // The error response  contains:
 //	* Message: (string) that contains message explaining the error.
 //	* Errors: (string) identifier of error messages.
