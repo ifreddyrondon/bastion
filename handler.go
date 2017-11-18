@@ -69,3 +69,8 @@ func MethodNotAllowed(w http.ResponseWriter, err error) {
 	Abort(w, http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed), err.Error())
 }
 
+// InternalServerError, sends a JSON-encoded error response in the body of a request with the 500 status code.
+// The response will contains the status 500 and error "Internal Server Error".
+func InternalServerError(w http.ResponseWriter, err error) {
+	Abort(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), err.Error())
+}

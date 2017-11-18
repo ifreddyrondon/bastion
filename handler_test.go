@@ -272,3 +272,22 @@ func TestMethodNotAllowed(t *testing.T) {
 		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
 	}
 }
+
+func TestInternalServerError(t *testing.T) {
+	err := errors.New("test")
+	rr := httptest.NewRecorder()
+	gognar.InternalServerError(rr, err)
+
+	if 500 != rr.Code {
+		t.Errorf("Expected response code to be '500'. Got '%v'", rr.Code)
+	}
+	if "application/json" != rr.Header().Get("Content-type") {
+		t.Errorf("Expected response Content-type to be 'application/json'. Got '%v'",
+			rr.Header().Get("Content-type"))
+	}
+	expectedBody := responseErrorToString("test", "Internal Server Error", 500)
+	resBody, _ := ioutil.ReadAll(rr.Body)
+	if expectedBody != string(resBody) {
+		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
+	}
+}
