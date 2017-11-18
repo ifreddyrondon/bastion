@@ -23,3 +23,8 @@ func ResponseJson(w http.ResponseWriter, code int, response interface{}) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// ResponseJson send a JSON-encoded response in the body of a request with the 200 code.
+func Send(w http.ResponseWriter, response interface{}) {
+	ResponseJson(w, http.StatusOK, response)
+}
+
