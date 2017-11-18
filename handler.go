@@ -3,6 +3,7 @@ package gognar
 import (
 	"encoding/json"
 	"io"
+	"net/http"
 )
 
 // ReadJSON parses the JSON-encoded reader and stores the result in the model.
@@ -13,5 +14,12 @@ func ReadJSON(reader io.ReadCloser, model interface{}) error {
 	}
 	reader.Close()
 	return nil
+}
+
+// ResponseJson send a JSON-encoded response in the body of a request with the HTTP status code.
+func ResponseJson(w http.ResponseWriter, code int, response interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(response)
 }
 

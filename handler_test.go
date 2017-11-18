@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -16,17 +19,19 @@ type testerReaderCloser struct {
 
 func (t testerReaderCloser) Close() error { return nil }
 
+type address struct {
+	Address string  `json:"address"`
+	Lat     float64 `json:"lat"`
+	Lng     float64 `json:"lng"`
+}
+
 func addressToBytes(address string, lat, lng float64) []byte {
 	res := fmt.Sprintf(`{"address":"%v", "lat":%v, "lng":%v}`, address, lat, lng)
 	return []byte(res)
 }
 
 func TestReadJSONWithDefinedStruct(t *testing.T) {
-	container := struct {
-		Address string  `json:"address"`
-		Lat     float64 `json:"lat"`
-		Lng     float64 `json:"lng"`
-	}{}
+	container := new(address)
 	expected := struct {
 		address  string
 		lat, lng float64
@@ -83,5 +88,32 @@ func TestReadJSONError(t *testing.T) {
 
 	if expectedErr != err.Error() {
 		t.Fatalf("Expected err to be '%v'. Got '%v'", expectedErr, err.Error())
+	}
+}
+
+func TestResponseJson(t *testing.T) {
+	expected := struct {
+		body, contentType string
+		status            int
+	}{
+		"{\"address\":\"test address\",\"lat\":1,\"lng\":1}\n",
+		"application/json",
+		http.StatusOK,
+	}
+
+	a := address{"test address", 1, 1}
+	rr := httptest.NewRecorder()
+	gognar.ResponseJson(rr, http.StatusOK, a)
+
+	if expected.status != rr.Code {
+		t.Errorf("Expected response code to be '%v'. Got '%v'", expected.status, rr.Code)
+	}
+	if expected.contentType != rr.Header().Get("Content-type") {
+		t.Errorf("Expected response Content-type to be '%v'. Got '%v'",
+			expected.contentType, rr.Header().Get("Content-type"))
+	}
+	resBody, _ := ioutil.ReadAll(rr.Body)
+	if expected.body != string(resBody) {
+		t.Errorf("Expected response body to be '%v'. Got '%v'", expected.body, string(resBody))
 	}
 }
