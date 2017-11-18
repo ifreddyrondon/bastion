@@ -51,6 +51,12 @@ func Abort(w http.ResponseWriter, status int, err string, message string) {
 	})
 }
 
+// BadRequest, sends a JSON-encoded error response in the body of a request with the 400 status code.
+// The response will contains the status 400 and error "Bad Request".
+func BadRequest(w http.ResponseWriter, err error) {
+	Abort(w, http.StatusBadRequest, http.StatusText(http.StatusBadRequest), err.Error())
+}
+
 // Abort, sends a JSON-encoded error response in the body of a request with the 404 status code.
 // The response will contains the status 404 and error "Not Found".
 func NotFound(w http.ResponseWriter, err error) {

@@ -216,6 +216,25 @@ func TestAbort(t *testing.T) {
 	}
 }
 
+func TestBadRequest(t *testing.T) {
+	err := errors.New("test")
+	rr := httptest.NewRecorder()
+	gognar.BadRequest(rr, err)
+
+	if 400 != rr.Code {
+		t.Errorf("Expected response code to be '400'. Got '%v'", rr.Code)
+	}
+	if "application/json" != rr.Header().Get("Content-type") {
+		t.Errorf("Expected response Content-type to be 'application/json'. Got '%v'",
+			rr.Header().Get("Content-type"))
+	}
+	expectedBody := responseErrorToString("test", "Bad Request", 400)
+	resBody, _ := ioutil.ReadAll(rr.Body)
+	if expectedBody != string(resBody) {
+		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
+	}
+}
+
 func TestNotFound(t *testing.T) {
 	err := errors.New("test")
 	rr := httptest.NewRecorder()
