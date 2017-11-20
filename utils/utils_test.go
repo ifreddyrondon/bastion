@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ifreddyrondon/gognar/utils"
+	"github.com/ifreddyrondon/gobastion/utils"
 )
 
 type testerReaderCloser struct {

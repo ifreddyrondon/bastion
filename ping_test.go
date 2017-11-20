@@ -1,4 +1,4 @@
-package gognar
+package bastion
 
 import (
 	"io/ioutil"
