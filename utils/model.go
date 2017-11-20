@@ -1,4 +1,4 @@
-package gognar
+package utils
 
 // Auxiliary structure that contains the necessary data to give a response
 // with the error context.

@@ -1,4 +1,4 @@
-package gognar
+package utils
 
 import (
 	"encoding/json"

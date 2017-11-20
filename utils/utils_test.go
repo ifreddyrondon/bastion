@@ -1,4 +1,4 @@
-package gognar_test
+package utils_test
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ifreddyrondon/gognar"
+	"github.com/ifreddyrondon/gognar/utils"
 )
 
 type testerReaderCloser struct {
@@ -40,7 +40,7 @@ func TestReadJSONWithDefinedStruct(t *testing.T) {
 
 	payload := addressToBytes(expected.address, expected.lat, expected.lng)
 	input := testerReaderCloser{bytes.NewBuffer(payload)}
-	err := gognar.ReadJSON(&input, &container)
+	err := utils.ReadJSON(&input, &container)
 
 	if err != nil {
 		t.Fatalf("Expected err to be nil. Got '%v'", err)
@@ -65,7 +65,7 @@ func TestReadJSONWithMap(t *testing.T) {
 
 	payload := addressToBytes(expected.address, expected.lat, expected.lng)
 	input := testerReaderCloser{bytes.NewBuffer(payload)}
-	err := gognar.ReadJSON(&input, &container)
+	err := utils.ReadJSON(&input, &container)
 
 	if err != nil {
 		t.Fatalf("Expected err to be nil. Got '%v'", err)
@@ -85,7 +85,7 @@ func TestReadJSONError(t *testing.T) {
 	container := make(map[string]interface{})
 	input := testerReaderCloser{strings.NewReader("`")}
 	expectedErr := "invalid character '`' looking for beginning of value"
-	err := gognar.ReadJSON(&input, &container)
+	err := utils.ReadJSON(&input, &container)
 
 	if expectedErr != err.Error() {
 		t.Fatalf("Expected err to be '%v'. Got '%v'", expectedErr, err.Error())
@@ -104,7 +104,7 @@ func TestResponseJson(t *testing.T) {
 
 	a := address{"test address", 1, 1}
 	rr := httptest.NewRecorder()
-	gognar.ResponseJson(rr, http.StatusOK, a)
+	utils.ResponseJson(rr, http.StatusOK, a)
 
 	if expected.status != rr.Code {
 		t.Errorf("Expected response code to be '%v'. Got '%v'", expected.status, rr.Code)
@@ -129,7 +129,7 @@ func TestSend(t *testing.T) {
 
 	a := address{"test address", 1, 1}
 	rr := httptest.NewRecorder()
-	gognar.Send(rr, a)
+	utils.Send(rr, a)
 
 	if 200 != rr.Code {
 		t.Errorf("Expected response code to be 200. Got '%v'", rr.Code)
@@ -154,7 +154,7 @@ func TestCreated(t *testing.T) {
 
 	a := address{"test address", 1, 1}
 	rr := httptest.NewRecorder()
-	gognar.Created(rr, a)
+	utils.Created(rr, a)
 
 	if 201 != rr.Code {
 		t.Errorf("Expected response code to be 201. Got '%v'", rr.Code)
@@ -171,7 +171,7 @@ func TestCreated(t *testing.T) {
 
 func TestNoContent(t *testing.T) {
 	rr := httptest.NewRecorder()
-	gognar.NoContent(rr)
+	utils.NoContent(rr)
 
 	if 204 != rr.Code {
 		t.Errorf("Expected response code to be 204. Got '%v'", rr.Code)
@@ -200,7 +200,7 @@ func TestAbort(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	gognar.Abort(rr, http.StatusBadRequest, expected.error, expected.message)
+	utils.Abort(rr, http.StatusBadRequest, expected.error, expected.message)
 
 	if expected.status != rr.Code {
 		t.Errorf("Expected response code to be '%v'. Got '%v'", expected.status, rr.Code)
@@ -219,7 +219,7 @@ func TestAbort(t *testing.T) {
 func TestBadRequest(t *testing.T) {
 	err := errors.New("test")
 	rr := httptest.NewRecorder()
-	gognar.BadRequest(rr, err)
+	utils.BadRequest(rr, err)
 
 	if 400 != rr.Code {
 		t.Errorf("Expected response code to be '400'. Got '%v'", rr.Code)
@@ -238,7 +238,7 @@ func TestBadRequest(t *testing.T) {
 func TestNotFound(t *testing.T) {
 	err := errors.New("test")
 	rr := httptest.NewRecorder()
-	gognar.NotFound(rr, err)
+	utils.NotFound(rr, err)
 
 	if 404 != rr.Code {
 		t.Errorf("Expected response code to be '404'. Got '%v'", rr.Code)
@@ -257,7 +257,7 @@ func TestNotFound(t *testing.T) {
 func TestMethodNotAllowed(t *testing.T) {
 	err := errors.New("test")
 	rr := httptest.NewRecorder()
-	gognar.MethodNotAllowed(rr, err)
+	utils.MethodNotAllowed(rr, err)
 
 	if 405 != rr.Code {
 		t.Errorf("Expected response code to be '405'. Got '%v'", rr.Code)
@@ -276,7 +276,7 @@ func TestMethodNotAllowed(t *testing.T) {
 func TestInternalServerError(t *testing.T) {
 	err := errors.New("test")
 	rr := httptest.NewRecorder()
-	gognar.InternalServerError(rr, err)
+	utils.InternalServerError(rr, err)
 
 	if 500 != rr.Code {
 		t.Errorf("Expected response code to be '500'. Got '%v'", rr.Code)
