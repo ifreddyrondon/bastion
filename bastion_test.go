@@ -1,31 +1,36 @@
-package bastion
+package bastion_test
 
 import (
+	"net/http/httptest"
+	"testing"
+
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
+
 	"os"
-	"testing"
+
+	"github.com/ifreddyrondon/gobastion"
 )
 
-var r *http.ServeMux
+var server *http.ServeMux
 
 func TestMain(m *testing.M) {
-	r = http.NewServeMux()
-	r.HandleFunc("/ping", pingHandler)
+	server = http.NewServeMux()
+	server.Handle("/", bastion.NewBastion().Router)
 	code := m.Run()
 	os.Exit(code)
 }
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
-	rr := httptest.NewRecorder()
-	r.ServeHTTP(rr, req)
-	return rr
+	res := httptest.NewRecorder()
+	server.ServeHTTP(res, req)
+	return res
 }
 
-func TestPingHandler(t *testing.T) {
+func TestBastionWithDefaultConfig(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/ping", nil)
 	res := executeRequest(req)
+
 	if 200 != res.Code {
 		t.Errorf("Expected response code to be 200'. Got '%v'", res.Code)
 	}
