@@ -1,22 +1,22 @@
-package bastion_test
+package gobastion_test
 
 import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ifreddyrondon/gobastion"
+
 	"io/ioutil"
 	"net/http"
 
 	"os"
-
-	"github.com/ifreddyrondon/gobastion"
 )
 
 var server *http.ServeMux
 
 func TestMain(m *testing.M) {
 	server = http.NewServeMux()
-	server.Handle("/", bastion.NewBastion().Router)
+	server.Handle("/", gobastion.NewBastion().Router)
 	code := m.Run()
 	os.Exit(code)
 }

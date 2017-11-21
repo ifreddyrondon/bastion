@@ -1,4 +1,4 @@
-package bastion
+package gobastion
 
 import (
 	"net/http"
