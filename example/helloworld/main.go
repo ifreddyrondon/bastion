@@ -11,7 +11,7 @@ var bastion *gobastion.Bastion
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
-		Message string
+		Message string `json:"message"`
 	}{"world"}
 	utils.Send(w, res)
 }
