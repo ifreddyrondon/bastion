@@ -16,7 +16,8 @@ var server *http.ServeMux
 
 func TestMain(m *testing.M) {
 	server = http.NewServeMux()
-	server.Handle("/", gobastion.NewBastion().Router)
+	app := gobastion.NewBastion()
+	server.Handle("/", gobastion.GetInternalRouter(app))
 	code := m.Run()
 	os.Exit(code)
 }
