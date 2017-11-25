@@ -7,7 +7,7 @@ import (
 	"github.com/ghodss/yaml"
 )
 
-// Config, contains the configuration of the bastion.
+// Config represents the configuration of the bastion.
 type Config struct {
 	API struct {
 		BasePath string `json:"base_path"`
@@ -21,6 +21,9 @@ func getDefault() *Config {
 }
 
 // NewConfig, returns a configuration with the default values.
+// Defaults:
+//	api:
+//		base_path: "/"
 func NewConfig() *Config {
 	return getDefault()
 }
