@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/ifreddyrondon/gobastion/config"
 )
 
 // Bastion offers an "augmented" Router instance.
@@ -16,12 +17,14 @@ import (
 // of mounting an API router, it will define the routes and middleware of the application with the app logic.
 type Bastion struct {
 	r         *chi.Mux
+	cfg       *config.Config
 	APIRouter chi.Router
 }
 
 // NewRouter returns a new GogApp instance ready
 func NewBastion() *Bastion {
 	app := new(Bastion)
+	app.cfg = config.NewConfig()
 	initialize(app)
 	return app
 }
