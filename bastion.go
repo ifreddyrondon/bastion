@@ -21,15 +21,27 @@ type Bastion struct {
 	APIRouter chi.Router
 }
 
-// NewRouter returns a new GogApp instance ready
-func NewBastion() *Bastion {
+// NewRouter returns a new Bastion instance.
+// if configPath is empty the configuration will be from defaults.
+// 	Defaults:
+//		api:
+//			base_path: "/"
+// Otherwise the configuration will be loaded from configPath.
+// If the config file is missing or unable to unmarshal the will panic.
+func NewBastion(configPath string) *Bastion {
 	app := new(Bastion)
-	app.cfg = config.NewConfig()
+	app.cfg = config.New()
+	if configPath != "" {
+		if err := app.cfg.FromFile(configPath); err != nil {
+			log.Panic(err)
+		}
+	}
 	initialize(app)
 	return app
 }
 
-func (app *Bastion) Run(address string) {
+// Serve the application at the specified address/port
+func (app *Bastion) Serve(address string) {
 	log.Printf("Running on %s", address)
 	log.Fatal(http.ListenAndServe(address, app.r))
 }
@@ -51,5 +63,5 @@ func initialize(app *Bastion) {
 	app.APIRouter = chi.NewRouter()
 	app.APIRouter.Use(middleware.RequestID)
 	app.APIRouter.Use(middleware.Logger)
-	app.r.Mount("/", app.APIRouter)
+	app.r.Mount(app.cfg.API.BasePath, app.APIRouter)
 }
