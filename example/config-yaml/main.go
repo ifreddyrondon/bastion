@@ -19,5 +19,5 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 func main() {
 	bastion = gobastion.NewBastion("./config.yaml")
 	bastion.APIRouter.Get("/hello", helloHandler)
-	bastion.Serve(":8080")
+	bastion.Serve()
 }

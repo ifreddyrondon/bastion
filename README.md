@@ -21,8 +21,6 @@ import (
 	"github.com/ifreddyrondon/gobastion/utils"
 )
 
-var bastion *gobastion.Bastion
-
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
 		Message string `json:"message"`
@@ -31,9 +29,9 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	bastion = gobastion.NewBastion("")
+	bastion := gobastion.NewBastion("")
 	bastion.APIRouter.Get("/hello", helloHandler)
-	bastion.Serve(":8080")
+	bastion.Serve()
 }
 ```
 
@@ -43,7 +41,9 @@ Represents the configuration for bastion. Config are used to define how the appl
 ###YAML
 ```yaml
 api:
-  base_path: "/api/"
+  base_path: "/"
+server:
+  address: ":8080"
 
 ```
 ###JSON
@@ -51,13 +51,16 @@ api:
 {
   "api": {
     "base_path": "/"
+  },
+  "server": {
+    "address": ":8080"
   }
 }
 ```
 
-
-### `basePath`
-basePath value where the application is going to be mounted. Default `/`.
+### api
+#### `api.base_path`
+base path value where the application is going to be mounted. Default `/`.
 
 ```json
 "base_path": "/foo/test",
@@ -66,3 +69,9 @@ basePath value where the application is going to be mounted. Default `/`.
 ```
 http://localhost/foo/test
 ```
+
+### `server`
+#### `server.address`
+Address is the host and port where the app is serve. Default `127.0.0.1:8080`.
+When `server.address` is not provided it'll search the ADDR and PORT environment variables 
+before set the default.

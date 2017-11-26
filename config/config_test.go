@@ -11,6 +11,9 @@ func TestNewConfig(t *testing.T) {
 	if cfg.API.BasePath != "/" {
 		t.Errorf("Expected BasePath to be '/api/'. Got '%v'", cfg.API.BasePath)
 	}
+	if cfg.Server.Addr != ":8080" {
+		t.Errorf("Expected BasePath to be ':8080'. Got '%v'", cfg.Server.Addr)
+	}
 }
 
 func TestLoadFromJSONFile(t *testing.T) {
@@ -19,6 +22,9 @@ func TestLoadFromJSONFile(t *testing.T) {
 	if cfg.API.BasePath != "/api/" {
 		t.Errorf("Expected BasePath to be '/api/'. Got '%v'", cfg.API.BasePath)
 	}
+	if cfg.Server.Addr != ":3000" {
+		t.Errorf("Expected BasePath to be ':3000'. Got '%v'", cfg.Server.Addr)
+	}
 }
 
 func TestLoadFromYAMLFile(t *testing.T) {
@@ -26,6 +32,9 @@ func TestLoadFromYAMLFile(t *testing.T) {
 	cfg.FromFile("./testdata/config_test.yaml")
 	if cfg.API.BasePath != "/api/" {
 		t.Errorf("Expected BasePath to be '/api/'. Got '%v'", cfg.API.BasePath)
+	}
+	if cfg.Server.Addr != ":3000" {
+		t.Errorf("Expected BasePath to be ':3000'. Got '%v'", cfg.Server.Addr)
 	}
 }
 

@@ -1,6 +1,7 @@
 package gobastion
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -26,6 +27,8 @@ type Bastion struct {
 // 	Defaults:
 //		api:
 //			base_path: "/"
+//		server:
+//			address ":8080"
 // Otherwise the configuration will be loaded from configPath.
 // If the config file is missing or unable to unmarshal the will panic.
 func NewBastion(configPath string) *Bastion {
@@ -41,9 +44,15 @@ func NewBastion(configPath string) *Bastion {
 }
 
 // Serve the application at the specified address/port
-func (app *Bastion) Serve(address string) {
-	log.Printf("Running on %s", address)
-	log.Fatal(http.ListenAndServe(address, app.r))
+func (app *Bastion) Serve() error {
+	fmt.Printf("Starting application at %s\n", app.cfg.Server.Addr)
+	server := http.Server{Addr: app.cfg.Server.Addr, Handler: app.r}
+
+	// start the web server
+	if err := server.ListenAndServe(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func initialize(app *Bastion) {

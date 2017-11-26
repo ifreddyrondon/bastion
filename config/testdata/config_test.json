@@ -1,5 +1,8 @@
 {
   "api": {
     "base_path": "/api/"
+  },
+  "server": {
+    "address": ":3000"
   }
 }

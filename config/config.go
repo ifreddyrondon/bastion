@@ -5,9 +5,14 @@ import (
 
 	"errors"
 
+	"fmt"
+
 	"github.com/ghodss/yaml"
+	"github.com/gobuffalo/envy"
 	"github.com/markbates/going/defaults"
 )
+
+const DefaultPort = "8080"
 
 var (
 	ErrorMissingConfigFile = errors.New("missing configuration file at path")
@@ -20,6 +25,11 @@ type Config struct {
 		// BasePath is the path where the application is going to be mounted. Default `/`.
 		BasePath string `json:"base_path"`
 	} `json:"api"`
+	Server struct {
+		// Address is the bind address provided to http.Server. Default is "127.0.0.1:8080"
+		// Can be set using ENV vars "ADDR" and "PORT".
+		Addr string `json:"address"`
+	} `json:"server"`
 }
 
 // New, returns a new Config instance with sensible defaults.
@@ -29,6 +39,9 @@ func New() *Config {
 
 func configWithDefaults(cfg *Config) *Config {
 	cfg.API.BasePath = defaults.String(cfg.API.BasePath, "/")
+	port := envy.Get("PORT", DefaultPort)
+	host := envy.Get("ADDR", "")
+	cfg.Server.Addr = defaults.String(cfg.Server.Addr, fmt.Sprintf("%s:%s", host, port))
 	return cfg
 }
 
