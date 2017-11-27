@@ -1,13 +1,18 @@
 package gobastion
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"net/http"
+
+	"os"
+
+	"syscall"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/ifreddyrondon/gobastion/config"
+	"github.com/markbates/sigtx"
 )
 
 // Bastion offers an "augmented" Router instance.
@@ -45,10 +50,26 @@ func NewBastion(configPath string) *Bastion {
 
 // Serve the application at the specified address/port
 func (app *Bastion) Serve() error {
-	fmt.Printf("Starting application at %s\n", app.cfg.Server.Addr)
 	server := http.Server{Addr: app.cfg.Server.Addr, Handler: app.r}
 
+	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
+	defer cancel()
+
+	// check for a closing signal
+	go func() {
+		// graceful shutdown
+		<-ctx.Done()
+		log.Printf("shutting down application")
+
+		if err := server.Shutdown(ctx); err != nil {
+			log.Printf("unable to shutdown server: %v", err)
+		} else {
+			log.Printf("server stopped")
+		}
+	}()
+
 	// start the web server
+	log.Printf("Starting application at %s\n", app.cfg.Server.Addr)
 	if err := server.ListenAndServe(); err != nil {
 		return err
 	}
