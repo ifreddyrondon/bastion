@@ -75,3 +75,13 @@ http://localhost/foo/test
 Address is the host and port where the app is serve. Default `127.0.0.1:8080`.
 When `server.address` is not provided it'll search the ADDR and PORT environment variables 
 before set the default.
+
+## Middlewares
+
+Bastion comes equipped with a set of commons middlewares, providing a suite of standard
+`net/http` middlewares.
+| name      	| description                                                             	|
+|-----------	|-------------------------------------------------------------------------	|
+| Logger    	| Logs the start and end of each request with the elapsed processing time 	|
+| Recoverer 	| Gracefully absorb panics and prints the stack trace                     	|
+| RequestID 	| Injects a request ID into the context of each request                   	|
