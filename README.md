@@ -1,9 +1,15 @@
-# gobastion
+# Bastion
 
 Defend your API from the sieges. Bastion offers an "augmented" Router instance.
 
 It has the minimal necessary to create an API with default handlers and middleware that help you raise your API easy and fast.
 Allows to have commons handlers and middleware between projects with the need for each one to do so.
+
+## Examples
+
+* [helloworld](https://github.com/ifreddyrondon/gobastion/blob/master/example/helloworld/main.go) - Quickstart, first Hello world with bastion.
+* [config-yaml](https://github.com/ifreddyrondon/gobastion/blob/master/example/config-yaml/main.go) - Bastion with config file.
+* [todos-rest](https://github.com/ifreddyrondon/gobastion/blob/master/example/todo-rest/main.go) - REST APIs made easy, productive and maintainable.
 
 ## Router
 Bastion use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
@@ -32,6 +38,69 @@ func main() {
 	bastion := gobastion.New("")
 	bastion.APIRouter.Get("/hello", helloHandler)
 	bastion.Serve()
+}
+```
+
+### NewRouter
+NewRouter return a router as a subrouter along a routing path. 
+
+It's very useful to split up a large API as many independent routers and compose them as a single service.
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/go-chi/chi"
+	"github.com/ifreddyrondon/gobastion"
+)
+
+type handler struct{}
+
+// Routes creates a REST router for the todos resource
+func (h *handler) Routes() chi.Router {
+	r := gobastion.NewRouter()
+
+	r.Get("/", h.List)    // GET /todos - read a list of todos
+	r.Post("/", h.Create) // POST /todos - create a new todo and persist it
+	r.Route("/{id}", func(r chi.Router) {
+		r.Get("/", h.Get)       // GET /todos/{id} - read a single todo by :id
+		r.Put("/", h.Update)    // PUT /todos/{id} - update a single todo by :id
+		r.Delete("/", h.Delete) // DELETE /todos/{id} - delete a single todo by :id
+	})
+
+	return r
+}
+
+func (h *handler) List(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("todos list of stuff.."))
+}
+
+func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("todos create"))
+}
+
+func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	w.Write([]byte(fmt.Sprintf("get todo with id %v", id)))
+}
+
+func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	w.Write([]byte(fmt.Sprintf("update todo with id %v", id)))
+}
+
+func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	w.Write([]byte(fmt.Sprintf("delete todo with id %v", id)))
+}
+
+func main() {
+	app := gobastion.New("")
+	app.APIRouter.Mount("/todo/", new(handler).Routes())
+	app.Serve()
 }
 ```
 

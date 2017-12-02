@@ -7,7 +7,7 @@ import (
 	"github.com/ifreddyrondon/gobastion/utils"
 )
 
-var bastion *gobastion.Bastion
+var app *gobastion.Bastion
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
@@ -17,7 +17,7 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	bastion = gobastion.New("")
-	bastion.APIRouter.Get("/hello", helloHandler)
-	bastion.Serve()
+	app = gobastion.New("")
+	app.APIRouter.Get("/hello", helloHandler)
+	app.Serve()
 }

@@ -97,3 +97,10 @@ func initialize(app *Bastion) {
 	app.APIRouter.Use(CHIMiddleware.Logger)
 	app.r.Mount(app.cfg.API.BasePath, app.APIRouter)
 }
+
+// NewRouter return a router as a subrouter along a routing path.
+// It's very useful to split up a large API as many independent routers and
+// compose them as a single service.
+func NewRouter() chi.Router {
+	return chi.NewRouter()
+}
