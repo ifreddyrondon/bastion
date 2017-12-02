@@ -80,8 +80,9 @@ before set the default.
 
 Bastion comes equipped with a set of commons middlewares, providing a suite of standard
 `net/http` middlewares.
-| name      	| description                                                             	|
-|-----------	|-------------------------------------------------------------------------	|
-| Logger    	| Logs the start and end of each request with the elapsed processing time 	|
-| Recovery   	| Gracefully absorb panics and prints the stack trace                     	|
-| RequestID 	| Injects a request ID into the context of each request                   	|
+
+Name | Description
+---- | -----------
+Logger | Logs the start and end of each request with the elapsed processing time
+Recovery | Gracefully absorb panics and prints the stack trace
+RequestID | Injects a request ID into the context of each request
