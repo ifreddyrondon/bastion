@@ -10,8 +10,9 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	CHIMiddleware "github.com/go-chi/chi/middleware"
 	"github.com/ifreddyrondon/gobastion/config"
+	"github.com/ifreddyrondon/gobastion/midleware"
 	"github.com/markbates/sigtx"
 )
 
@@ -81,6 +82,7 @@ func initialize(app *Bastion) {
 	 * internal router
 	 */
 	app.r = chi.NewRouter()
+	app.r.Use(middleware.Recovery)
 
 	/**
 	 * Ping route
@@ -91,7 +93,7 @@ func initialize(app *Bastion) {
 	 * API Router
 	 */
 	app.APIRouter = chi.NewRouter()
-	app.APIRouter.Use(middleware.RequestID)
-	app.APIRouter.Use(middleware.Logger)
+	app.APIRouter.Use(CHIMiddleware.RequestID)
+	app.APIRouter.Use(CHIMiddleware.Logger)
 	app.r.Mount(app.cfg.API.BasePath, app.APIRouter)
 }

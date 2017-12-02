@@ -11,10 +11,10 @@ import (
 	"github.com/ifreddyrondon/gobastion/utils"
 )
 
-// Recoverer is a middleware that recovers from panics, logs the panic (and a
+// Recovery is a middleware that recovers from panics, logs the panic (and a
 // backtrace), and returns a HTTP 500 (Internal Server Error) status if
-// possible. Recoverer prints a request ID if one is provided.
-func Recoverer(next http.Handler) http.Handler {
+// possible. Recovery prints a request ID if one is provided.
+func Recovery(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
