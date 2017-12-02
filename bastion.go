@@ -28,7 +28,7 @@ type Bastion struct {
 	APIRouter chi.Router
 }
 
-// NewRouter returns a new Bastion instance.
+// New returns a new Bastion instance.
 // if configPath is empty the configuration will be from defaults.
 // 	Defaults:
 //		api:
@@ -37,7 +37,7 @@ type Bastion struct {
 //			address ":8080"
 // Otherwise the configuration will be loaded from configPath.
 // If the config file is missing or unable to unmarshal the will panic.
-func NewBastion(configPath string) *Bastion {
+func New(configPath string) *Bastion {
 	app := new(Bastion)
 	app.cfg = config.New()
 	if configPath != "" {

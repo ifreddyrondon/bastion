@@ -26,7 +26,7 @@ func executeRequest(server *http.ServeMux, req *http.Request) *httptest.Response
 }
 
 func TestDefaultBastion(t *testing.T) {
-	bastion := gobastion.NewBastion("")
+	bastion := gobastion.New("")
 	s := getServerForApp(bastion)
 	req, _ := http.NewRequest("GET", "/ping", nil)
 	res := executeRequest(s, req)
@@ -41,7 +41,7 @@ func TestDefaultBastion(t *testing.T) {
 }
 
 func TestBastionHelloWorld(t *testing.T) {
-	bastion := gobastion.NewBastion("")
+	bastion := gobastion.New("")
 	bastion.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
 			Message string `json:"message"`
@@ -64,7 +64,7 @@ func TestBastionHelloWorld(t *testing.T) {
 }
 
 func TestBastionHelloWorldFromFile(t *testing.T) {
-	bastion := gobastion.NewBastion("./testdata/config_test.yaml")
+	bastion := gobastion.New("./testdata/config_test.yaml")
 	bastion.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
 			Message string `json:"message"`
