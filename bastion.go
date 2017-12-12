@@ -25,7 +25,7 @@ import (
 type Bastion struct {
 	r         *chi.Mux
 	cfg       *config.Config
-	APIRouter chi.Router
+	APIRouter *chi.Mux
 }
 
 // New returns a new Bastion instance.
@@ -101,6 +101,6 @@ func initialize(app *Bastion) {
 // NewRouter return a router as a subrouter along a routing path.
 // It's very useful to split up a large API as many independent routers and
 // compose them as a single service.
-func NewRouter() chi.Router {
+func NewRouter() *chi.Mux {
 	return chi.NewRouter()
 }
