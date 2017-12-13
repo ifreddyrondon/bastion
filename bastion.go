@@ -23,9 +23,10 @@ import (
 // It use go-chi router to modularize the applications. Each instance of GogApp, will have the possibility
 // of mounting an API router, it will define the routes and middleware of the application with the app logic.
 type Bastion struct {
-	r         *chi.Mux
-	cfg       *config.Config
-	APIRouter *chi.Mux
+	r          *chi.Mux
+	cfg        *config.Config
+	APIRouter  *chi.Mux
+	finalizers []Finalizer
 }
 
 // New returns a new Bastion instance.
@@ -49,6 +50,13 @@ func New(configPath string) *Bastion {
 	return app
 }
 
+// AppendFinalizers add helpers function that will be executed
+// in the graceful shutdown.
+// The function need to implement the Finalizer interface.
+func (app *Bastion) AppendFinalizers(finalizer ...Finalizer) {
+	app.finalizers = append(app.finalizers, finalizer...)
+}
+
 // Serve the application at the specified address/port
 func (app *Bastion) Serve() error {
 	server := http.Server{Addr: app.cfg.Server.Addr, Handler: app.r}
@@ -56,16 +64,19 @@ func (app *Bastion) Serve() error {
 	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
+	appFinalizer := serverFinalizer{&server, ctx}
+	app.AppendFinalizers(appFinalizer)
+
 	// check for a closing signal
 	go func() {
 		// graceful shutdown
 		<-ctx.Done()
-		log.Printf("shutting down application")
 
-		if err := server.Shutdown(ctx); err != nil {
-			log.Printf("unable to shutdown server: %v", err)
+		log.Printf("shutting down application")
+		if err := finalize(app.finalizers); err != nil {
+			log.Printf("%v", err)
 		} else {
-			log.Printf("server stopped")
+			log.Printf("application stopped")
 		}
 	}()
 

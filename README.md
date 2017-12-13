@@ -9,6 +9,7 @@ Allows to have commons handlers and middleware between projects with the need fo
 
 * [helloworld](https://github.com/ifreddyrondon/gobastion/blob/master/example/helloworld/main.go) - Quickstart, first Hello world with bastion.
 * [config-yaml](https://github.com/ifreddyrondon/gobastion/blob/master/example/config-yaml/main.go) - Bastion with config file.
+* [finalizer](https://github.com/ifreddyrondon/gobastion/blob/master/example/finalizer/main.go) - Bastion with Finalizer.
 * [todos-rest](https://github.com/ifreddyrondon/gobastion/blob/master/example/todo-rest/main.go) - REST APIs made easy, productive and maintainable.
 
 ## Router
@@ -104,6 +105,46 @@ func main() {
 }
 ```
 
+## Middlewares
+
+Bastion comes equipped with a set of commons middlewares, providing a suite of standard
+`net/http` middlewares.
+
+Name | Description
+---- | -----------
+Logger | Logs the start and end of each request with the elapsed processing time
+Recovery | Gracefully absorb panics and prints the stack trace
+RequestID | Injects a request ID into the context of each request
+
+## Finalizers
+Bastion listens if any SIGINT, SIGTERM or SIGKILL signal is emitted and performs a graceful shutdown.
+By default the graceful shutdown execute the server shutdown through a Finalizer.
+
+The Finalizer is an interface. All the finalizer will be executed into the graceful shutdown.
+```go
+type Finalizer interface {
+	Finalize() error
+}
+```
+It can be added to Finalizer queue with `AppendFinalizers` method of the bastion instance.
+
+### Example
+
+```go
+type MyFinalizer struct{}
+
+func (f MyFinalizer) Finalize() error {
+	log.Printf("[finalizer:MyFinalizer] doing something")
+	return nil
+}
+
+func main() {
+	bastion := gobastion.New("")
+	bastion.AppendFinalizers(MyFinalizer{})
+	bastion.Serve()
+}
+```
+
 ## Configuration
 Represents the configuration for bastion. Config are used to define how the application should run.
 
@@ -144,14 +185,3 @@ http://localhost/foo/test
 Address is the host and port where the app is serve. Default `127.0.0.1:8080`.
 When `server.address` is not provided it'll search the ADDR and PORT environment variables 
 before set the default.
-
-## Middlewares
-
-Bastion comes equipped with a set of commons middlewares, providing a suite of standard
-`net/http` middlewares.
-
-Name | Description
----- | -----------
-Logger | Logs the start and end of each request with the elapsed processing time
-Recovery | Gracefully absorb panics and prints the stack trace
-RequestID | Injects a request ID into the context of each request
