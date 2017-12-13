@@ -117,7 +117,7 @@ Recovery | Gracefully absorb panics and prints the stack trace
 RequestID | Injects a request ID into the context of each request
 
 ## Finalizers
-Bastion listens if any SIGINT, SIGTERM or SIGKILL signal is emitted and performs a graceful shutdown.
+Bastion listens if any **SIGINT**, **SIGTERM** or **SIGKILL** signal is emitted and performs a graceful shutdown.
 By default the graceful shutdown execute the server shutdown through a Finalizer.
 
 The Finalizer is an interface. All the finalizer will be executed into the graceful shutdown.
