@@ -1,14 +1,14 @@
 package gobastion_test
 
 import (
+	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/gobastion/config"
 	"github.com/ifreddyrondon/gobastion/utils"
-
-	"io/ioutil"
-	"net/http"
 )
 
 var server *http.ServeMux
@@ -26,7 +26,7 @@ func executeRequest(server *http.ServeMux, req *http.Request) *httptest.Response
 }
 
 func TestDefaultBastion(t *testing.T) {
-	bastion := gobastion.New("")
+	bastion := gobastion.New(nil)
 	s := getServerForApp(bastion)
 	req, _ := http.NewRequest("GET", "/ping", nil)
 	res := executeRequest(s, req)
@@ -41,7 +41,7 @@ func TestDefaultBastion(t *testing.T) {
 }
 
 func TestBastionHelloWorld(t *testing.T) {
-	bastion := gobastion.New("")
+	bastion := gobastion.New(nil)
 	bastion.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
 			Message string `json:"message"`
@@ -64,7 +64,8 @@ func TestBastionHelloWorld(t *testing.T) {
 }
 
 func TestBastionHelloWorldFromFile(t *testing.T) {
-	bastion := gobastion.New("./testdata/config_test.yaml")
+	cfg, _ := config.FromFile("./config/testdata/config_test.yaml")
+	bastion := gobastion.New(cfg)
 	bastion.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
 			Message string `json:"message"`
@@ -83,5 +84,12 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 	body, _ := ioutil.ReadAll(res.Body)
 	if expected != string(body) {
 		t.Errorf("Expected response body to be %v. Got %v", expected, string(body))
+	}
+}
+
+func TestNewRouter(t *testing.T) {
+	r := gobastion.NewRouter()
+	if r == nil {
+		t.Errorf("Expected bastion router not to be nil")
 	}
 }

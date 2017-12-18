@@ -36,7 +36,7 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	bastion := gobastion.New("")
+	bastion := gobastion.New(nil)
 	bastion.APIRouter.Get("/hello", helloHandler)
 	bastion.Serve()
 }
@@ -99,7 +99,7 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	app := gobastion.New("")
+	app := gobastion.New(nil)
 	app.APIRouter.Mount("/todo/", new(handler).Routes())
 	app.Serve()
 }
@@ -139,7 +139,7 @@ func (f MyFinalizer) Finalize() error {
 }
 
 func main() {
-	bastion := gobastion.New("")
+	bastion := gobastion.New(nil)
 	bastion.AppendFinalizers(MyFinalizer{})
 	bastion.Serve()
 }
@@ -148,15 +148,56 @@ func main() {
 ## Configuration
 Represents the configuration for bastion. Config are used to define how the application should run.
 
-###YAML
+### Structure
+```go
+type Config struct {
+ 	API struct {
+ 		BasePath string
+ 	}
+ 	Server struct {
+ 		Addr string
+ 	}
+ 	Debug bool
+}
+```
+
+#### Api
+##### `Api.BasePath`
+Base path value where the application is going to be mounted. Default `/`. Is JSON tagged as `api.base_path`
+
+When
+```json
+"base_path": "/foo/test",
+```
+Then
+```
+http://localhost:8080/foo/test
+```
+
+#### Server
+##### `Server.Addr`
+Address is the host and port where the app is serve. Default `127.0.0.1:8080`. Is JSON tagged as `server.address`
+
+#### Debug
+Debug flag if Bastion should enable debugging features. Default `false`. . Is JSON tagged as `debug`
+
+### From configuration file
+Bastion comes with an util function to load configuration from a file.
+**FromFile** is an util function to load the bastion configuration from a config file. The config file could it be in **YAML** or **JSON** format. Is some attributes are missing
+from the config file it'll be set with the default. [Example](https://github.com/ifreddyrondon/gobastion/blob/master/example/config-yaml/main.go).
+
+FromFile takes a special consideration for `server.address` default. When it's not provided it'll search the ADDR and PORT environment variables first before set the default.
+
+####YAML
 ```yaml
 api:
   base_path: "/"
 server:
   address: ":8080"
+debug: true
 
 ```
-###JSON
+####JSON
 ```json
 {
   "api": {
@@ -164,24 +205,7 @@ server:
   },
   "server": {
     "address": ":8080"
-  }
+  },
+  "debug": true
 }
 ```
-
-### api
-#### `api.base_path`
-base path value where the application is going to be mounted. Default `/`.
-
-```json
-"base_path": "/foo/test",
-```
-
-```
-http://localhost/foo/test
-```
-
-### `server`
-#### `server.address`
-Address is the host and port where the app is serve. Default `127.0.0.1:8080`.
-When `server.address` is not provided it'll search the ADDR and PORT environment variables 
-before set the default.

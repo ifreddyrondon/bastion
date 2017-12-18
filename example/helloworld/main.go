@@ -17,7 +17,7 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	app = gobastion.New("")
+	app = gobastion.New(nil)
 	app.APIRouter.Get("/hello", helloHandler)
 	app.Serve()
 }

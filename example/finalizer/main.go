@@ -26,7 +26,7 @@ func (f MyFinalizer) Finalize() error {
 }
 
 func main() {
-	app = gobastion.New("")
+	app = gobastion.New(nil)
 	app.AppendFinalizers(MyFinalizer{})
 	app.APIRouter.Get("/hello", helloHandler)
 	app.Serve()

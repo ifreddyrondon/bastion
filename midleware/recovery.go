@@ -3,10 +3,9 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"runtime/debug"
-
-	"net/http/httputil"
 
 	"github.com/ifreddyrondon/gobastion/utils"
 )

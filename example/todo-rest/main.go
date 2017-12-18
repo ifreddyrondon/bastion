@@ -49,7 +49,7 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	app := gobastion.New("")
+	app := gobastion.New(nil)
 	app.APIRouter.Mount("/todo/", new(handler).Routes())
 	app.Serve()
 }

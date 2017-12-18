@@ -4,9 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
-
 	"os"
-
 	"syscall"
 
 	"github.com/go-chi/chi"
@@ -30,22 +28,19 @@ type Bastion struct {
 }
 
 // New returns a new Bastion instance.
-// if configPath is empty the configuration will be from defaults.
+// if cfg is empty the configuration will be from defaults.
 // 	Defaults:
-//		api:
-//			base_path: "/"
-//		server:
-//			address ":8080"
-// Otherwise the configuration will be loaded from configPath.
-// If the config file is missing or unable to unmarshal the will panic.
-func New(configPath string) *Bastion {
-	app := new(Bastion)
-	app.cfg = config.New()
-	if configPath != "" {
-		if err := app.cfg.FromFile(configPath); err != nil {
-			log.Panic(err)
-		}
+//		Api:
+//			BasePath: "/"
+//		Server:
+//			Addr ":8080"
+//		Debug: false
+func New(cfg *config.Config) *Bastion {
+	if cfg == nil {
+		cfg = config.DefaultConfig()
 	}
+	app := new(Bastion)
+	app.cfg = cfg
 	initialize(app)
 	return app
 }

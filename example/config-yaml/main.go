@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/gobastion/config"
 	"github.com/ifreddyrondon/gobastion/utils"
 )
 
@@ -17,7 +18,8 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	app = gobastion.New("./config.yaml")
+	cfg, _ := config.FromFile("./config.yaml")
+	app = gobastion.New(cfg)
 	app.APIRouter.Get("/hello", helloHandler)
 	app.Serve()
 }
