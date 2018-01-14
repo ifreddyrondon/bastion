@@ -13,6 +13,11 @@ import (
 	"github.com/markbates/sigtx"
 )
 
+// DefaultResponder is the default Responder and is used to provide utils method
+// for response http request by bastion. It's a JsonResponder instance and it'll
+// wrap the response to a JSON valid response.
+var DefaultResponder Responder = new(JsonResponder)
+
 // Bastion offers an "augmented" Router instance.
 // It has the minimal necessary to create an API with default handlers and middleware.
 // Allows to have commons handlers and middleware between projects with the need for each one to do so.
@@ -24,7 +29,6 @@ type Bastion struct {
 	cfg        *config.Config
 	APIRouter  *chi.Mux
 	finalizers []Finalizer
-	Reader
 	Responder
 }
 
@@ -42,8 +46,7 @@ func New(cfg *config.Config) *Bastion {
 	}
 	app := new(Bastion)
 	app.cfg = cfg
-	app.Reader = new(JsonReader)
-	app.Responder = new(JsonResponder)
+	app.Responder = DefaultResponder
 	initialize(app)
 	return app
 }
