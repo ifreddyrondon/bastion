@@ -25,20 +25,19 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/gobastion"
-	"github.com/ifreddyrondon/gobastion/utils"
 )
 
-func helloHandler(w http.ResponseWriter, _ *http.Request) {
-	res := struct {
-		Message string `json:"message"`
-	}{"world"}
-	utils.Send(w, res)
+var app *gobastion.Bastion
+
+func handler(w http.ResponseWriter, _ *http.Request) {
+	res := struct {Message string `json:"message"`}{"world"}
+	app.Send(w, res)
 }
 
 func main() {
-	bastion := gobastion.New(nil)
-	bastion.APIRouter.Get("/hello", helloHandler)
-	bastion.Serve()
+	app = gobastion.New(nil)
+	app.APIRouter.Get("/hello", handler)
+	app.Serve()
 }
 ```
 
@@ -131,6 +130,14 @@ It can be added to Finalizer queue with `AppendFinalizers` method of the bastion
 ### Example
 
 ```go
+package main
+
+import (
+	"log"
+
+	"github.com/ifreddyrondon/gobastion"
+)
+
 type MyFinalizer struct{}
 
 func (f MyFinalizer) Finalize() error {

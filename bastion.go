@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/chi"
 	CHIMiddleware "github.com/go-chi/chi/middleware"
 	"github.com/ifreddyrondon/gobastion/config"
-	"github.com/ifreddyrondon/gobastion/midleware"
 	"github.com/markbates/sigtx"
 )
 
@@ -25,6 +24,8 @@ type Bastion struct {
 	cfg        *config.Config
 	APIRouter  *chi.Mux
 	finalizers []Finalizer
+	Reader
+	Responder
 }
 
 // New returns a new Bastion instance.
@@ -41,6 +42,8 @@ func New(cfg *config.Config) *Bastion {
 	}
 	app := new(Bastion)
 	app.cfg = cfg
+	app.Reader = new(JsonReader)
+	app.Responder = new(JsonResponder)
 	initialize(app)
 	return app
 }
@@ -88,7 +91,7 @@ func initialize(app *Bastion) {
 	 * internal router
 	 */
 	app.r = chi.NewRouter()
-	app.r.Use(middleware.Recovery)
+	app.r.Use(Recovery(app.Responder))
 
 	/**
 	 * Ping route

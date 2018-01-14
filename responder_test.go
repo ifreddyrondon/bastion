@@ -1,95 +1,22 @@
-package utils_test
+package gobastion_test
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
-	"github.com/ifreddyrondon/gobastion/utils"
+	"github.com/ifreddyrondon/gobastion"
 )
 
-type testerReaderCloser struct {
-	io.Reader
-}
-
-func (t testerReaderCloser) Close() error { return nil }
+var responder gobastion.JsonResponder
 
 type address struct {
 	Address string  `json:"address"`
 	Lat     float64 `json:"lat"`
 	Lng     float64 `json:"lng"`
-}
-
-func addressToBytes(address string, lat, lng float64) []byte {
-	res := fmt.Sprintf(`{"address":"%v", "lat":%v, "lng":%v}`, address, lat, lng)
-	return []byte(res)
-}
-
-func TestReadJSONWithDefinedStruct(t *testing.T) {
-	container := new(address)
-	expected := struct {
-		address  string
-		lat, lng float64
-	}{"jorge matte gormaz", 1, 1}
-
-	payload := addressToBytes(expected.address, expected.lat, expected.lng)
-	input := testerReaderCloser{bytes.NewBuffer(payload)}
-	err := utils.ReadJSON(&input, &container)
-
-	if err != nil {
-		t.Fatalf("Expected err to be nil. Got '%v'", err)
-	}
-	if expected.address != container.Address {
-		t.Errorf("Expected address to be '%v'. Got '%v'", expected.address, container.Address)
-	}
-	if expected.lat != container.Lat {
-		t.Errorf("Expected lat to be '%v'. Got '%v'", expected.lat, container.Lat)
-	}
-	if expected.lng != container.Lng {
-		t.Errorf("Expected lng to be '%v'. Got '%v'", expected.lng, container.Lng)
-	}
-}
-
-func TestReadJSONWithMap(t *testing.T) {
-	container := make(map[string]interface{})
-	expected := struct {
-		address  string
-		lat, lng float64
-	}{"jorge matte gormaz", 1, 1}
-
-	payload := addressToBytes(expected.address, expected.lat, expected.lng)
-	input := testerReaderCloser{bytes.NewBuffer(payload)}
-	err := utils.ReadJSON(&input, &container)
-
-	if err != nil {
-		t.Fatalf("Expected err to be nil. Got '%v'", err)
-	}
-	if expected.address != container["address"] {
-		t.Errorf("Expected address to be '%v'. Got '%v'", expected.address, container["address"])
-	}
-	if expected.lat != container["lat"] {
-		t.Errorf("Expected lat to be '%v'. Got '%v'", expected.lat, container["lat"])
-	}
-	if expected.lng != container["lng"] {
-		t.Errorf("Expected lng to be '%v'. Got '%v'", expected.lng, container["lng"])
-	}
-}
-
-func TestReadJSONError(t *testing.T) {
-	container := make(map[string]interface{})
-	input := testerReaderCloser{strings.NewReader("`")}
-	expectedErr := "invalid character '`' looking for beginning of value"
-	err := utils.ReadJSON(&input, &container)
-
-	if expectedErr != err.Error() {
-		t.Fatalf("Expected err to be '%v'. Got '%v'", expectedErr, err.Error())
-	}
 }
 
 func TestResponseJson(t *testing.T) {
@@ -104,7 +31,7 @@ func TestResponseJson(t *testing.T) {
 
 	a := address{"test address", 1, 1}
 	rr := httptest.NewRecorder()
-	utils.ResponseJson(rr, http.StatusOK, a)
+	responder.Response(rr, http.StatusOK, a)
 
 	if expected.status != rr.Code {
 		t.Errorf("Expected response code to be '%v'. Got '%v'", expected.status, rr.Code)
@@ -129,7 +56,7 @@ func TestSend(t *testing.T) {
 
 	a := address{"test address", 1, 1}
 	rr := httptest.NewRecorder()
-	utils.Send(rr, a)
+	responder.Send(rr, a)
 
 	if 200 != rr.Code {
 		t.Errorf("Expected response code to be 200. Got '%v'", rr.Code)
@@ -154,7 +81,7 @@ func TestCreated(t *testing.T) {
 
 	a := address{"test address", 1, 1}
 	rr := httptest.NewRecorder()
-	utils.Created(rr, a)
+	responder.Created(rr, a)
 
 	if 201 != rr.Code {
 		t.Errorf("Expected response code to be 201. Got '%v'", rr.Code)
@@ -171,7 +98,7 @@ func TestCreated(t *testing.T) {
 
 func TestNoContent(t *testing.T) {
 	rr := httptest.NewRecorder()
-	utils.NoContent(rr)
+	responder.NoContent(rr)
 
 	if 204 != rr.Code {
 		t.Errorf("Expected response code to be 204. Got '%v'", rr.Code)
@@ -186,40 +113,10 @@ func responseErrorToString(message, error string, status int) string {
 	return fmt.Sprintf("{\"message\":\"%v\",\"error\":\"%v\",\"status\":%v}\n", message, error, status)
 }
 
-func TestAbort(t *testing.T) {
-	expected := struct {
-		contentType string
-		status      int
-		error       string
-		message     string
-	}{
-		"application/json",
-		http.StatusBadRequest,
-		"Not Found",
-		"Test message",
-	}
-
-	rr := httptest.NewRecorder()
-	utils.Abort(rr, http.StatusBadRequest, expected.error, expected.message)
-
-	if expected.status != rr.Code {
-		t.Errorf("Expected response code to be '%v'. Got '%v'", expected.status, rr.Code)
-	}
-	if expected.contentType != rr.Header().Get("Content-type") {
-		t.Errorf("Expected response Content-type to be '%v'. Got '%v'",
-			expected.contentType, rr.Header().Get("Content-type"))
-	}
-	expectedBody := responseErrorToString(expected.message, expected.error, expected.status)
-	resBody, _ := ioutil.ReadAll(rr.Body)
-	if expectedBody != string(resBody) {
-		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
-	}
-}
-
 func TestBadRequest(t *testing.T) {
 	err := errors.New("test")
 	rr := httptest.NewRecorder()
-	utils.BadRequest(rr, err)
+	responder.BadRequest(rr, err)
 
 	if 400 != rr.Code {
 		t.Errorf("Expected response code to be '400'. Got '%v'", rr.Code)
@@ -238,7 +135,7 @@ func TestBadRequest(t *testing.T) {
 func TestNotFound(t *testing.T) {
 	err := errors.New("test")
 	rr := httptest.NewRecorder()
-	utils.NotFound(rr, err)
+	responder.NotFound(rr, err)
 
 	if 404 != rr.Code {
 		t.Errorf("Expected response code to be '404'. Got '%v'", rr.Code)
@@ -257,7 +154,7 @@ func TestNotFound(t *testing.T) {
 func TestMethodNotAllowed(t *testing.T) {
 	err := errors.New("test")
 	rr := httptest.NewRecorder()
-	utils.MethodNotAllowed(rr, err)
+	responder.MethodNotAllowed(rr, err)
 
 	if 405 != rr.Code {
 		t.Errorf("Expected response code to be '405'. Got '%v'", rr.Code)
@@ -276,7 +173,7 @@ func TestMethodNotAllowed(t *testing.T) {
 func TestInternalServerError(t *testing.T) {
 	err := errors.New("test")
 	rr := httptest.NewRecorder()
-	utils.InternalServerError(rr, err)
+	responder.InternalServerError(rr, err)
 
 	if 500 != rr.Code {
 		t.Errorf("Expected response code to be '500'. Got '%v'", rr.Code)

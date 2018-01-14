@@ -8,7 +8,6 @@ import (
 
 	"github.com/ifreddyrondon/gobastion"
 	"github.com/ifreddyrondon/gobastion/config"
-	"github.com/ifreddyrondon/gobastion/utils"
 )
 
 var server *http.ServeMux
@@ -46,7 +45,7 @@ func TestBastionHelloWorld(t *testing.T) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
-		utils.Send(w, res)
+		bastion.Send(w, res)
 	})
 
 	s := getServerForApp(bastion)
@@ -70,7 +69,7 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
-		utils.Send(w, res)
+		bastion.Send(w, res)
 	})
 
 	s := getServerForApp(bastion)

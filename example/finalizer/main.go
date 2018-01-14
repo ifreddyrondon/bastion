@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/ifreddyrondon/gobastion"
-	"github.com/ifreddyrondon/gobastion/utils"
 )
 
 var app *gobastion.Bastion
@@ -15,7 +14,7 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
 		Message string `json:"message"`
 	}{"world"}
-	utils.Send(w, res)
+	app.Send(w, res)
 }
 
 type MyFinalizer struct{}
