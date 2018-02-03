@@ -1,42 +1,20 @@
 package gobastion_test
 
 import (
-	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/ifreddyrondon/gobastion"
 	"github.com/ifreddyrondon/gobastion/config"
 )
 
-var server *http.ServeMux
-
-func getServerForApp(app *gobastion.Bastion) *http.ServeMux {
-	server = http.NewServeMux()
-	server.Handle("/", gobastion.GetInternalRouter(app))
-	return server
-}
-
-func executeRequest(server *http.ServeMux, req *http.Request) *httptest.ResponseRecorder {
-	res := httptest.NewRecorder()
-	server.ServeHTTP(res, req)
-	return res
-}
-
 func TestDefaultBastion(t *testing.T) {
 	bastion := gobastion.New(nil)
-	s := getServerForApp(bastion)
-	req, _ := http.NewRequest("GET", "/ping", nil)
-	res := executeRequest(s, req)
-
-	if 200 != res.Code {
-		t.Errorf("Expected response code to be 200'. Got '%v'", res.Code)
-	}
-	body, _ := ioutil.ReadAll(res.Body)
-	if "pong" != string(body) {
-		t.Errorf("Expected response body to be 'pong'. Got '%v'", string(body))
-	}
+	e := gobastion.Tester(t, bastion)
+	e.GET("/ping").
+		Expect().
+		Status(http.StatusOK).
+		Text().Equal("pong")
 }
 
 func TestBastionHelloWorld(t *testing.T) {
@@ -48,18 +26,13 @@ func TestBastionHelloWorld(t *testing.T) {
 		bastion.Send(w, res)
 	})
 
-	s := getServerForApp(bastion)
-	req, _ := http.NewRequest("GET", "/hello", nil)
-	res := executeRequest(s, req)
-	expected := "{\"message\":\"world\"}\n"
+	expected := map[string]interface{}{"message": "world"}
 
-	if 200 != res.Code {
-		t.Errorf("Expected response code to be 200'. Got '%v'", res.Code)
-	}
-	body, _ := ioutil.ReadAll(res.Body)
-	if expected != string(body) {
-		t.Errorf("Expected response body to be %v. Got %v", expected, string(body))
-	}
+	e := gobastion.Tester(t, bastion)
+	e.GET("/hello").
+		Expect().
+		Status(http.StatusOK).
+		JSON().Object().Equal(expected)
 }
 
 func TestBastionHelloWorldFromFile(t *testing.T) {
@@ -72,18 +45,12 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 		bastion.Send(w, res)
 	})
 
-	s := getServerForApp(bastion)
-	req, _ := http.NewRequest("GET", "/api/hello", nil)
-	res := executeRequest(s, req)
-	expected := "{\"message\":\"world\"}\n"
-
-	if 200 != res.Code {
-		t.Errorf("Expected response code to be 200'. Got '%v'", res.Code)
-	}
-	body, _ := ioutil.ReadAll(res.Body)
-	if expected != string(body) {
-		t.Errorf("Expected response body to be %v. Got %v", expected, string(body))
-	}
+	expected := map[string]interface{}{"message": "world"}
+	e := gobastion.Tester(t, bastion)
+	e.GET("/api/hello").
+		Expect().
+		Status(http.StatusOK).
+		JSON().Object().Equal(expected)
 }
 
 func TestNewRouter(t *testing.T) {

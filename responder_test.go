@@ -2,13 +2,12 @@ package gobastion_test
 
 import (
 	"errors"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/ifreddyrondon/gobastion"
+	"gopkg.in/gavv/httpexpect.v1"
 )
 
 var responder gobastion.JsonResponder
@@ -20,171 +19,136 @@ type address struct {
 }
 
 func TestResponseJson(t *testing.T) {
-	expected := struct {
-		body, contentType string
-		status            int
+	tc := struct {
+		name       string
+		toResponse interface{}
+		result     map[string]interface{}
+		status     int
 	}{
-		"{\"address\":\"test address\",\"lat\":1,\"lng\":1}\n",
-		"application/json",
+		"response json",
+		address{"test address", 1, 1},
+		map[string]interface{}{"address": "test address", "lat": 1, "lng": 1},
 		http.StatusOK,
 	}
 
-	a := address{"test address", 1, 1}
 	rr := httptest.NewRecorder()
-	responder.Response(rr, http.StatusOK, a)
-
-	if expected.status != rr.Code {
-		t.Errorf("Expected response code to be '%v'. Got '%v'", expected.status, rr.Code)
-	}
-	if expected.contentType != rr.Header().Get("Content-type") {
-		t.Errorf("Expected response Content-type to be '%v'. Got '%v'",
-			expected.contentType, rr.Header().Get("Content-type"))
-	}
-	resBody, _ := ioutil.ReadAll(rr.Body)
-	if expected.body != string(resBody) {
-		t.Errorf("Expected response body to be '%v'. Got '%v'", expected.body, string(resBody))
-	}
+	responder.Response(rr, tc.status, tc.toResponse)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(tc.status).
+		JSON().Object().Equal(tc.result)
 }
 
 func TestSend(t *testing.T) {
-	expected := struct {
-		body, contentType string
+	tc := struct {
+		name       string
+		toResponse interface{}
+		result     map[string]interface{}
 	}{
-		"{\"address\":\"test address\",\"lat\":1,\"lng\":1}\n",
-		"application/json",
+		"send",
+		address{"test address", 1, 1},
+		map[string]interface{}{"address": "test address", "lat": 1, "lng": 1},
 	}
 
-	a := address{"test address", 1, 1}
 	rr := httptest.NewRecorder()
-	responder.Send(rr, a)
-
-	if 200 != rr.Code {
-		t.Errorf("Expected response code to be 200. Got '%v'", rr.Code)
-	}
-	if expected.contentType != rr.Header().Get("Content-type") {
-		t.Errorf("Expected response Content-type to be '%v'. Got '%v'",
-			expected.contentType, rr.Header().Get("Content-type"))
-	}
-	resBody, _ := ioutil.ReadAll(rr.Body)
-	if expected.body != string(resBody) {
-		t.Errorf("Expected response body to be '%v'. Got '%v'", expected.body, string(resBody))
-	}
+	responder.Send(rr, tc.toResponse)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusOK).
+		JSON().Object().Equal(tc.result)
 }
 
 func TestCreated(t *testing.T) {
-	expected := struct {
-		body, contentType string
+	tc := struct {
+		name       string
+		toResponse interface{}
+		result     map[string]interface{}
 	}{
-		"{\"address\":\"test address\",\"lat\":1,\"lng\":1}\n",
-		"application/json",
+		"send",
+		address{"test address", 1, 1},
+		map[string]interface{}{"address": "test address", "lat": 1, "lng": 1},
 	}
 
-	a := address{"test address", 1, 1}
 	rr := httptest.NewRecorder()
-	responder.Created(rr, a)
-
-	if 201 != rr.Code {
-		t.Errorf("Expected response code to be 201. Got '%v'", rr.Code)
-	}
-	if expected.contentType != rr.Header().Get("Content-type") {
-		t.Errorf("Expected response Content-type to be '%v'. Got '%v'",
-			expected.contentType, rr.Header().Get("Content-type"))
-	}
-	resBody, _ := ioutil.ReadAll(rr.Body)
-	if expected.body != string(resBody) {
-		t.Errorf("Expected response body to be '%v'. Got '%v'", expected.body, string(resBody))
-	}
+	responder.Created(rr, tc.toResponse)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusCreated).
+		JSON().Object().Equal(tc.result)
 }
 
 func TestNoContent(t *testing.T) {
 	rr := httptest.NewRecorder()
 	responder.NoContent(rr)
-
-	if 204 != rr.Code {
-		t.Errorf("Expected response code to be 204. Got '%v'", rr.Code)
-	}
-	resBody, _ := ioutil.ReadAll(rr.Body)
-	if "" != string(resBody) {
-		t.Errorf("Expected response body to be empty. Got '%v'", string(resBody))
-	}
-}
-
-func responseErrorToString(message, error string, status int) string {
-	return fmt.Sprintf("{\"message\":\"%v\",\"error\":\"%v\",\"status\":%v}\n", message, error, status)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusNoContent).NoContent()
 }
 
 func TestBadRequest(t *testing.T) {
-	err := errors.New("test")
-	rr := httptest.NewRecorder()
-	responder.BadRequest(rr, err)
+	tc := struct {
+		name       string
+		toResponse error
+		result     map[string]interface{}
+	}{
+		"Bad Request",
+		errors.New("test"),
+		map[string]interface{}{"message": "test", "error": "Bad Request", "status": 400},
+	}
 
-	if 400 != rr.Code {
-		t.Errorf("Expected response code to be '400'. Got '%v'", rr.Code)
-	}
-	if "application/json" != rr.Header().Get("Content-type") {
-		t.Errorf("Expected response Content-type to be 'application/json'. Got '%v'",
-			rr.Header().Get("Content-type"))
-	}
-	expectedBody := responseErrorToString("test", "Bad Request", 400)
-	resBody, _ := ioutil.ReadAll(rr.Body)
-	if expectedBody != string(resBody) {
-		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
-	}
+	rr := httptest.NewRecorder()
+	responder.BadRequest(rr, tc.toResponse)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusBadRequest).
+		JSON().Object().Equal(tc.result)
 }
 
 func TestNotFound(t *testing.T) {
-	err := errors.New("test")
-	rr := httptest.NewRecorder()
-	responder.NotFound(rr, err)
+	tc := struct {
+		name       string
+		toResponse error
+		result     map[string]interface{}
+	}{
+		"Not Found",
+		errors.New("test"),
+		map[string]interface{}{"message": "test", "error": "Not Found", "status": 404},
+	}
 
-	if 404 != rr.Code {
-		t.Errorf("Expected response code to be '404'. Got '%v'", rr.Code)
-	}
-	if "application/json" != rr.Header().Get("Content-type") {
-		t.Errorf("Expected response Content-type to be 'application/json'. Got '%v'",
-			rr.Header().Get("Content-type"))
-	}
-	expectedBody := responseErrorToString("test", "Not Found", 404)
-	resBody, _ := ioutil.ReadAll(rr.Body)
-	if expectedBody != string(resBody) {
-		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
-	}
+	rr := httptest.NewRecorder()
+	responder.NotFound(rr, tc.toResponse)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusNotFound).
+		JSON().Object().Equal(tc.result)
 }
 
 func TestMethodNotAllowed(t *testing.T) {
-	err := errors.New("test")
-	rr := httptest.NewRecorder()
-	responder.MethodNotAllowed(rr, err)
+	tc := struct {
+		name       string
+		toResponse error
+		result     map[string]interface{}
+	}{
+		"Method Not Allowed",
+		errors.New("test"),
+		map[string]interface{}{"message": "test", "error": "Method Not Allowed", "status": 405},
+	}
 
-	if 405 != rr.Code {
-		t.Errorf("Expected response code to be '405'. Got '%v'", rr.Code)
-	}
-	if "application/json" != rr.Header().Get("Content-type") {
-		t.Errorf("Expected response Content-type to be 'application/json'. Got '%v'",
-			rr.Header().Get("Content-type"))
-	}
-	expectedBody := responseErrorToString("test", "Method Not Allowed", 405)
-	resBody, _ := ioutil.ReadAll(rr.Body)
-	if expectedBody != string(resBody) {
-		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
-	}
+	rr := httptest.NewRecorder()
+	responder.MethodNotAllowed(rr, tc.toResponse)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusMethodNotAllowed).
+		JSON().Object().Equal(tc.result)
 }
 
 func TestInternalServerError(t *testing.T) {
-	err := errors.New("test")
-	rr := httptest.NewRecorder()
-	responder.InternalServerError(rr, err)
+	tc := struct {
+		name       string
+		toResponse error
+		result     map[string]interface{}
+	}{
+		"Internal Server Error",
+		errors.New("test"),
+		map[string]interface{}{"message": "test", "error": "Internal Server Error", "status": 500},
+	}
 
-	if 500 != rr.Code {
-		t.Errorf("Expected response code to be '500'. Got '%v'", rr.Code)
-	}
-	if "application/json" != rr.Header().Get("Content-type") {
-		t.Errorf("Expected response Content-type to be 'application/json'. Got '%v'",
-			rr.Header().Get("Content-type"))
-	}
-	expectedBody := responseErrorToString("test", "Internal Server Error", 500)
-	resBody, _ := ioutil.ReadAll(rr.Body)
-	if expectedBody != string(resBody) {
-		t.Errorf("Expected response body to be '%v'. Got '%v'", expectedBody, string(resBody))
-	}
+	rr := httptest.NewRecorder()
+	responder.InternalServerError(rr, tc.toResponse)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusInternalServerError).
+		JSON().Object().Equal(tc.result)
 }
