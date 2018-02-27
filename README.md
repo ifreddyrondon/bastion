@@ -12,9 +12,9 @@ Allows to have commons handlers and middleware between projects with the need fo
 ## Examples
 
 * [helloworld](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/helloworld/main.go) - Quickstart, first Hello world with bastion.
+* [todos-rest](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
 * [config-yaml](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/config-yaml/main.go) - Bastion with config file.
 * [finalizer](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/finalizer/main.go) - Bastion with Finalizer.
-* [todos-rest](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
 
 ## Router
 Bastion use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
