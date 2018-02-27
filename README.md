@@ -7,10 +7,10 @@ Allows to have commons handlers and middleware between projects with the need fo
 
 ## Examples
 
-* [helloworld](https://github.com/ifreddyrondon/gobastion/blob/master/example/helloworld/main.go) - Quickstart, first Hello world with bastion.
-* [config-yaml](https://github.com/ifreddyrondon/gobastion/blob/master/example/config-yaml/main.go) - Bastion with config file.
-* [finalizer](https://github.com/ifreddyrondon/gobastion/blob/master/example/finalizer/main.go) - Bastion with Finalizer.
-* [todos-rest](https://github.com/ifreddyrondon/gobastion/blob/master/example/todo-rest/main.go) - REST APIs made easy, productive and maintainable.
+* [helloworld](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/helloworld/main.go) - Quickstart, first Hello world with bastion.
+* [config-yaml](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/config-yaml/main.go) - Bastion with config file.
+* [finalizer](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/finalizer/main.go) - Bastion with Finalizer.
+* [todos-rest](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/main.go) - REST APIs made easy, productive and maintainable.
 
 ## Router
 Bastion use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
@@ -191,7 +191,7 @@ Debug flag if Bastion should enable debugging features. Default `false`. . Is JS
 ### From configuration file
 Bastion comes with an util function to load configuration from a file.
 **FromFile** is an util function to load the bastion configuration from a config file. The config file could it be in **YAML** or **JSON** format. Is some attributes are missing
-from the config file it'll be set with the default. [Example](https://github.com/ifreddyrondon/gobastion/blob/master/example/config-yaml/main.go).
+from the config file it'll be set with the default. [Example](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/config-yaml/main.go).
 
 FromFile takes a special consideration for `server.address` default. When it's not provided it'll search the ADDR and PORT environment variables first before set the default.
 
