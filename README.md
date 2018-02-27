@@ -5,12 +5,16 @@ Defend your API from the sieges. Bastion offers an "augmented" Router instance.
 It has the minimal necessary to create an API with default handlers and middleware that help you raise your API easy and fast.
 Allows to have commons handlers and middleware between projects with the need for each one to do so.
 
+## Install
+
+`go get -u github.com/ifreddyrondon/gobastion`
+
 ## Examples
 
 * [helloworld](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/helloworld/main.go) - Quickstart, first Hello world with bastion.
 * [config-yaml](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/config-yaml/main.go) - Bastion with config file.
 * [finalizer](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/finalizer/main.go) - Bastion with Finalizer.
-* [todos-rest](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/main.go) - REST APIs made easy, productive and maintainable.
+* [todos-rest](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
 
 ## Router
 Bastion use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
