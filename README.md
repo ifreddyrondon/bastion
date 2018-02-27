@@ -199,7 +199,7 @@ from the config file it'll be set with the default. [Example](https://github.com
 
 FromFile takes a special consideration for `server.address` default. When it's not provided it'll search the ADDR and PORT environment variables first before set the default.
 
-####YAML
+#### YAML
 ```yaml
 api:
   base_path: "/"
@@ -208,7 +208,7 @@ server:
 debug: true
 
 ```
-####JSON
+#### JSON
 ```json
 {
   "api": {
