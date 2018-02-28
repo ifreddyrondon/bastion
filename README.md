@@ -230,7 +230,7 @@ inspect HTTP responses and inspect response payload recursively.
 ### Quick start
 1. Create the bastion instance with the handler you want to test.
 2. Import from `gobastion.Tester`
-3. It receive a *testing.T and *gobastion.Bastion instances as params.
+3. It receive a `*testing.T` and `*gobastion.Bastion` instances as params.
 4. Build http request.
 5. Inspect http response.
 6. Inspect response payload.
@@ -264,4 +264,4 @@ func TestHandlerCreate(t *testing.T) {
 }
 ```
 
-Go and check the [full test](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/todo/handler_test.go``) for the [app](https://github.com/ifreddyrondon/gobastion/tree/master/_examples/todo-rest) 🤓
+Go and check the [full test](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/todo/handler_test.go) for the [app](https://github.com/ifreddyrondon/gobastion/tree/master/_examples/todo-rest) 🤓
