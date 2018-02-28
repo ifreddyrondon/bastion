@@ -220,3 +220,48 @@ debug: true
   "debug": true
 }
 ```
+
+## Testing
+Bastion comes with battery included testing tools to perform End-to-end test over your endpoint/handlers.
+
+It uses [github.com/gavv/httpexpect](https://github.com/gavv/httpexpect) to incrementally build HTTP requests,
+inspect HTTP responses and inspect response payload recursively.
+
+### Quick start
+1. Create the bastion instance with the handler you want to test.
+2. Import from `gobastion.Tester`
+3. It receive a *testing.T and *gobastion.Bastion instances as params.
+4. Build http request.
+5. Inspect http response.
+6. Inspect response payload.
+
+```go
+var bastion *gobastion.Bastion
+
+func TestMain(m *testing.M) {
+	bastion = gobastion.New(nil)
+	reader := new(gobastion.JsonReader)
+	handler := todo.Handler{
+		Reader:    reader,
+		Responder: gobastion.DefaultResponder,
+	}
+	bastion.APIRouter.Mount("/todo/", handler.Routes())
+	code := m.Run()
+	os.Exit(code)
+}
+
+func TestHandlerCreate(t *testing.T) {
+	payload := map[string]interface{}{
+		"description": "new description",
+	}
+
+	e := gobastion.Tester(t, bastion)
+	e.POST("/todo/").WithJSON(payload).Expect().
+		Status(http.StatusCreated).
+		JSON().Object().
+		ContainsKey("id").ValueEqual("id", 0).
+		ContainsKey("description").ValueEqual("description", "new description")
+}
+```
+
+Go and check the [full test](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/todo/handler_test.go``) for the [app](https://github.com/ifreddyrondon/gobastion/tree/master/_examples/todo-rest) 🤓
