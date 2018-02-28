@@ -264,4 +264,4 @@ func TestHandlerCreate(t *testing.T) {
 }
 ```
 
-Go and check the [full test](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/todo/handler_test.go) for the [app](https://github.com/ifreddyrondon/gobastion/tree/master/_examples/todo-rest) 🤓
+Go and check the [full test](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/todo/handler_test.go) for [handler](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/todo/handler.go) and complete [app](https://github.com/ifreddyrondon/gobastion/tree/master/_examples/todo-rest) 🤓
