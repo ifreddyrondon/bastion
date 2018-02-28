@@ -38,7 +38,10 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
-	todo1 := todo{Description: "do something 1"}
+	var todo1 todo
+	if err := h.Reader.Read(r.Body, &todo1); err != nil {
+		panic(err) // the error should be handle
+	}
 	h.Created(w, todo1)
 }
 
@@ -52,10 +55,15 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	i, _ := strconv.Atoi(id) // the error should be handle
-	todo1 := todo{Id: i, Description: fmt.Sprintf("do something %v", id)}
+	var todo1 todo
+	if err := h.Reader.Read(r.Body, &todo1); err != nil {
+		panic(err)
+	}
+	todo1.Id = i
 	h.Send(w, todo1)
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	// handle delete logic
 	h.NoContent(w)
 }
