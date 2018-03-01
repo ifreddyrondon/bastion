@@ -8,4 +8,4 @@
 
 * How to test the app routes ? [answer](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/todo/handler_test.go)
 
-Enjoi 😎
+Enjoy 😎
