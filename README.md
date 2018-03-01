@@ -5,10 +5,6 @@ Defend your API from the sieges. Bastion offers an "augmented" Router instance.
 It has the minimal necessary to create an API with default handlers and middleware that help you raise your API easy and fast.
 Allows to have commons handlers and middleware between projects with the need for each one to do so.
 
-## Install
-
-`go get -u github.com/ifreddyrondon/gobastion`
-
 ## Examples
 
 * [helloworld](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/helloworld/main.go) - Quickstart, first Hello world with bastion.
@@ -16,34 +12,33 @@ Allows to have commons handlers and middleware between projects with the need fo
 * [config-yaml](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/config-yaml/main.go) - Bastion with config file.
 * [finalizer](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/finalizer/main.go) - Bastion with Finalizer.
 
+## Table of contents
+
+* [Installation](#installation)
+* [Router](#router)
+	* [NewRouter](#newrouter)
+	* [Example](#example)
+* [Middlewares](#middlewares)
+* [Finalizers](#finalizers)
+	* [Example](#example-1)
+* [Configuration](#configuration)
+	* [Structure](#structure)
+		* [Api](#api)
+		* [Server](#server)
+		* [Debug](#debug)
+	* [From configuration file](#from-configuration-file)
+		* [YAML](#yaml)
+		* [JSON](#json)
+* [Testing](#testing)
+	* [Quick start](#quick-start)
+
+## Installation
+
+`go get -u github.com/ifreddyrondon/gobastion`
+
 ## Router
 Bastion use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
 of mounting an api router, it will define the routes and middleware of the application with the app logic.
-
-### Example
-
-```go
-package main
-
-import (
-	"net/http"
-
-	"github.com/ifreddyrondon/gobastion"
-)
-
-var app *gobastion.Bastion
-
-func handler(w http.ResponseWriter, _ *http.Request) {
-	res := struct {Message string `json:"message"`}{"world"}
-	app.Send(w, res)
-}
-
-func main() {
-	app = gobastion.New(nil)
-	app.APIRouter.Get("/hello", handler)
-	app.Serve()
-}
-```
 
 ### NewRouter
 NewRouter return a router as a subrouter along a routing path. 
@@ -104,6 +99,31 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 func main() {
 	app := gobastion.New(nil)
 	app.APIRouter.Mount("/todo/", new(handler).Routes())
+	app.Serve()
+}
+```
+
+### Example
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/ifreddyrondon/gobastion"
+)
+
+var app *gobastion.Bastion
+
+func handler(w http.ResponseWriter, _ *http.Request) {
+	res := struct {Message string `json:"message"`}{"world"}
+	app.Send(w, res)
+}
+
+func main() {
+	app = gobastion.New(nil)
+	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }
 ```
