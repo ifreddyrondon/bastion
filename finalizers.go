@@ -2,13 +2,16 @@ package bastion
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
-// Finalizer is a func that will be executed into the graceful shutdown
+// Finalizer is an interface to be implemented when is necessary
+// to run something before a shutdown of the server or in graceful shutdown.
 type Finalizer interface {
+	// Finalize is a func that will be executed into the graceful shutdown
 	Finalize() error
 }
 
@@ -20,7 +23,7 @@ type serverFinalizer struct {
 func (sf serverFinalizer) Finalize() error {
 	log.Printf("[finalizer:server] stoping server")
 	if err := sf.server.Shutdown(sf.ctx); err != nil {
-		return fmt.Errorf("[finalizer:server] unable to finalize. Got %v", err)
+		return errors.Wrap(err, "[finalizer:server] unable to finalize")
 	}
 	return nil
 }
