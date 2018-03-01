@@ -59,7 +59,7 @@ import (
 type handler struct{}
 
 // Routes creates a REST router for the todos resource
-func (h *handler) Routes() chi.Router {
+func (h *handler) Routes() http.Handler {
 	r := bastion.NewRouter()
 
 	r.Get("/", h.List)    // GET /todos - read a list of todos

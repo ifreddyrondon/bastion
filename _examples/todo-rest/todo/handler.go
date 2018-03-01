@@ -15,7 +15,7 @@ type Handler struct {
 }
 
 // Routes creates a REST router for the todos resource
-func (h *Handler) Routes() chi.Router {
+func (h *Handler) Routes() http.Handler {
 	r := bastion.NewRouter()
 
 	r.Get("/", h.List)    // GET /todos - read a list of todos
