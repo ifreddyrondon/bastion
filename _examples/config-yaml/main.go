@@ -3,11 +3,11 @@ package main
 import (
 	"net/http"
 
-	"github.com/ifreddyrondon/gobastion"
-	"github.com/ifreddyrondon/gobastion/config"
+	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/config"
 )
 
-var app *gobastion.Bastion
+var app *bastion.Bastion
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
@@ -18,7 +18,7 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 
 func main() {
 	cfg, _ := config.FromFile("./config.yaml")
-	app = gobastion.New(cfg)
+	app = bastion.New(cfg)
 	app.APIRouter.Get("/hello", helloHandler)
 	app.Serve()
 }

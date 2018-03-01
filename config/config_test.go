@@ -3,7 +3,7 @@ package config_test
 import (
 	"testing"
 
-	"github.com/ifreddyrondon/gobastion/config"
+	"github.com/ifreddyrondon/bastion/config"
 )
 
 func TestDefaultConfig(t *testing.T) {

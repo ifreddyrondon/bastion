@@ -1,4 +1,4 @@
-package gobastion
+package bastion
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-chi/chi"
 	CHIMiddleware "github.com/go-chi/chi/middleware"
-	"github.com/ifreddyrondon/gobastion/config"
+	"github.com/ifreddyrondon/bastion/config"
 	"github.com/markbates/sigtx"
 )
 

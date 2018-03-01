@@ -3,10 +3,10 @@ package main
 import (
 	"net/http"
 
-	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/bastion"
 )
 
-var app *gobastion.Bastion
+var app *bastion.Bastion
 
 func handler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
@@ -16,7 +16,7 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	app = gobastion.New(nil)
+	app = bastion.New(nil)
 	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }

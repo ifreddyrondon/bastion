@@ -1,14 +1,13 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
-	"log"
-
-	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/bastion"
 )
 
-var app *gobastion.Bastion
+var app *bastion.Bastion
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
@@ -25,7 +24,7 @@ func (f MyFinalizer) Finalize() error {
 }
 
 func main() {
-	app = gobastion.New(nil)
+	app = bastion.New(nil)
 	app.AppendFinalizers(MyFinalizer{})
 	app.APIRouter.Get("/hello", helloHandler)
 	app.Serve()

@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/ifreddyrondon/gobastion"
-	"github.com/ifreddyrondon/gobastion/_examples/todo-rest/todo"
+	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
 )
 
 func main() {
-	app := gobastion.New(nil)
-	reader := new(gobastion.JsonReader)
+	app := bastion.New(nil)
+	reader := new(bastion.JsonReader)
 	handler := todo.Handler{
 		Reader:    reader,
-		Responder: gobastion.DefaultResponder,
+		Responder: bastion.DefaultResponder,
 	}
 	app.APIRouter.Mount("/todo/", handler.Routes())
 	app.Serve()

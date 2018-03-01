@@ -1,4 +1,4 @@
-package gobastion_test
+package bastion_test
 
 import (
 	"errors"
@@ -6,11 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/bastion"
 	"gopkg.in/gavv/httpexpect.v1"
 )
 
-var responder gobastion.JsonResponder
+var responder bastion.JsonResponder
 
 type address struct {
 	Address string  `json:"address"`

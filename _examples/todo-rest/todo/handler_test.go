@@ -1,25 +1,24 @@
 package todo_test
 
 import (
+	"net/http"
 	"os"
 	"testing"
 
-	"net/http"
-
-	"github.com/ifreddyrondon/gobastion"
-	"github.com/ifreddyrondon/gobastion/_examples/todo-rest/todo"
+	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
 )
 
-var bastion *gobastion.Bastion
+var app *bastion.Bastion
 
 func TestMain(m *testing.M) {
-	bastion = gobastion.New(nil)
-	reader := new(gobastion.JsonReader)
+	app = bastion.New(nil)
+	reader := new(bastion.JsonReader)
 	handler := todo.Handler{
 		Reader:    reader,
-		Responder: gobastion.DefaultResponder,
+		Responder: bastion.DefaultResponder,
 	}
-	bastion.APIRouter.Mount("/todo/", handler.Routes())
+	app.APIRouter.Mount("/todo/", handler.Routes())
 	code := m.Run()
 	os.Exit(code)
 }
@@ -29,7 +28,7 @@ func TestHandlerCreate(t *testing.T) {
 		"description": "new description",
 	}
 
-	e := gobastion.Tester(t, bastion)
+	e := bastion.Tester(t, app)
 	e.POST("/todo/").WithJSON(payload).Expect().
 		Status(http.StatusCreated).
 		JSON().Object().
@@ -38,7 +37,7 @@ func TestHandlerCreate(t *testing.T) {
 }
 
 func TestHandlerList(t *testing.T) {
-	e := gobastion.Tester(t, bastion)
+	e := bastion.Tester(t, app)
 	array := e.GET("/todo/").Expect().
 		Status(http.StatusOK).
 		JSON().Array().NotEmpty()
@@ -50,7 +49,7 @@ func TestHandlerList(t *testing.T) {
 }
 
 func TestHandlerGet(t *testing.T) {
-	e := gobastion.Tester(t, bastion)
+	e := bastion.Tester(t, app)
 	e.GET("/todo/2").Expect().
 		Status(http.StatusOK).
 		JSON().Object().
@@ -64,7 +63,7 @@ func TestHandlerUpdate(t *testing.T) {
 		"description": "updated description",
 	}
 
-	e := gobastion.Tester(t, bastion)
+	e := bastion.Tester(t, app)
 	e.PUT("/todo/4").WithJSON(payload).Expect().
 		Status(http.StatusOK).
 		JSON().Object().
@@ -73,7 +72,7 @@ func TestHandlerUpdate(t *testing.T) {
 }
 
 func TestHandlerDelete(t *testing.T) {
-	e := gobastion.Tester(t, bastion)
+	e := bastion.Tester(t, app)
 	e.DELETE("/todo/4").Expect().
 		Status(http.StatusNoContent).NoContent()
 }

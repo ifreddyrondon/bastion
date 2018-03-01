@@ -1,23 +1,22 @@
 package todo
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
-	"fmt"
-
 	"github.com/go-chi/chi"
-	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/bastion"
 )
 
 type Handler struct {
-	gobastion.Reader
-	gobastion.Responder
+	bastion.Reader
+	bastion.Responder
 }
 
 // Routes creates a REST router for the todos resource
 func (h *Handler) Routes() chi.Router {
-	r := gobastion.NewRouter()
+	r := bastion.NewRouter()
 
 	r.Get("/", h.List)    // GET /todos - read a list of todos
 	r.Post("/", h.Create) // POST /todos - create a new todo and persist it

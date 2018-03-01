@@ -7,10 +7,10 @@ Allows to have commons handlers and middleware between projects with the need fo
 
 ## Examples
 
-* [helloworld](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/helloworld/main.go) - Quickstart, first Hello world with bastion.
-* [todos-rest](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
-* [config-yaml](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/config-yaml/main.go) - Bastion with config file.
-* [finalizer](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/finalizer/main.go) - Bastion with Finalizer.
+* [helloworld](https://github.com/ifreddyrondon/bastion/blob/master/_examples/helloworld/main.go) - Quickstart, first Hello world with bastion.
+* [todos-rest](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
+* [config-yaml](https://github.com/ifreddyrondon/bastion/blob/master/_examples/config-yaml/main.go) - Bastion with config file.
+* [finalizer](https://github.com/ifreddyrondon/bastion/blob/master/_examples/finalizer/main.go) - Bastion with Finalizer.
 
 ## Table of contents
 
@@ -34,7 +34,7 @@ Allows to have commons handlers and middleware between projects with the need fo
 
 ## Installation
 
-`go get -u github.com/ifreddyrondon/gobastion`
+`go get -u github.com/ifreddyrondon/bastion`
 
 ## Router
 Bastion use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
@@ -53,14 +53,14 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/bastion"
 )
 
 type handler struct{}
 
 // Routes creates a REST router for the todos resource
 func (h *handler) Routes() chi.Router {
-	r := gobastion.NewRouter()
+	r := bastion.NewRouter()
 
 	r.Get("/", h.List)    // GET /todos - read a list of todos
 	r.Post("/", h.Create) // POST /todos - create a new todo and persist it
@@ -97,7 +97,7 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	app := gobastion.New(nil)
+	app := bastion.New(nil)
 	app.APIRouter.Mount("/todo/", new(handler).Routes())
 	app.Serve()
 }
@@ -111,10 +111,10 @@ package main
 import (
 	"net/http"
 
-	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/bastion"
 )
 
-var app *gobastion.Bastion
+var app *bastion.Bastion
 
 func handler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {Message string `json:"message"`}{"world"}
@@ -122,7 +122,7 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	app = gobastion.New(nil)
+	app = bastion.New(nil)
 	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }
@@ -159,7 +159,7 @@ package main
 import (
 	"log"
 
-	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/bastion"
 )
 
 type MyFinalizer struct{}
@@ -170,9 +170,9 @@ func (f MyFinalizer) Finalize() error {
 }
 
 func main() {
-	bastion := gobastion.New(nil)
-	bastion.AppendFinalizers(MyFinalizer{})
-	bastion.Serve()
+	app := bastion.New(nil)
+	app.AppendFinalizers(MyFinalizer{})
+	app.Serve()
 }
 ```
 
@@ -215,7 +215,7 @@ Debug flag if Bastion should enable debugging features. Default `false`. . Is JS
 ### From configuration file
 Bastion comes with an util function to load configuration from a file.
 **FromFile** is an util function to load the bastion configuration from a config file. The config file could it be in **YAML** or **JSON** format. Is some attributes are missing
-from the config file it'll be set with the default. [Example](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/config-yaml/main.go).
+from the config file it'll be set with the default. [Example](https://github.com/ifreddyrondon/bastion/blob/master/_examples/config-yaml/main.go).
 
 FromFile takes a special consideration for `server.address` default. When it's not provided it'll search the ADDR and PORT environment variables first before set the default.
 
@@ -249,23 +249,23 @@ inspect HTTP responses and inspect response payload recursively.
 
 ### Quick start
 1. Create the bastion instance with the handler you want to test.
-2. Import from `gobastion.Tester`
-3. It receive a `*testing.T` and `*gobastion.Bastion` instances as params.
+2. Import from `bastion.Tester`
+3. It receive a `*testing.T` and `*bastion.Bastion` instances as params.
 4. Build http request.
 5. Inspect http response.
 6. Inspect response payload.
 
 ```go
-var bastion *gobastion.Bastion
+var app *bastion.Bastion
 
 func TestMain(m *testing.M) {
-	bastion = gobastion.New(nil)
-	reader := new(gobastion.JsonReader)
+	app = bastion.New(nil)
+	reader := new(bastion.JsonReader)
 	handler := todo.Handler{
 		Reader:    reader,
-		Responder: gobastion.DefaultResponder,
+		Responder: bastion.DefaultResponder,
 	}
-	bastion.APIRouter.Mount("/todo/", handler.Routes())
+	app.APIRouter.Mount("/todo/", handler.Routes())
 	code := m.Run()
 	os.Exit(code)
 }
@@ -275,7 +275,7 @@ func TestHandlerCreate(t *testing.T) {
 		"description": "new description",
 	}
 
-	e := gobastion.Tester(t, bastion)
+	e := bastion.Tester(t, app)
 	e.POST("/todo/").WithJSON(payload).Expect().
 		Status(http.StatusCreated).
 		JSON().Object().
@@ -284,4 +284,4 @@ func TestHandlerCreate(t *testing.T) {
 }
 ```
 
-Go and check the [full test](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/todo/handler_test.go) for [handler](https://github.com/ifreddyrondon/gobastion/blob/master/_examples/todo-rest/todo/handler.go) and complete [app](https://github.com/ifreddyrondon/gobastion/tree/master/_examples/todo-rest) 🤓
+Go and check the [full test](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/todo/handler_test.go) for [handler](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/todo/handler.go) and complete [app](https://github.com/ifreddyrondon/bastion/tree/master/_examples/todo-rest) 🤓

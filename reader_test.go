@@ -1,4 +1,4 @@
-package gobastion_test
+package bastion_test
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ifreddyrondon/gobastion"
+	"github.com/ifreddyrondon/bastion"
 )
 
 type testerReaderCloser struct {
@@ -22,7 +22,7 @@ func addressToBytes(address string, lat, lng float64) []byte {
 }
 
 func TestReadJSONWithDefinedStrut(t *testing.T) {
-	reader := gobastion.JsonReader{}
+	reader := bastion.JsonReader{}
 	container := struct {
 		Address string  `json:"address"`
 		Lat     float64 `json:"lat"`
@@ -52,7 +52,7 @@ func TestReadJSONWithDefinedStrut(t *testing.T) {
 }
 
 func TestReadJSONWithMap(t *testing.T) {
-	reader := gobastion.JsonReader{}
+	reader := bastion.JsonReader{}
 	container := make(map[string]interface{})
 	expected := struct {
 		address  string
@@ -78,7 +78,7 @@ func TestReadJSONWithMap(t *testing.T) {
 }
 
 func TestReadJSONError(t *testing.T) {
-	reader := gobastion.JsonReader{}
+	reader := bastion.JsonReader{}
 	container := make(map[string]interface{})
 	input := testerReaderCloser{strings.NewReader("`")}
 	expectedErr := "invalid character '`' looking for beginning of value"

@@ -1,4 +1,4 @@
-package gobastion
+package bastion
 
 import (
 	"fmt"

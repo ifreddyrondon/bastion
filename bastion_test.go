@@ -1,16 +1,16 @@
-package gobastion_test
+package bastion_test
 
 import (
 	"net/http"
 	"testing"
 
-	"github.com/ifreddyrondon/gobastion"
-	"github.com/ifreddyrondon/gobastion/config"
+	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/config"
 )
 
 func TestDefaultBastion(t *testing.T) {
-	bastion := gobastion.New(nil)
-	e := gobastion.Tester(t, bastion)
+	app := bastion.New(nil)
+	e := bastion.Tester(t, app)
 	e.GET("/ping").
 		Expect().
 		Status(http.StatusOK).
@@ -18,17 +18,17 @@ func TestDefaultBastion(t *testing.T) {
 }
 
 func TestBastionHelloWorld(t *testing.T) {
-	bastion := gobastion.New(nil)
-	bastion.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
+	app := bastion.New(nil)
+	app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
-		bastion.Send(w, res)
+		app.Send(w, res)
 	})
 
 	expected := map[string]interface{}{"message": "world"}
 
-	e := gobastion.Tester(t, bastion)
+	e := bastion.Tester(t, app)
 	e.GET("/hello").
 		Expect().
 		Status(http.StatusOK).
@@ -37,16 +37,16 @@ func TestBastionHelloWorld(t *testing.T) {
 
 func TestBastionHelloWorldFromFile(t *testing.T) {
 	cfg, _ := config.FromFile("./config/testdata/config_test.yaml")
-	bastion := gobastion.New(cfg)
-	bastion.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
+	app := bastion.New(cfg)
+	app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
-		bastion.Send(w, res)
+		app.Send(w, res)
 	})
 
 	expected := map[string]interface{}{"message": "world"}
-	e := gobastion.Tester(t, bastion)
+	e := bastion.Tester(t, app)
 	e.GET("/api/hello").
 		Expect().
 		Status(http.StatusOK).
@@ -54,7 +54,7 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 }
 
 func TestNewRouter(t *testing.T) {
-	r := gobastion.NewRouter()
+	r := bastion.NewRouter()
 	if r == nil {
 		t.Errorf("Expected bastion router not to be nil")
 	}
