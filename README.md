@@ -8,9 +8,9 @@ Allows to have commons handlers and middleware between projects with the need fo
 ## Examples
 
 * [helloworld](https://github.com/ifreddyrondon/bastion/blob/master/_examples/helloworld/main.go) - Quickstart, first Hello world with bastion.
-* [todos-rest](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
-* [config-yaml](https://github.com/ifreddyrondon/bastion/blob/master/_examples/config-yaml/main.go) - Bastion with config file.
-* [finalizer](https://github.com/ifreddyrondon/bastion/blob/master/_examples/finalizer/main.go) - Bastion with Finalizer.
+* [todo-rest](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
+* [Config with yaml](https://github.com/ifreddyrondon/bastion/blob/master/_examples/config-yaml/main.go) - Bastion with config file.
+* [Register on shutdown](https://github.com/ifreddyrondon/bastion/blob/master/_examples/register/main.go) - Registers functions to be call on Shutdown.
 
 ## Table of contents
 
@@ -19,7 +19,7 @@ Allows to have commons handlers and middleware between projects with the need fo
 	* [NewRouter](#newrouter)
 	* [Example](#example)
 * [Middlewares](#middlewares)
-* [Finalizers](#finalizers)
+* [Register on shutdown](#register-on-shutdown)
 	* [Example](#example-1)
 * [Configuration](#configuration)
 	* [Structure](#structure)
@@ -139,17 +139,12 @@ Logger | Logs the start and end of each request with the elapsed processing time
 Recovery | Gracefully absorb panics and prints the stack trace
 RequestID | Injects a request ID into the context of each request
 
-## Finalizers
-Bastion listens if any **SIGINT**, **SIGTERM** or **SIGKILL** signal is emitted and performs a graceful shutdown.
-By default the graceful shutdown execute the server shutdown through a Finalizer.
+## Register on shutdown
+You can register a function to call on shutdown. This can be used to gracefully shutdown connections. By default the shutdown execute the server shutdown.
 
-The Finalizer is an interface. All the finalizer will be executed into the graceful shutdown.
-```go
-type Finalizer interface {
-	Finalize() error
-}
-```
-It can be added to Finalizer queue with `AppendFinalizers` method of the bastion instance.
+Bastion listens if any **SIGINT**, **SIGTERM** or **SIGKILL** signal is emitted and performs a graceful shutdown.
+
+It can be added with `RegisterOnShutdown` method of the bastion instance, it can accept variable number of functions.
 
 ### Example
 
@@ -162,16 +157,13 @@ import (
 	"github.com/ifreddyrondon/bastion"
 )
 
-type MyFinalizer struct{}
-
-func (f MyFinalizer) Finalize() error {
-	log.Printf("[finalizer:MyFinalizer] doing something")
-	return nil
+func onShutdown() {
+	log.Printf("My registered on shutdown. Doing something...")
 }
 
 func main() {
 	app := bastion.New(nil)
-	app.AppendFinalizers(MyFinalizer{})
+	app.RegisterOnShutdown(onShutdown)
 	app.Serve()
 }
 ```

@@ -2,6 +2,7 @@ package bastion
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -18,6 +19,10 @@ import (
 // wrap the response to a JSON valid response.
 var DefaultResponder Responder = new(JsonResponder)
 
+// onShutdown is a function to be implemented when is necessary
+// to run something before a shutdown of the server or in graceful shutdown.
+type onShutdown func()
+
 // Bastion offers an "augmented" Router instance.
 // It has the minimal necessary to create an API with default handlers and middleware.
 // Allows to have commons handlers and middleware between projects with the need for each one to do so.
@@ -25,10 +30,10 @@ var DefaultResponder Responder = new(JsonResponder)
 // It use go-chi router to modularize the applications. Each instance of GogApp, will have the possibility
 // of mounting an API router, it will define the routes and middleware of the application with the app logic.
 type Bastion struct {
-	r          *chi.Mux
-	cfg        *config.Config
-	APIRouter  *chi.Mux
-	finalizers []Finalizer
+	r         *chi.Mux
+	cfg       *config.Config
+	server    *http.Server
+	APIRouter *chi.Mux
 	Responder
 }
 
@@ -48,42 +53,32 @@ func New(cfg *config.Config) *Bastion {
 	app.cfg = cfg
 	app.Responder = DefaultResponder
 	initialize(app)
+	app.server = &http.Server{Addr: app.cfg.Server.Addr, Handler: app.r}
 	return app
 }
 
-// AppendFinalizers add helpers function that will be executed
-// in the graceful shutdown.
-// The function need to implement the Finalizer interface.
-func (app *Bastion) AppendFinalizers(finalizer ...Finalizer) {
-	app.finalizers = append(app.finalizers, finalizer...)
+// onShutdown registers a function to call on Shutdown.
+// This can be used to gracefully shutdown connections that have
+// undergone NPN/ALPN protocol upgrade or that have been hijacked.
+// This function should start protocol-specific graceful shutdown,
+// but should not wait for shutdown to complete.
+func (app *Bastion) RegisterOnShutdown(fs ...onShutdown) {
+	for _, f := range fs {
+		app.server.RegisterOnShutdown(f)
+	}
 }
 
-// Serve the application at the specified address/port
+// Serve, serve all the incoming connections coming from the specified address/port.
+// It also prepare the graceful shutdown.
 func (app *Bastion) Serve() error {
-	server := http.Server{Addr: app.cfg.Server.Addr, Handler: app.r}
-
 	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
-	appFinalizer := serverFinalizer{&server, ctx}
-	app.AppendFinalizers(appFinalizer)
-
-	// check for a closing signal
-	go func() {
-		// graceful shutdown
-		<-ctx.Done()
-
-		log.Printf("shutting down application")
-		if err := finalize(app.finalizers); err != nil {
-			log.Printf("%v", err)
-		} else {
-			log.Printf("application stopped")
-		}
-	}()
-
+	go graceful(app.server, ctx)
 	// start the web server
-	log.Printf("Starting application at %s\n", app.cfg.Server.Addr)
-	if err := server.ListenAndServe(); err != nil {
+	log.Printf("[app:starting] at %s\n", app.cfg.Server.Addr)
+	if err := app.server.ListenAndServe(); err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil

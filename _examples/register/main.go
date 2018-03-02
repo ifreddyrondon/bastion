@@ -16,16 +16,13 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	app.Send(w, res)
 }
 
-type MyFinalizer struct{}
-
-func (f MyFinalizer) Finalize() error {
-	log.Printf("[finalizer:MyFinalizer] doing something")
-	return nil
+func onShutdown() {
+	log.Printf("My registered on shutdown. Doing something...")
 }
 
 func main() {
 	app = bastion.New(nil)
-	app.AppendFinalizers(MyFinalizer{})
+	app.RegisterOnShutdown(onShutdown)
 	app.APIRouter.Get("/hello", helloHandler)
 	app.Serve()
 }
