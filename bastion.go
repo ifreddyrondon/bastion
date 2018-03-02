@@ -57,7 +57,7 @@ func New(cfg *config.Config) *Bastion {
 	return app
 }
 
-// onShutdown registers a function to call on Shutdown.
+// RegisterOnShutdown registers a function to call on Shutdown.
 // This can be used to gracefully shutdown connections that have
 // undergone NPN/ALPN protocol upgrade or that have been hijacked.
 // This function should start protocol-specific graceful shutdown,
