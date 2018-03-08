@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/renderer/json"
 	"gopkg.in/gavv/httpexpect.v1"
 )
 

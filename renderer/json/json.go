@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ifreddyrondon/bastion/render"
+	"github.com/ifreddyrondon/bastion/renderer"
 )
 
 // NewRenderer returns the Engine to response with "application/json" content type.
-func NewRenderer(w http.ResponseWriter) render.Engine {
+func NewRenderer(w http.ResponseWriter) renderer.Engine {
 	return &Renderer{w}
 }
 

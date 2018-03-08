@@ -6,7 +6,7 @@ import (
 	"net/http/httputil"
 	"os"
 
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/renderer/json"
 	"github.com/pkg/errors"
 )
 

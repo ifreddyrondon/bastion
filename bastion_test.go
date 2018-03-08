@@ -6,7 +6,7 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/config"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/renderer/json"
 )
 
 func TestDefaultBastion(t *testing.T) {

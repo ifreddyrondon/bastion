@@ -4,7 +4,7 @@ import (
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
 	jsonreader "github.com/ifreddyrondon/bastion/reader/json"
-	jsonrender "github.com/ifreddyrondon/bastion/render/json"
+	jsonrender "github.com/ifreddyrondon/bastion/renderer/json"
 )
 
 func main() {
