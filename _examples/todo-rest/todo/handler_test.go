@@ -2,28 +2,26 @@ package todo_test
 
 import (
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
-var app *bastion.Bastion
-
-func TestMain(m *testing.M) {
-	app = bastion.New(nil)
+func setup() *bastion.Bastion {
+	app := bastion.New(nil)
 	reader := new(bastion.JsonReader)
 	handler := todo.Handler{
-		Reader:    reader,
-		Responder: bastion.DefaultResponder,
+		Reader: reader,
+		Render: render.JSONRender,
 	}
 	app.APIRouter.Mount("/todo/", handler.Routes())
-	code := m.Run()
-	os.Exit(code)
+	return app
 }
 
 func TestHandlerCreate(t *testing.T) {
+	app := setup()
 	payload := map[string]interface{}{
 		"description": "new description",
 	}
@@ -37,6 +35,7 @@ func TestHandlerCreate(t *testing.T) {
 }
 
 func TestHandlerList(t *testing.T) {
+	app := setup()
 	e := bastion.Tester(t, app)
 	array := e.GET("/todo/").Expect().
 		Status(http.StatusOK).
@@ -49,6 +48,7 @@ func TestHandlerList(t *testing.T) {
 }
 
 func TestHandlerGet(t *testing.T) {
+	app := setup()
 	e := bastion.Tester(t, app)
 	e.GET("/todo/2").Expect().
 		Status(http.StatusOK).
@@ -58,6 +58,7 @@ func TestHandlerGet(t *testing.T) {
 }
 
 func TestHandlerUpdate(t *testing.T) {
+	app := setup()
 	payload := map[string]interface{}{
 		"id":          4,
 		"description": "updated description",
@@ -72,6 +73,7 @@ func TestHandlerUpdate(t *testing.T) {
 }
 
 func TestHandlerDelete(t *testing.T) {
+	app := setup()
 	e := bastion.Tester(t, app)
 	e.DELETE("/todo/4").Expect().
 		Status(http.StatusNoContent).NoContent()

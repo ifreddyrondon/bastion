@@ -7,51 +7,51 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 type Handler struct {
-	bastion.Reader
-	bastion.Responder
+	Reader bastion.Reader
+	Render render.Renderer
 }
 
 // Routes creates a REST router for the todos resource
 func (h *Handler) Routes() http.Handler {
 	r := bastion.NewRouter()
 
-	r.Get("/", h.List)    // GET /todos - read a list of todos
-	r.Post("/", h.Create) // POST /todos - create a new todo and persist it
+	r.Get("/", h.list)    // GET /todos - read a list of todos
+	r.Post("/", h.create) // POST /todos - create a new todo and persist it
 	r.Route("/{id}", func(r chi.Router) {
-		r.Get("/", h.Get)       // GET /todos/{id} - read a single todo by :id
-		r.Put("/", h.Update)    // PUT /todos/{id} - update a single todo by :id
-		r.Delete("/", h.Delete) // DELETE /todos/{id} - delete a single todo by :id
+		r.Get("/", h.get)       // GET /todos/{id} - read a single todo by :id
+		r.Put("/", h.update)    // PUT /todos/{id} - update a single todo by :id
+		r.Delete("/", h.delete) // DELETE /todos/{id} - delete a single todo by :id
 	})
 
 	return r
 }
 
-func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	todo1 := todo{Description: "do something 1"}
 	todo2 := todo{Description: "do something 2"}
-
-	h.Send(w, []todo{todo1, todo2})
+	h.Render(w).Send([]todo{todo1, todo2})
 }
 
-func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var todo1 todo
 	if err := h.Reader.Read(r.Body, &todo1); err != nil {
 		panic(err) // the error should be handle
 	}
-	h.Created(w, todo1)
+	h.Render(w).Created(todo1)
 }
 
-func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	i, _ := strconv.Atoi(id) // the error should be handle
 	todo1 := todo{Id: i, Description: fmt.Sprintf("do something %v", id)}
-	h.Send(w, todo1)
+	h.Render(w).Send(todo1)
 }
 
-func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	i, _ := strconv.Atoi(id) // the error should be handle
 	var todo1 todo
@@ -59,10 +59,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	todo1.Id = i
-	h.Send(w, todo1)
+	h.Render(w).Send(todo1)
 }
 
-func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	// handle delete logic
-	h.NoContent(w)
+	h.Render(w).NoContent()
 }

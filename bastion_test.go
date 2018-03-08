@@ -6,6 +6,7 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/config"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func TestDefaultBastion(t *testing.T) {
@@ -23,7 +24,7 @@ func TestBastionHelloWorld(t *testing.T) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
-		app.Send(w, res)
+		render.JSONRender(w).Send(res)
 	})
 
 	expected := map[string]interface{}{"message": "world"}
@@ -42,7 +43,7 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
-		app.Send(w, res)
+		render.JSONRender(w).Send(res)
 	})
 
 	expected := map[string]interface{}{"message": "world"}

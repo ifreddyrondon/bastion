@@ -14,11 +14,6 @@ import (
 	"github.com/markbates/sigtx"
 )
 
-// DefaultResponder is the default Responder and is used to provide utils method
-// for response http request by bastion. It's a JsonResponder instance and it'll
-// wrap the response to a JSON valid response.
-var DefaultResponder Responder = new(JsonResponder)
-
 // onShutdown is a function to be implemented when is necessary
 // to run something before a shutdown of the server or in graceful shutdown.
 type onShutdown func()
@@ -34,7 +29,6 @@ type Bastion struct {
 	cfg       *config.Config
 	server    *http.Server
 	APIRouter *chi.Mux
-	Responder
 }
 
 // New returns a new Bastion instance.
@@ -51,7 +45,6 @@ func New(cfg *config.Config) *Bastion {
 	}
 	app := new(Bastion)
 	app.cfg = cfg
-	app.Responder = DefaultResponder
 	initialize(app)
 	app.server = &http.Server{Addr: app.cfg.Server.Addr, Handler: app.r}
 	return app
@@ -89,7 +82,7 @@ func initialize(app *Bastion) {
 	 * internal router
 	 */
 	app.r = chi.NewRouter()
-	app.r.Use(Recovery(app.Responder))
+	app.r.Use(Recovery)
 
 	/**
 	 * Ping route

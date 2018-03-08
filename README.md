@@ -56,49 +56,49 @@ import (
 	"github.com/ifreddyrondon/bastion"
 )
 
-type handler struct{}
+type Handler struct{}
 
 // Routes creates a REST router for the todos resource
-func (h *handler) Routes() http.Handler {
+func (h *Handler) Routes() http.Handler {
 	r := bastion.NewRouter()
 
-	r.Get("/", h.List)    // GET /todos - read a list of todos
-	r.Post("/", h.Create) // POST /todos - create a new todo and persist it
+	r.Get("/", h.list)    // GET /todos - read a list of todos
+	r.Post("/", h.create) // POST /todos - create a new todo and persist it
 	r.Route("/{id}", func(r chi.Router) {
-		r.Get("/", h.Get)       // GET /todos/{id} - read a single todo by :id
-		r.Put("/", h.Update)    // PUT /todos/{id} - update a single todo by :id
-		r.Delete("/", h.Delete) // DELETE /todos/{id} - delete a single todo by :id
+		r.Get("/", h.get)       // GET /todos/{id} - read a single todo by :id
+		r.Put("/", h.update)    // PUT /todos/{id} - update a single todo by :id
+		r.Delete("/", h.delete) // DELETE /todos/{id} - delete a single todo by :id
 	})
 
 	return r
 }
 
-func (h *handler) List(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("todos list of stuff.."))
 }
 
-func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("todos create"))
 }
 
-func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	w.Write([]byte(fmt.Sprintf("get todo with id %v", id)))
 }
 
-func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	w.Write([]byte(fmt.Sprintf("update todo with id %v", id)))
 }
 
-func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	w.Write([]byte(fmt.Sprintf("delete todo with id %v", id)))
 }
 
 func main() {
 	app := bastion.New(nil)
-	app.APIRouter.Mount("/todo/", new(handler).Routes())
+	app.APIRouter.Mount("/todo/", new(Handler).Routes())
 	app.Serve()
 }
 ```
@@ -112,17 +112,16 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/render"
 )
-
-var app *bastion.Bastion
 
 func handler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {Message string `json:"message"`}{"world"}
-	app.Send(w, res)
+	render.JSONRender(w).Send(res)
 }
 
 func main() {
-	app = bastion.New(nil)
+	app := bastion.New(nil)
 	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }
@@ -248,21 +247,28 @@ inspect HTTP responses and inspect response payload recursively.
 6. Inspect response payload.
 
 ```go
-var app *bastion.Bastion
+import (
+	"net/http"
+	"testing"
 
-func TestMain(m *testing.M) {
-	app = bastion.New(nil)
+	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
+	"github.com/ifreddyrondon/bastion/render"
+)
+
+func setup() *bastion.Bastion {
+	app := bastion.New(nil)
 	reader := new(bastion.JsonReader)
 	handler := todo.Handler{
-		Reader:    reader,
-		Responder: bastion.DefaultResponder,
+		Reader: reader,
+		Render: render.JSONRender,
 	}
 	app.APIRouter.Mount("/todo/", handler.Routes())
-	code := m.Run()
-	os.Exit(code)
+	return app
 }
 
 func TestHandlerCreate(t *testing.T) {
+	app := setup()
 	payload := map[string]interface{}{
 		"description": "new description",
 	}
