@@ -7,8 +7,8 @@ import (
 	"github.com/ifreddyrondon/bastion/render"
 )
 
-// JSONRender returns the Renderer to response with "application/json" content type.
-func NewRenderer(w http.ResponseWriter) render.RendererEngine {
+// NewRenderer returns the Engine to response with "application/json" content type.
+func NewRenderer(w http.ResponseWriter) render.Engine {
 	return &Renderer{w}
 }
 

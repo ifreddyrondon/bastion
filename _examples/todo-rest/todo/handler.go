@@ -7,12 +7,13 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/reader"
 	"github.com/ifreddyrondon/bastion/render"
 )
 
 type Handler struct {
-	Reader bastion.Reader
-	Render render.Renderer
+	Reader reader.Reader
+	Render render.Render
 }
 
 // Routes creates a REST router for the todos resource
@@ -38,7 +39,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var todo1 todo
-	if err := h.Reader.Read(r.Body, &todo1); err != nil {
+	if err := h.Reader(r.Body).Read(&todo1); err != nil {
 		panic(err) // the error should be handle
 	}
 	h.Render(w).Created(todo1)
@@ -55,7 +56,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	i, _ := strconv.Atoi(id) // the error should be handle
 	var todo1 todo
-	if err := h.Reader.Read(r.Body, &todo1); err != nil {
+	if err := h.Reader(r.Body).Read(&todo1); err != nil {
 		panic(err)
 	}
 	todo1.Id = i
