@@ -1,4 +1,4 @@
-package render_test
+package json_test
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/render"
+	"github.com/ifreddyrondon/bastion/render/json"
 	"gopkg.in/gavv/httpexpect.v1"
 )
 
@@ -30,7 +30,7 @@ func TestResponseJson(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	render.JSONRender(rr).Response(tc.status, tc.toResponse)
+	json.NewRenderer(rr).Response(tc.status, tc.toResponse)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(tc.status).
 		JSON().Object().Equal(tc.result)
@@ -48,7 +48,7 @@ func TestSend(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	render.JSONRender(rr).Send(tc.toResponse)
+	json.NewRenderer(rr).Send(tc.toResponse)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusOK).
 		JSON().Object().Equal(tc.result)
@@ -66,7 +66,7 @@ func TestCreated(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	render.JSONRender(rr).Created(tc.toResponse)
+	json.NewRenderer(rr).Created(tc.toResponse)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusCreated).
 		JSON().Object().Equal(tc.result)
@@ -74,7 +74,7 @@ func TestCreated(t *testing.T) {
 
 func TestNoContent(t *testing.T) {
 	rr := httptest.NewRecorder()
-	render.JSONRender(rr).NoContent()
+	json.NewRenderer(rr).NoContent()
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNoContent).NoContent()
 }
@@ -91,7 +91,7 @@ func TestBadRequest(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	render.JSONRender(rr).BadRequest(tc.toResponse)
+	json.NewRenderer(rr).BadRequest(tc.toResponse)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusBadRequest).
 		JSON().Object().Equal(tc.result)
@@ -109,7 +109,7 @@ func TestNotFound(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	render.JSONRender(rr).NotFound(tc.toResponse)
+	json.NewRenderer(rr).NotFound(tc.toResponse)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNotFound).
 		JSON().Object().Equal(tc.result)
@@ -127,7 +127,7 @@ func TestMethodNotAllowed(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	render.JSONRender(rr).MethodNotAllowed(tc.toResponse)
+	json.NewRenderer(rr).MethodNotAllowed(tc.toResponse)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusMethodNotAllowed).
 		JSON().Object().Equal(tc.result)
@@ -145,7 +145,7 @@ func TestInternalServerError(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	render.JSONRender(rr).InternalServerError(tc.toResponse)
+	json.NewRenderer(rr).InternalServerError(tc.toResponse)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusInternalServerError).
 		JSON().Object().Equal(tc.result)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
-	"github.com/ifreddyrondon/bastion/render"
+	"github.com/ifreddyrondon/bastion/render/json"
 )
 
 func setup() *bastion.Bastion {
@@ -14,7 +14,7 @@ func setup() *bastion.Bastion {
 	reader := new(bastion.JsonReader)
 	handler := todo.Handler{
 		Reader: reader,
-		Render: render.JSONRender,
+		Render: json.NewRenderer,
 	}
 	app.APIRouter.Mount("/todo/", handler.Routes())
 	return app

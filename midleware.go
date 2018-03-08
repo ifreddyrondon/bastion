@@ -6,7 +6,7 @@ import (
 	"net/http/httputil"
 	"os"
 
-	"github.com/ifreddyrondon/bastion/render"
+	"github.com/ifreddyrondon/bastion/render/json"
 	"github.com/pkg/errors"
 )
 
@@ -28,7 +28,7 @@ func Recovery(next http.Handler) http.Handler {
 				}
 				dump, _ := httputil.DumpRequest(req, true)
 				fmt.Fprintf(os.Stderr, fmt.Sprintf("[recovery] req: %v err: %+v\n", string(dump), err))
-				render.JSONRender(w).InternalServerError(err)
+				json.NewRenderer(w).InternalServerError(err)
 				return
 			}
 		}()

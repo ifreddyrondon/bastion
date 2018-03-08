@@ -1,39 +1,41 @@
-package render
+package json
 
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 // JSONRender returns the Renderer to response with "application/json" content type.
-func JSONRender(w http.ResponseWriter) RendererEngine {
-	return &JSONRenderer{w}
+func NewRenderer(w http.ResponseWriter) render.RendererEngine {
+	return &Renderer{w}
 }
 
-// JSONRenderer encode the response as "application/json" content type and implement the Renderer interface.
-type JSONRenderer struct {
+// Renderer encode the response as "application/json" content type and implement the Renderer interface.
+type Renderer struct {
 	value http.ResponseWriter
 }
 
 // Response sends a JSON-encoded response in the body of a request with the HTTP status code.
-func (res *JSONRenderer) Response(code int, response interface{}) {
+func (res *Renderer) Response(code int, response interface{}) {
 	res.value.Header().Set("Content-Type", "application/json")
 	res.value.WriteHeader(code)
 	json.NewEncoder(res.value).Encode(response)
 }
 
 // Send sends a JSON-encoded response in the body of a request with the 200 status code.
-func (res *JSONRenderer) Send(response interface{}) {
+func (res *Renderer) Send(response interface{}) {
 	res.Response(http.StatusOK, response)
 }
 
 // Created sends a JSON-encoded response in the body of a request with the 201 status code.
-func (res *JSONRenderer) Created(response interface{}) {
+func (res *Renderer) Created(response interface{}) {
 	res.Response(http.StatusCreated, response)
 }
 
 // NoContent sends a response without no content with the 204 status code.
-func (res *JSONRenderer) NoContent() {
+func (res *Renderer) NoContent() {
 	res.value.WriteHeader(http.StatusNoContent)
 }
 
@@ -46,7 +48,7 @@ type HTTPError struct {
 
 // BadRequest sends a JSON-encoded error response in the body of a request with the 400 status code.
 // The response will contains the status 400 and error "Bad Request".
-func (res *JSONRenderer) BadRequest(err error) {
+func (res *Renderer) BadRequest(err error) {
 	message := HTTPError{
 		Status:  http.StatusBadRequest,
 		Errors:  http.StatusText(http.StatusBadRequest),
@@ -57,7 +59,7 @@ func (res *JSONRenderer) BadRequest(err error) {
 
 // NotFound sends a JSON-encoded error response in the body of a request with the 404 status code.
 // The response will contains the status 404 and error "Not Found".
-func (res *JSONRenderer) NotFound(err error) {
+func (res *Renderer) NotFound(err error) {
 	message := HTTPError{
 		Status:  http.StatusNotFound,
 		Errors:  http.StatusText(http.StatusNotFound),
@@ -68,7 +70,7 @@ func (res *JSONRenderer) NotFound(err error) {
 
 // MethodNotAllowed sends a JSON-encoded error response in the body of a request with the 405 status code.
 // The response will contains the status 405 and error "Method Not Allowed".
-func (res *JSONRenderer) MethodNotAllowed(err error) {
+func (res *Renderer) MethodNotAllowed(err error) {
 	message := HTTPError{
 		Status:  http.StatusMethodNotAllowed,
 		Errors:  http.StatusText(http.StatusMethodNotAllowed),
@@ -79,7 +81,7 @@ func (res *JSONRenderer) MethodNotAllowed(err error) {
 
 // InternalServerError sends a JSON-encoded error response in the body of a request with the 500 status code.
 // The response will contains the status 500 and error "Internal Server Error".
-func (res *JSONRenderer) InternalServerError(err error) {
+func (res *Renderer) InternalServerError(err error) {
 	message := HTTPError{
 		Status:  http.StatusInternalServerError,
 		Errors:  http.StatusText(http.StatusInternalServerError),
