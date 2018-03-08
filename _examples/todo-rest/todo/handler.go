@@ -1,18 +1,17 @@
 package todo
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/reader"
 	"github.com/ifreddyrondon/bastion/renderer"
 )
 
 type Handler struct {
-	Reader reader.Reader
 	Render renderer.Renderer
 }
 
@@ -39,7 +38,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var todo1 todo
-	if err := h.Reader(r.Body).Read(&todo1); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&todo1); err != nil {
 		panic(err) // the error should be handle
 	}
 	h.Render(w).Created(todo1)
@@ -56,8 +55,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	i, _ := strconv.Atoi(id) // the error should be handle
 	var todo1 todo
-	if err := h.Reader(r.Body).Read(&todo1); err != nil {
-		panic(err)
+	if err := json.NewDecoder(r.Body).Decode(&todo1); err != nil {
+		panic(err) // the error should be handle
 	}
 	todo1.Id = i
 	h.Render(w).Send(todo1)

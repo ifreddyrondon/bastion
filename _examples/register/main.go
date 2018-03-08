@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/renderer/json"
 )
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
