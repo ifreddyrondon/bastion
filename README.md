@@ -308,7 +308,7 @@ type Engine interface {
 type Renderer func(http.ResponseWriter) Engine
 ``` 
 
-Bastion define a `json.Renderer` [implementation](https://github.com/ifreddyrondon/bastion/blob/feature/reader-responder/renderer/json/json.go) of `Engine` and is available through `json.NewRenderer`
+Bastion define a `json.Renderer` [implementation](https://github.com/ifreddyrondon/bastion/blob/master/renderer/json/json.go) of `Engine` and is available through `json.NewRenderer`
 
 ### Example
 
