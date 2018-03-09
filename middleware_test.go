@@ -9,21 +9,46 @@ import (
 )
 
 func TestRecovery(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		err := errors.New("testing recovery")
-		panic(err)
-	})
-
-	app := bastion.New(nil)
-	app.APIRouter.Mount("/", handler)
-
-	expectedRes := map[string]interface{}{
-		"message": "testing recovery",
-		"error":   "Internal Server Error",
-		"status":  500,
+	tt := []struct {
+		name                    string
+		panicArg                interface{}
+		expectedMessageResponse string
+	}{
+		{
+			"recovery with err panic call",
+			errors.New("testing recovery"),
+			"testing recovery",
+		},
+		{
+			"recovery with string panic call",
+			"testing recovery",
+			"testing recovery",
+		},
+		{
+			"recovery with empty panic call",
+			500,
+			"500",
+		},
 	}
 
-	e := bastion.Tester(t, app)
-	e.GET("/").Expect().Status(500).JSON().
-		Object().ContainsMap(expectedRes)
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				panic(tc.panicArg)
+			})
+
+			app := bastion.New(nil)
+			app.APIRouter.Mount("/", handler)
+
+			expectedRes := map[string]interface{}{
+				"message": tc.expectedMessageResponse,
+				"error":   "Internal Server Error",
+				"status":  500,
+			}
+
+			e := bastion.Tester(t, app)
+			e.GET("/").Expect().Status(500).JSON().
+				Object().ContainsMap(expectedRes)
+		})
+	}
 }
