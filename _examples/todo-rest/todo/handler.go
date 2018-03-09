@@ -8,11 +8,11 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/renderer"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 type Handler struct {
-	Render renderer.Renderer
+	render.Render
 }
 
 // Routes creates a REST router for the todos resource

@@ -5,14 +5,14 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/config"
-	"github.com/ifreddyrondon/bastion/renderer/json"
+	"github.com/ifreddyrondon/bastion/render/json"
 )
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
 		Message string `json:"message"`
 	}{"world"}
-	json.NewRenderer(w).Send(res)
+	json.NewRender(w).Send(res)
 }
 
 func main() {

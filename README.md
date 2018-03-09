@@ -31,7 +31,7 @@ Allows to have commons handlers and middleware between projects with the need fo
 		* [JSON](#json)
 * [Testing](#testing)
 	* [Quick start](#quick-start)
-* [Renderer](#renderer)
+* [Render](#render)
     * [Example](#example-2)
 
 ## Installation
@@ -114,12 +114,12 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/renderer/json"
+	"github.com/ifreddyrondon/bastion/render/json"
 )
 
 func handler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {Message string `json:"message"`}{"world"}
-	json.NewRenderer(w).Send(res)
+	json.NewRender(w).Send(res)
 }
 
 func main() {
@@ -257,13 +257,13 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
-    "github.com/ifreddyrondon/bastion/renderer/json"
+    "github.com/ifreddyrondon/bastion/render/json"
 )
 
 func setup() *bastion.Bastion {
 	app := bastion.New(nil)
 	handler := todo.Handler{
-		Render: json.NewRenderer,
+		Render: json.NewRender,
 	}
 	app.APIRouter.Mount("/todo/", handler.Routes())
 	return app
@@ -286,10 +286,10 @@ func TestHandlerCreate(t *testing.T) {
 
 Go and check the [full test](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/todo/handler_test.go) for [handler](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/todo/handler.go) and complete [app](https://github.com/ifreddyrondon/bastion/tree/master/_examples/todo-rest) 🤓
 
-## Renderer
+## Render
 
 Render a HTTP status code and content type to the associated Response. 
-The renderer engines implements `Engine` and is obtained through `Renderer` function.  
+The render engine implements `Engine` and is obtained through `Render` function.  
 
 ```go
 // Engine define methods to encoded response in the body of a request with the HTTP status code.
@@ -304,11 +304,11 @@ type Engine interface {
 	InternalServerError(err error)
 }
 
-// Renderer returns a Engine to response a request with the HTTP status code.
-type Renderer func(http.ResponseWriter) Engine
+// Render returns a Engine to response a request with the HTTP status code.
+type Render func(http.ResponseWriter) Engine
 ``` 
 
-Bastion define a `json.Renderer` [implementation](https://github.com/ifreddyrondon/bastion/blob/master/renderer/json/json.go) of `Engine` and is available through `json.NewRenderer`
+Bastion define a `json.Render` [implementation](https://github.com/ifreddyrondon/bastion/blob/master/render/json/json.go) of `Engine` and is available through `json.NewRender`
 
 ### Example
 
@@ -320,14 +320,14 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/renderer/json"
+	"github.com/ifreddyrondon/bastion/render/json"
 )
 
 func handler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
 		Message string `json:"message"`
 	}{"world"}
-	json.NewRenderer(w).Send(res)
+	json.NewRender(w).Send(res)
 }
 
 func main() {

@@ -6,13 +6,13 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
-	"github.com/ifreddyrondon/bastion/renderer/json"
+	"github.com/ifreddyrondon/bastion/render/json"
 )
 
 func setup() *bastion.Bastion {
 	app := bastion.New(nil)
 	handler := todo.Handler{
-		Render: json.NewRenderer,
+		Render: json.NewRender,
 	}
 	app.APIRouter.Mount("/todo/", handler.Routes())
 	return app

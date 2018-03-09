@@ -1,4 +1,4 @@
-package renderer
+package render
 
 import (
 	"net/http"
@@ -17,4 +17,4 @@ type Engine interface {
 }
 
 // Render returns a Engine to response a request with the HTTP status code.
-type Renderer func(http.ResponseWriter) Engine
+type Render func(http.ResponseWriter) Engine
