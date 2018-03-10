@@ -26,7 +26,7 @@ func TestGracefulShutdown(t *testing.T) {
 	}
 	app.RegisterOnShutdown(f)
 	ctx, cancel := context.WithCancel(context.Background())
-	go graceful(app.server, ctx)
+	go graceful(ctx, app.server)
 	cancel()
 	ch := make(chan bool, 1)
 	isServerClosed(app.server, ch)

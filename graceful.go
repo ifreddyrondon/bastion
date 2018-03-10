@@ -9,7 +9,7 @@ import (
 )
 
 // graceful shutdown
-func graceful(server *http.Server, ctx context.Context) {
+func graceful(ctx context.Context, server *http.Server) {
 	<-ctx.Done()
 	log.Printf("[app:shutdown]")
 	if err := server.Shutdown(ctx); err != nil {

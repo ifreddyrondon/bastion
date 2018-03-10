@@ -24,6 +24,7 @@ type onShutdown func()
 // Mounted Routers
 // It use go-chi router to modularize the applications. Each instance of GogApp, will have the possibility
 // of mounting an API router, it will define the routes and middleware of the application with the app logic.
+// Without a Bastion you can't do much!
 type Bastion struct {
 	r         *chi.Mux
 	cfg       *config.Config
@@ -61,13 +62,13 @@ func (app *Bastion) RegisterOnShutdown(fs ...onShutdown) {
 	}
 }
 
-// Serve, serve all the incoming connections coming from the specified address/port.
+// Serve accepts incoming incoming connections coming from the specified address/port.
 // It also prepare the graceful shutdown.
 func (app *Bastion) Serve() error {
 	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
-	go graceful(app.server, ctx)
+	go graceful(ctx, app.server)
 	// start the web server
 	log.Printf("[app:starting] at %s\n", app.cfg.Server.Addr)
 	if err := app.server.ListenAndServe(); err != nil {
