@@ -22,12 +22,12 @@ Allows to have commons handlers and middleware between projects with the need fo
 4. [Register on shutdown](#register-on-shutdown)
     * [Example](#register-on-shutdown-example)
 5. [Options](#options)
-    5.1 [Structure](#structure)
+    1. [Structure](#structure)
         * [APIBasepath](#apibasepath)
         * [Addr](#addr)
         * [Env](#env)
         * [Debug](#debug)
-    5.2 [From options file](#from-options-file)
+    2. [From options file](#from-options-file)
         * [YAML](#yaml)
         * [JSON](#json)
 6. [Testing](#testing)
@@ -208,13 +208,11 @@ Then: `http://localhost:8080/foo/test`
 
 #### `Addr`
 
-Addr is the bind address provided to http.Server. Default is `127.0.0.1:8080`. Can be set using ENV
-vars `ADDR` and `PORT`. It's JSON tagged as `addr`
+Addr is the bind address provided to http.Server. Default is `127.0.0.1:8080`. Can be set using **ENV** vars `ADDR` and `PORT`. It's JSON tagged as `addr`
 
 #### Env
 
-Env is the "environment" in which the App is running. Default is "development". Can be set using ENV
-vars `GO_ENV` It's JSON tagged as `env`
+Env is the "environment" in which the App is running. Default is "development". Can be set using **ENV** vars `GO_ENV` It's JSON tagged as `env`
 
 #### Debug
 
@@ -224,7 +222,7 @@ Debug flag if Bastion should enable debugging features. Default `false`. It's JS
 
 Bastion comes with an util function to load a new instance of Bastion from a options file. The options file could it be in **YAML** or **JSON** format. Is some attributes are missing from the options file it'll be set with the default. [Example](https://github.com/ifreddyrondon/bastion/blob/master/_examples/options-yaml/main.go).
 
-FromFile takes special consideration when there are ENV vars:
+FromFile takes special consideration when there are **ENV** vars:
 
 * For `Addr`. When it's not provided it'll search the `ADDR` and `PORT` environment variables first before set the default.
 
