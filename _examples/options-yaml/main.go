@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/config"
 	"github.com/ifreddyrondon/bastion/render/json"
 )
 
@@ -16,8 +15,7 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	cfg, _ := config.FromFile("./config.yaml")
-	app := bastion.New(cfg)
+	app, _ := bastion.FromFile("./options.yaml")
 	app.APIRouter.Get("/hello", helloHandler)
 	app.Serve()
 }

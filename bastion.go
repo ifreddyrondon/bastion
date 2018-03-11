@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -10,8 +11,9 @@ import (
 
 	"github.com/go-chi/chi"
 	CHIMiddleware "github.com/go-chi/chi/middleware"
-	"github.com/ifreddyrondon/bastion/config"
 	"github.com/markbates/sigtx"
+	"github.com/pkg/errors"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // onShutdown is a function to be implemented when is necessary
@@ -26,29 +28,48 @@ type onShutdown func()
 // of mounting an API router, it will define the routes and middleware of the application with the app logic.
 // Without a Bastion you can't do much!
 type Bastion struct {
-	r         *chi.Mux
-	cfg       *config.Config
-	server    *http.Server
+	r      *chi.Mux
+	server *http.Server
+	*Options
 	APIRouter *chi.Mux
 }
 
-// New returns a new Bastion instance.
-// if cfg is empty the configuration will be from defaults.
+// New returns a new instance of Bastion and adds some sane, and useful, defaults.
 // 	Defaults:
-//		Api:
-//			BasePath: "/"
-//		Server:
-//			Addr ":8080"
+//		Addr: "127.0.0.1:8080"
+//		Env: "development"
 //		Debug: false
-func New(cfg *config.Config) *Bastion {
-	if cfg == nil {
-		cfg = config.DefaultConfig()
+//		API:
+//			BasePath: "/"
+func New(opts Options) *Bastion {
+	app := new(Bastion)
+	app.Options = optionsWithDefaults(&opts)
+	initialize(app)
+	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}
+	return app
+}
+
+// FromFile is an util function to load  a new instance of Bastion from a options file.
+// The options file could it be in YAML or JSON format. Is some attributes are missing
+// from the config file it'll be set with the defaults.
+// FromFile takes a special consideration for `server.address` default.
+// When it's not provided it'll search the ADDR and PORT environment variables
+// first before set the default.
+func FromFile(path string) (*Bastion, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "missing configuration file at %v", path)
+	}
+
+	var opts Options
+	if err := yaml.Unmarshal(b, &opts); err != nil {
+		return nil, errors.Wrap(err, "cannot unmarshal configuration file")
 	}
 	app := new(Bastion)
-	app.cfg = cfg
+	app.Options = optionsWithDefaults(&opts)
 	initialize(app)
-	app.server = &http.Server{Addr: app.cfg.Server.Addr, Handler: app.r}
-	return app
+	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}
+	return app, nil
 }
 
 // RegisterOnShutdown registers a function to call on Shutdown.
@@ -70,7 +91,7 @@ func (app *Bastion) Serve() error {
 
 	go graceful(ctx, app.server)
 	// start the web server
-	log.Printf("[app:starting] at %s\n", app.cfg.Server.Addr)
+	log.Printf("[app:starting] at %s\n", app.Options.Addr)
 	if err := app.server.ListenAndServe(); err != nil {
 		fmt.Println(err)
 		return err
@@ -96,7 +117,7 @@ func initialize(app *Bastion) {
 	app.APIRouter = chi.NewRouter()
 	app.APIRouter.Use(CHIMiddleware.RequestID)
 	app.APIRouter.Use(CHIMiddleware.Logger)
-	app.r.Mount(app.cfg.API.BasePath, app.APIRouter)
+	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
 }
 
 // NewRouter return a router as a subrouter along a routing path.

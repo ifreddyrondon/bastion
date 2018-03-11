@@ -14,4 +14,7 @@
 .glide/
 
 # idea IDE
-.idea/
+.idea
+
+# vscode IDE
+.vscode

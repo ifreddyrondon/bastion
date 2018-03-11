@@ -9,41 +9,44 @@ Allows to have commons handlers and middleware between projects with the need fo
 
 * [helloworld](https://github.com/ifreddyrondon/bastion/blob/master/_examples/helloworld/main.go) - Quickstart, first Hello world with bastion.
 * [todo-rest](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
-* [Config with yaml](https://github.com/ifreddyrondon/bastion/blob/master/_examples/config-yaml/main.go) - Bastion with config file.
+* [Options with yaml](https://github.com/ifreddyrondon/bastion/blob/master/_examples/options-yaml/main.go) - Bastion with options file.
 * [Register on shutdown](https://github.com/ifreddyrondon/bastion/blob/master/_examples/register/main.go) - Registers functions to be call on Shutdown.
 
 ## Table of contents
 
-* [Installation](#installation)
-* [Router](#router)
-	* [NewRouter](#newrouter)
-	* [Example](#example)
-* [Middlewares](#middlewares)
-* [Register on shutdown](#register-on-shutdown)
-	* [Example](#example-1)
-* [Configuration](#configuration)
-	* [Structure](#structure)
-		* [Api](#api)
-		* [Server](#server)
-		* [Debug](#debug)
-	* [From configuration file](#from-configuration-file)
-		* [YAML](#yaml)
-		* [JSON](#json)
-* [Testing](#testing)
-	* [Quick start](#quick-start)
-* [Render](#render)
-    * [Example](#example-2)
+1. [Installation](#installation)
+2. [Router](#router)
+    * [NewRouter](#newrouter)
+    * [Example](#router-example)
+3. [Middlewares](#middlewares)
+4. [Register on shutdown](#register-on-shutdown)
+    * [Example](#register-on-shutdown-example)
+5. [Options](#options)
+    5.1 [Structure](#structure)
+        * [APIBasepath](#apibasepath)
+        * [Addr](#addr)
+        * [Env](#env)
+        * [Debug](#debug)
+    5.2 [From options file](#from-options-file)
+        * [YAML](#yaml)
+        * [JSON](#json)
+6. [Testing](#testing)
+    * [Quick start](#quick-start)
+7. [Render](#render)
+    * [Example](#render-example)
 
 ## Installation
 
 `go get -u github.com/ifreddyrondon/bastion`
 
 ## Router
+
 Bastion use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
 of mounting an api router, it will define the routes and middleware of the application with the app logic.
 
 ### NewRouter
-NewRouter return a router as a subrouter along a routing path. 
+
+NewRouter return a router as a subrouter along a routing path.
 
 It's very useful to split up a large API as many independent routers and compose them as a single service.
 
@@ -99,33 +102,33 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	app := bastion.New(nil)
+	app := bastion.New(bastion.Options{})
 	app.APIRouter.Mount("/todo/", new(Handler).Routes())
 	app.Serve()
 }
 ```
 
-### Example
+### Router example
 
 ```go
 package main
 
 import (
-	"net/http"
+    "net/http"
 
-	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+    "github.com/ifreddyrondon/bastion"
+    "github.com/ifreddyrondon/bastion/render/json"
 )
 
 func handler(w http.ResponseWriter, _ *http.Request) {
-	res := struct {Message string `json:"message"`}{"world"}
-	json.NewRender(w).Send(res)
+    res := struct {Message string `json:"message"`}{"world"}
+    json.NewRender(w).Send(res)
 }
 
 func main() {
-	app := bastion.New(nil)
-	app.APIRouter.Get("/hello", handler)
-	app.Serve()
+    app := bastion.New(bastion.Options{})
+    app.APIRouter.Get("/hello", handler)
+    app.Serve()
 }
 ```
 
@@ -141,106 +144,121 @@ Recovery | Gracefully absorb panics and prints the stack trace
 RequestID | Injects a request ID into the context of each request
 
 ## Register on shutdown
+
 You can register a function to call on shutdown. This can be used to gracefully shutdown connections. By default the shutdown execute the server shutdown.
 
 Bastion listens if any **SIGINT**, **SIGTERM** or **SIGKILL** signal is emitted and performs a graceful shutdown.
 
 It can be added with `RegisterOnShutdown` method of the bastion instance, it can accept variable number of functions.
 
-### Example
+### Register on shutdown example
 
 ```go
 package main
 
 import (
-	"log"
+    "log"
 
-	"github.com/ifreddyrondon/bastion"
+    "github.com/ifreddyrondon/bastion"
 )
 
 func onShutdown() {
-	log.Printf("My registered on shutdown. Doing something...")
+    log.Printf("My registered on shutdown. Doing something...")
 }
 
 func main() {
-	app := bastion.New(nil)
-	app.RegisterOnShutdown(onShutdown)
-	app.Serve()
+    app := bastion.New(bastion.Options{})
+    app.RegisterOnShutdown(onShutdown)
+    app.Serve()
 }
 ```
 
-## Configuration
-Represents the configuration for bastion. Config are used to define how the application should run.
+## Options
+
+Options are used to define how the application should run.
 
 ### Structure
+
 ```go
-type Config struct {
- 	API struct {
- 		BasePath string
- 	}
- 	Server struct {
- 		Addr string
- 	}
- 	Debug bool
+// Options are used to define how the application should run.
+type Options struct {
+	// APIBasepath is the path where the bastion api router is going to be mounted. Default `/`.
+	APIBasepath string `yaml:"apiBasepath"`
+	// Addr is the bind address provided to http.Server. Default is "127.0.0.1:8080"
+	// Can be set using ENV vars "ADDR" and "PORT".
+	Addr string `yaml:"addr"`
+	// Env is the "environment" in which the App is running. Default is "development".
+	Env string `yaml:"env"`
+	// Debug flag if Bastion should enable debugging features.
+	Debug bool `yaml:"debug"`
 }
 ```
 
-#### Api
-##### `Api.BasePath`
-Base path value where the application is going to be mounted. Default `/`. Is JSON tagged as `api.base_path`
+#### `APIBasepath`
 
-When
+Api base path value where the bastion api router is going to be mounted. Default `/`. It's JSON tagged as `apiBasepath`
+
+When:
+
 ```json
-"base_path": "/foo/test",
-```
-Then
-```
-http://localhost:8080/foo/test
+"apiBasepath": "/foo/test",
 ```
 
-#### Server
-##### `Server.Addr`
-Address is the host and port where the app is serve. Default `127.0.0.1:8080`. Is JSON tagged as `server.address`
+Then: `http://localhost:8080/foo/test`
+
+#### `Addr`
+
+Addr is the bind address provided to http.Server. Default is `127.0.0.1:8080`. Can be set using ENV
+vars `ADDR` and `PORT`. It's JSON tagged as `addr`
+
+#### Env
+
+Env is the "environment" in which the App is running. Default is "development". Can be set using ENV
+vars `GO_ENV` It's JSON tagged as `env`
 
 #### Debug
-Debug flag if Bastion should enable debugging features. Default `false`. . Is JSON tagged as `debug`
 
-### From configuration file
-Bastion comes with an util function to load configuration from a file.
-**FromFile** is an util function to load the bastion configuration from a config file. The config file could it be in **YAML** or **JSON** format. Is some attributes are missing
-from the config file it'll be set with the default. [Example](https://github.com/ifreddyrondon/bastion/blob/master/_examples/config-yaml/main.go).
+Debug flag if Bastion should enable debugging features. Default `false`. It's JSON tagged as `debug`
 
-FromFile takes a special consideration for `server.address` default. When it's not provided it'll search the ADDR and PORT environment variables first before set the default.
+### From options file
+
+Bastion comes with an util function to load a new instance of Bastion from a options file. The options file could it be in **YAML** or **JSON** format. Is some attributes are missing from the options file it'll be set with the default. [Example](https://github.com/ifreddyrondon/bastion/blob/master/_examples/options-yaml/main.go).
+
+FromFile takes special consideration when there are ENV vars:
+
+* For `Addr`. When it's not provided it'll search the `ADDR` and `PORT` environment variables first before set the default.
+
+* For `Env`. When it's not provided it'll search the `GO_ENV` environment variables first before set the default.
 
 #### YAML
-```yaml
-api:
-  base_path: "/"
-server:
-  address: ":8080"
-debug: true
 
+```yaml
+apiBasepath: "/"
+addr: ":8080"
+debug: true
+env: "development"
 ```
+
 #### JSON
+
 ```json
 {
-  "api": {
-    "base_path": "/"
-  },
-  "server": {
-    "address": ":8080"
-  },
-  "debug": true
+  "apiBasepath": "/",
+  "addr": ":8080",
+  "debug": true,
+  "env": "development"
 }
 ```
 
 ## Testing
+
 Bastion comes with battery included testing tools to perform End-to-end test over your endpoint/handlers.
 
 It uses [github.com/gavv/httpexpect](https://github.com/gavv/httpexpect) to incrementally build HTTP requests,
 inspect HTTP responses and inspect response payload recursively.
 
 ### Quick start
+
 1. Create the bastion instance with the handler you want to test.
 2. Import from `bastion.Tester`
 3. It receive a `*testing.T` and `*bastion.Bastion` instances as params.
@@ -261,7 +279,7 @@ import (
 )
 
 func setup() *bastion.Bastion {
-	app := bastion.New(nil)
+	app := bastion.New(bastion.Options{})
 	handler := todo.Handler{
 		Render: json.NewRender,
 	}
@@ -288,8 +306,8 @@ Go and check the [full test](https://github.com/ifreddyrondon/bastion/blob/maste
 
 ## Render
 
-Render a HTTP status code and content type to the associated Response. 
-The render engine implements `Engine` and is obtained through `Render` function.  
+Render a HTTP status code and content type to the associated Response.
+The render engine implements `Engine` and is obtained through `Render` function.
 
 ```go
 // Engine define methods to encoded response in the body of a request with the HTTP status code.
@@ -306,13 +324,14 @@ type Engine interface {
 
 // Render returns a Engine to response a request with the HTTP status code.
 type Render func(http.ResponseWriter) Engine
-``` 
+```
 
 Bastion define a `json.Render` [implementation](https://github.com/ifreddyrondon/bastion/blob/master/render/json/json.go) of `Engine` and is available through `json.NewRender`
 
-### Example
+### Render example
 
-Response a JSON with a 200 HTTP status code. 
+Response a JSON with a 200 HTTP status code.
+
 ```go
 package main
 
@@ -331,7 +350,7 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	app := bastion.New(nil)
+	app := bastion.New(bastion.Options{})
 	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }

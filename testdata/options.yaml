@@ -1,0 +1,3 @@
+apiBasepath: "/api/"
+addr: ":3000"
+debug: true

@@ -37,7 +37,7 @@ func TestRecovery(t *testing.T) {
 				panic(tc.panicArg)
 			})
 
-			app := bastion.New(nil)
+			app := bastion.New(bastion.Options{})
 			app.APIRouter.Mount("/", handler)
 
 			expectedRes := map[string]interface{}{

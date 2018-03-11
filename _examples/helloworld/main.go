@@ -15,7 +15,7 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	app := bastion.New(nil)
+	app := bastion.New(bastion.Options{})
 	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }

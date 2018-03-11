@@ -10,7 +10,7 @@ import (
 )
 
 func setup() *bastion.Bastion {
-	app := bastion.New(nil)
+	app := bastion.New(bastion.Options{})
 	handler := todo.Handler{
 		Render: json.NewRender,
 	}

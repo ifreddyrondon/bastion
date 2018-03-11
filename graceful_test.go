@@ -18,7 +18,7 @@ func isServerClosed(server *http.Server, ch chan<- bool) {
 }
 
 func TestGracefulShutdown(t *testing.T) {
-	app := New(nil)
+	app := New(Options{})
 	app.server = &http.Server{}
 	visited := false
 	f := func() {
