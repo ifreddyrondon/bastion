@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ifreddyrondon/bastion/render/json"
 	"gopkg.in/gavv/httpexpect.v1"
 )
@@ -30,7 +32,8 @@ func TestResponseJson(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	json.NewRender(rr).Response(tc.status, tc.toResponse)
+	err := json.NewRender(rr).Response(tc.status, tc.toResponse)
+	assert.Nil(t, err)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(tc.status).
 		JSON().Object().Equal(tc.result)
@@ -48,7 +51,8 @@ func TestSend(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	json.NewRender(rr).Send(tc.toResponse)
+	err := json.NewRender(rr).Send(tc.toResponse)
+	assert.Nil(t, err)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusOK).
 		JSON().Object().Equal(tc.result)
@@ -66,7 +70,8 @@ func TestCreated(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	json.NewRender(rr).Created(tc.toResponse)
+	err := json.NewRender(rr).Created(tc.toResponse)
+	assert.Nil(t, err)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusCreated).
 		JSON().Object().Equal(tc.result)
@@ -91,7 +96,8 @@ func TestBadRequest(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	json.NewRender(rr).BadRequest(tc.toResponse)
+	err := json.NewRender(rr).BadRequest(tc.toResponse)
+	assert.Nil(t, err)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusBadRequest).
 		JSON().Object().Equal(tc.result)
@@ -109,7 +115,8 @@ func TestNotFound(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	json.NewRender(rr).NotFound(tc.toResponse)
+	err := json.NewRender(rr).NotFound(tc.toResponse)
+	assert.Nil(t, err)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNotFound).
 		JSON().Object().Equal(tc.result)
@@ -127,7 +134,8 @@ func TestMethodNotAllowed(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	json.NewRender(rr).MethodNotAllowed(tc.toResponse)
+	err := json.NewRender(rr).MethodNotAllowed(tc.toResponse)
+	assert.Nil(t, err)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusMethodNotAllowed).
 		JSON().Object().Equal(tc.result)
@@ -145,7 +153,8 @@ func TestInternalServerError(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	json.NewRender(rr).InternalServerError(tc.toResponse)
+	err := json.NewRender(rr).InternalServerError(tc.toResponse)
+	assert.Nil(t, err)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusInternalServerError).
 		JSON().Object().Equal(tc.result)

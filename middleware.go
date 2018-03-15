@@ -2,9 +2,9 @@ package bastion
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httputil"
-	"os"
 
 	"github.com/ifreddyrondon/bastion/render/json"
 	"github.com/pkg/errors"
@@ -27,8 +27,10 @@ func Recovery(next http.Handler) http.Handler {
 					err = errors.New(fmt.Sprint(t))
 				}
 				dump, _ := httputil.DumpRequest(req, true)
-				fmt.Fprintf(os.Stderr, fmt.Sprintf("[recovery] req: %v err: %+v\n", string(dump), err))
-				json.NewRender(w).InternalServerError(err)
+				log.Printf("[recovery] req: %v err: %+v\n", string(dump), err)
+				if err = json.NewRender(w).InternalServerError(err); err != nil {
+					log.Printf("[recovery] err: %v", err)
+				}
 				return
 			}
 		}()

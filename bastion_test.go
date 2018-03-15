@@ -25,7 +25,8 @@ func TestBastionHelloWorld(t *testing.T) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
-		json.NewRender(w).Send(res)
+		err := json.NewRender(w).Send(res)
+		assert.Nil(t, err)
 	})
 
 	expected := map[string]interface{}{"message": "world"}
@@ -58,7 +59,8 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 				res := struct {
 					Message string `json:"message"`
 				}{"world"}
-				json.NewRender(w).Send(res)
+				err := json.NewRender(w).Send(res)
+				assert.Nil(t, err)
 			})
 
 			expected := map[string]interface{}{"message": "world"}
