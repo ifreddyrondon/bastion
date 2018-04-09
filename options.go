@@ -2,6 +2,8 @@ package bastion
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/gobuffalo/envy"
 	"github.com/markbates/going/defaults"
@@ -15,6 +17,28 @@ const (
 	defaultBasePath = "/"
 )
 
+// Level defines log levels.
+type Level uint8
+
+const (
+	// DebugLevel defines debug log level.
+	DebugLevel Level = iota
+	// InfoLevel defines info log level.
+	InfoLevel
+	// WarnLevel defines warn log level.
+	WarnLevel
+	// ErrorLevel defines error log level.
+	ErrorLevel
+	// FatalLevel defines fatal log level.
+	FatalLevel
+	// PanicLevel defines panic log level.
+	PanicLevel
+	// NoLevel defines an absent log level.
+	NoLevel
+	// Disabled disables the logger.
+	Disabled
+)
+
 // Options are used to define how the application should run.
 type Options struct {
 	// APIBasepath is the path where the bastion api router is going to be mounted. Default `/`.
@@ -24,8 +48,16 @@ type Options struct {
 	Addr string `yaml:"addr"`
 	// Env is the "environment" in which the App is running. Default is "development".
 	Env string `yaml:"env"`
-	// Debug flag if Bastion should enable debugging features.
-	Debug bool `yaml:"debug"`
+	// NoPrettyLogging don't output a colored human readable version on the out writer.
+	NoPrettyLogging bool `yaml:"prettyLogging"`
+	// LoggerLevel defines log levels. Default is DebugLevel defines an absent log level.
+	LoggerLevel Level `yaml:"loggerLevel"`
+	// LoggerWriter logger output writer. Default os.Stdout
+	LoggerWriter io.Writer
+}
+
+func (o *Options) isDEV() bool {
+	return o.Env == "development"
 }
 
 // NewOptions returns a new Options instance with sensible defaults
@@ -43,5 +75,9 @@ func optionsWithDefaults(opts *Options) *Options {
 	envAddr := envy.Get("ADDR", addr)
 	opts.Addr = defaults.String(opts.Addr, fmt.Sprintf("%s:%s", envAddr, port))
 	opts.APIBasepath = defaults.String(opts.APIBasepath, defaultBasePath)
+	if opts.LoggerWriter == nil {
+		opts.LoggerWriter = os.Stdout
+	}
+
 	return opts
 }

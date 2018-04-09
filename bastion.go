@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"syscall"
 
 	"github.com/go-chi/chi"
-	CHIMiddleware "github.com/go-chi/chi/middleware"
 	"github.com/markbates/sigtx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/hlog"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -30,6 +30,7 @@ type onShutdown func()
 type Bastion struct {
 	r      *chi.Mux
 	server *http.Server
+	Logger *zerolog.Logger
 	*Options
 	APIRouter *chi.Mux
 }
@@ -45,7 +46,6 @@ func New(opts Options) *Bastion {
 	app := new(Bastion)
 	app.Options = optionsWithDefaults(&opts)
 	initialize(app)
-	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}
 	return app
 }
 
@@ -68,7 +68,6 @@ func FromFile(path string) (*Bastion, error) {
 	app := new(Bastion)
 	app.Options = optionsWithDefaults(&opts)
 	initialize(app)
-	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}
 	return app, nil
 }
 
@@ -89,9 +88,9 @@ func (app *Bastion) Serve() error {
 	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
-	go graceful(ctx, app.server)
-	// start the web server
-	log.Printf("[app:starting] at %s\n", app.Options.Addr)
+	go graceful(ctx, app)
+
+	app.Logger.Info().Msgf("app starting at %v", app.Options.Addr)
 	if err := app.server.ListenAndServe(); err != nil {
 		fmt.Println(err)
 		return err
@@ -101,10 +100,16 @@ func (app *Bastion) Serve() error {
 
 func initialize(app *Bastion) {
 	/**
+	 * init logger
+	 */
+	app.Logger = getLogger(app.Options)
+
+	/**
 	 * internal router
 	 */
 	app.r = chi.NewRouter()
-	app.r.Use(Recovery)
+	app.r.Use(Recovery(app.Logger))
+	app.r.Use(hlog.NewHandler(*app.Logger))
 
 	/**
 	 * Ping route
@@ -115,9 +120,10 @@ func initialize(app *Bastion) {
 	 * API Router
 	 */
 	app.APIRouter = chi.NewRouter()
-	app.APIRouter.Use(CHIMiddleware.RequestID)
-	app.APIRouter.Use(CHIMiddleware.Logger)
+	app.APIRouter.Use(LoggerRequest(app.Options)...)
 	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
+
+	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}
 }
 
 // NewRouter return a router as a subrouter along a routing path.

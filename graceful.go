@@ -1,20 +1,17 @@
 package bastion
 
-import (
-	"context"
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-)
+import "context"
 
 // graceful shutdown
-func graceful(ctx context.Context, server *http.Server) {
+func graceful(ctx context.Context, app *Bastion) {
 	<-ctx.Done()
-	log.Printf("[app:shutdown]")
-	if err := server.Shutdown(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, fmt.Sprintf("[app:gracefully_err] %v", err))
+	logger := app.Logger.With().
+		Str("component", "gracefull").
+		Logger()
+	logger.Info().Msg("preparing for shutdown")
+	if err := app.server.Shutdown(ctx); err != nil {
+		logger.Error().Err(err)
 	} else {
-		log.Printf("[app:gracefully] stopped")
+		logger.Info().Msg("gracefully stopped")
 	}
 }

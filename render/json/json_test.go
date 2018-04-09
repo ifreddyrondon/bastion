@@ -19,6 +19,8 @@ type address struct {
 }
 
 func TestResponseJson(t *testing.T) {
+	t.Parallel()
+
 	tc := struct {
 		name       string
 		toResponse interface{}
@@ -40,6 +42,8 @@ func TestResponseJson(t *testing.T) {
 }
 
 func TestSend(t *testing.T) {
+	t.Parallel()
+
 	tc := struct {
 		name       string
 		toResponse interface{}
@@ -59,6 +63,8 @@ func TestSend(t *testing.T) {
 }
 
 func TestCreated(t *testing.T) {
+	t.Parallel()
+
 	tc := struct {
 		name       string
 		toResponse interface{}
@@ -78,6 +84,8 @@ func TestCreated(t *testing.T) {
 }
 
 func TestNoContent(t *testing.T) {
+	t.Parallel()
+
 	rr := httptest.NewRecorder()
 	json.NewRender(rr).NoContent()
 	httpexpect.NewResponse(t, rr.Result()).
@@ -85,6 +93,8 @@ func TestNoContent(t *testing.T) {
 }
 
 func TestBadRequest(t *testing.T) {
+	t.Parallel()
+
 	tc := struct {
 		name       string
 		toResponse error
@@ -104,6 +114,8 @@ func TestBadRequest(t *testing.T) {
 }
 
 func TestNotFound(t *testing.T) {
+	t.Parallel()
+
 	tc := struct {
 		name       string
 		toResponse error
@@ -123,6 +135,8 @@ func TestNotFound(t *testing.T) {
 }
 
 func TestMethodNotAllowed(t *testing.T) {
+	t.Parallel()
+
 	tc := struct {
 		name       string
 		toResponse error
@@ -142,6 +156,8 @@ func TestMethodNotAllowed(t *testing.T) {
 }
 
 func TestInternalServerError(t *testing.T) {
+	t.Parallel()
+
 	tc := struct {
 		name       string
 		toResponse error

@@ -11,6 +11,8 @@ import (
 )
 
 func TestDefaultBastion(t *testing.T) {
+	t.Parallel()
+
 	app := bastion.New(bastion.Options{})
 	e := bastion.Tester(t, app)
 	e.GET("/ping").
@@ -20,6 +22,8 @@ func TestDefaultBastion(t *testing.T) {
 }
 
 func TestBastionHelloWorld(t *testing.T) {
+	t.Parallel()
+
 	app := bastion.New(bastion.Options{})
 	app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
@@ -39,6 +43,8 @@ func TestBastionHelloWorld(t *testing.T) {
 }
 
 func TestBastionHelloWorldFromFile(t *testing.T) {
+	t.Parallel()
+
 	tt := []struct {
 		name string
 		path string
@@ -53,7 +59,6 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 
 			assert.Equal(t, "/api/", app.APIBasepath)
 			assert.Equal(t, ":3000", app.Addr)
-			assert.True(t, app.Debug)
 
 			app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 				res := struct {
@@ -74,24 +79,31 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 }
 
 func TestNewRouter(t *testing.T) {
+	t.Parallel()
+
 	r := bastion.NewRouter()
 	assert.NotNil(t, r)
 }
 
 func TestBastionFromPartialYAMLFile(t *testing.T) {
+	t.Parallel()
+
 	app, _ := bastion.FromFile("./testdata/partial_options.yaml")
 	assert.Equal(t, "/api/", app.APIBasepath)
 	assert.Equal(t, "127.0.0.1:8080", app.Addr)
-	assert.False(t, app.Debug)
 }
 
 func TestLoadMissingFile(t *testing.T) {
+	t.Parallel()
+
 	app, err := bastion.FromFile("./foo.json")
 	assert.Nil(t, app)
 	assert.Error(t, err, "missing configuration file at ./foo.json")
 }
 
 func TestFailUnmarshalFile(t *testing.T) {
+	t.Parallel()
+
 	app, err := bastion.FromFile("./testdata/bad_options.json")
 	assert.Nil(t, app)
 	assert.Error(t, err, "cannot unmarshal configuration file")

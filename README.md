@@ -26,7 +26,9 @@ Allows to have commons handlers and middleware between projects with the need fo
         * [APIBasepath](#apibasepath)
         * [Addr](#addr)
         * [Env](#env)
-        * [Debug](#debug)
+        * [NoPrettyLogging](#noprettylogging)
+        * [LoggerLevel](#loggerlevel)
+        * [LoggerWriter](#loggerwriter)
     2. [From options file](#from-options-file)
         * [YAML](#yaml)
         * [JSON](#json)
@@ -34,6 +36,9 @@ Allows to have commons handlers and middleware between projects with the need fo
     * [Quick start](#quick-start)
 7. [Render](#render)
     * [Example](#render-example)
+8. [Logger](#logger)
+    * [Logging from bastion instance](#logging-from-bastion-instance)
+	* [Logging from handler](#logging-from-handler)
 
 ## Installation
 
@@ -189,8 +194,12 @@ type Options struct {
 	Addr string `yaml:"addr"`
 	// Env is the "environment" in which the App is running. Default is "development".
 	Env string `yaml:"env"`
-	// Debug flag if Bastion should enable debugging features.
-	Debug bool `yaml:"debug"`
+	// NoPrettyLogging don't output a colored human readable version on the out writer.
+	NoPrettyLogging bool `yaml:"noPrettyLogging"`
+	// LoggerLevel defines log levels. Default is DebugLevel.
+	LoggerLevel Level `yaml:"loggerLevel"`
+	// LoggerWriter logger output writer. Default os.Stdout
+	LoggerWriter io.Writer
 }
 ```
 
@@ -214,9 +223,28 @@ Addr is the bind address provided to http.Server. Default is `127.0.0.1:8080`. C
 
 Env is the "environment" in which the App is running. Default is "development". Can be set using **ENV** vars `GO_ENV` It's JSON tagged as `env`
 
-#### Debug
+#### NoPrettyLogging
 
-Debug flag if Bastion should enable debugging features. Default `false`. It's JSON tagged as `debug`
+NoPrettyLogging boolean flag to don't output a colored human readable version on the out writer. Default `false`. It's JSON tagged as `noPrettyLogging`
+
+#### LoggerLevel
+
+LoggerLevel defines log levels. Allows for logging at the following levels (from highest to lowest):
+
+- panic (`bastion.PanicLevel`, 5)
+- fatal (`bastion.FatalLevel`, 4)
+- error (`bastion.ErrorLevel`, 3)
+- warn (`bastion.WarnLevel`, 2)
+- info (`bastion.InfoLevel`, 1)
+- debug (`bastion.DebugLevel`, 0)
+
+Default `bastion.DebugLevel`, to turn off logging entirely, pass the bastion.Disabled constant. It's JSON tagged as `loggerLevel`.
+
+#### LoggerWriter
+
+LoggerWriter is an `io.Writer` where the logger output write. Default os.Stdout.
+
+Each logging operation makes a single call to the Writer's Write method. There is no guaranty on access serialization to the Writer. If your Writer is not thread safe, you may consider using sync wrapper.
 
 ### From options file
 
@@ -344,6 +372,57 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
 		Message string `json:"message"`
 	}{"world"}
+	json.NewRender(w).Send(res)
+}
+
+func main() {
+	app := bastion.New(bastion.Options{})
+	app.APIRouter.Get("/hello", handler)
+	app.Serve()
+}
+```
+
+## Logger
+
+Bastion commes with a JSON structured logger powered by [github.com/rs/zerolog](github.com/rs/zerolog). It can be accessed through the bastion instance `bastion.Logger` or from the context of each request `l := bastion.LoggerFromCtx(ctx)`
+
+### Logging from bastion instance
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/ifreddyrondon/bastion"
+)
+
+func main() {
+	app := bastion.New(bastion.Options{})
+	app.Logger.Info().Str("app", "demo").Msg("main")
+	app.Serve()
+}
+```
+
+### Logging from handler
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/render/json"
+)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	res := struct {
+		Message string `json:"message"`
+	}{"world"}
+	l := bastion.LoggerFromCtx(r.Context())
+	l.Info().Msg("handler")
+
 	json.NewRender(w).Send(res)
 }
 

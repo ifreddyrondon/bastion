@@ -18,6 +18,8 @@ func isServerClosed(server *http.Server, ch chan<- bool) {
 }
 
 func TestGracefulShutdown(t *testing.T) {
+	t.Parallel()
+
 	app := New(Options{})
 	app.server = &http.Server{}
 	visited := false
@@ -26,7 +28,7 @@ func TestGracefulShutdown(t *testing.T) {
 	}
 	app.RegisterOnShutdown(f)
 	ctx, cancel := context.WithCancel(context.Background())
-	go graceful(ctx, app.server)
+	go graceful(ctx, app)
 	cancel()
 	ch := make(chan bool, 1)
 	isServerClosed(app.server, ch)
