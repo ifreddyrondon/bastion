@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"net/http"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,8 +24,11 @@ func TestGracefulShutdown(t *testing.T) {
 	app := New(Options{})
 	app.server = &http.Server{}
 	visited := false
+	mu := sync.RWMutex{}
 	f := func() {
+		mu.Lock()
 		visited = true
+		mu.Unlock()
 	}
 	app.RegisterOnShutdown(f)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -34,5 +38,7 @@ func TestGracefulShutdown(t *testing.T) {
 	isServerClosed(app.server, ch)
 	<-ch
 
+	mu.RLock()
 	require.True(t, visited)
+	mu.RUnlock()
 }
