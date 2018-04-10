@@ -24,5 +24,8 @@ jobs:
       # specify any bash command here prefixed with `run: `
       - run: go get -v -t -d ./...
       - run: go get github.com/mattn/goveralls
-      - run: go test -v -cover -race -coverprofile=/home/ubuntu/coverage.out ./...
-      - run: /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci
+      - run: go get github.com/modocache/gover
+      - run: go test -v -cover -race -coverprofile=bastion.coverprofile
+      - run: go test -v -cover -race github.com/ifreddyrondon/bastion/render/json -coverprofile=renderjson.coverprofile
+      - run: gover
+      - run: goveralls -coverprofile gover.coverprofile -service=circle-ci
