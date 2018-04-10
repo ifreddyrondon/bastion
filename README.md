@@ -1,5 +1,10 @@
 # Bastion
 
+[![Documentation](https://godoc.org/github.com/ifreddyrondon/bastion?status.svg)](http://godoc.org/github.com/ifreddyrondon/bastion)
+[![Coverage Status](https://coveralls.io/repos/github/ifreddyrondon/bastion/badge.svg?branch=master)](https://coveralls.io/github/ifreddyrondon/bastion?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ifreddyrondon/bastion)](https://goreportcard.com/report/github.com/ifreddyrondon/bastion)
+[![CircleCI](https://circleci.com/gh/ifreddyrondon/bastion.svg?style=svg)](https://circleci.com/gh/ifreddyrondon/bastion)
+
 Defend your API from the sieges. Bastion offers an "augmented" Router instance.
 
 It has the minimal necessary to create an API with default handlers and middleware that help you raise your API easy and fast.
