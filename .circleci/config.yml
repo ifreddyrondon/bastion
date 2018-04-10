@@ -28,4 +28,4 @@ jobs:
       - run: go test -v -cover -race -coverprofile=bastion.coverprofile
       - run: go test -v -cover -race github.com/ifreddyrondon/bastion/render/json -coverprofile=renderjson.coverprofile
       - run: gover
-      - run: goveralls -coverprofile gover.coverprofile -service=circle-ci
+      - run: goveralls -coverprofile gover.coverprofile -service=circle-ci -repotoken=WeGUqx5UpR38giZVmNAR8Zz8uL7bysnnG
