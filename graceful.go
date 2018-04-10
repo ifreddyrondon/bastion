@@ -6,7 +6,7 @@ import "context"
 func graceful(ctx context.Context, app *Bastion) {
 	<-ctx.Done()
 	logger := app.Logger.With().
-		Str("component", "gracefull").
+		Str("component", "graceful").
 		Logger()
 	logger.Info().Msg("preparing for shutdown")
 	if err := app.server.Shutdown(ctx); err != nil {
