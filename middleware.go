@@ -1,6 +1,7 @@
 package bastion
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,7 +10,34 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
+	"github.com/zenazn/goji/web/mutil"
 )
+
+// APIErrorHandler intercept responses to verify if his status code is >= 500.
+// If status is >= 500, it'll response with a default error.
+// This middleware allows to response with the same error without disclosure
+// internal information, also the real error is logged.
+func APIErrorHandler(defaultErr error, logger *zerolog.Logger) func(http.Handler) http.Handler {
+	l := logger.With().Str("component", "api_error_handler").Logger()
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			lw := mutil.WrapWriter(w)
+			var b bytes.Buffer
+			lw.Tee(&b)
+			defer func(logger zerolog.Logger) {
+				logger.Error().Int("status", lw.Status()).Bytes("response", b.Bytes()).Msg("")
+				b.Reset()
+
+				if err := json.NewRender(lw).InternalServerError(defaultErr); err != nil {
+					logger.Error().Err(err).Msg("")
+				}
+				return
+			}(l)
+			next.ServeHTTP(lw, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
 
 // Recovery is a middleware that recovers from panics, logs the panic (and a
 // backtrace), and returns a HTTP 500 (Internal Server Error) status if

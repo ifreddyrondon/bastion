@@ -120,6 +120,8 @@ func initialize(app *Bastion) {
 	 * API Router
 	 */
 	app.APIRouter = chi.NewRouter()
+	defaultErr := errors.New("test")
+	app.APIRouter.Use(APIErrorHandler(defaultErr, app.Logger))
 	app.APIRouter.Use(LoggerRequest(app.Options)...)
 	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
 
