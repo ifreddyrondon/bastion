@@ -8,7 +8,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/ifreddyrondon/bastion/midleware"
+	"github.com/ifreddyrondon/bastion/middleware"
 
 	"github.com/go-chi/chi"
 	"github.com/markbates/sigtx"
