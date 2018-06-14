@@ -8,6 +8,8 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/ifreddyrondon/bastion/midleware"
+
 	"github.com/go-chi/chi"
 	"github.com/markbates/sigtx"
 	"github.com/pkg/errors"
@@ -121,7 +123,8 @@ func initialize(app *Bastion) {
 	 */
 	app.APIRouter = chi.NewRouter()
 	defaultErr := errors.New("test")
-	app.APIRouter.Use(APIErrorHandler(defaultErr, app.Logger))
+	apiErrHandler := middleware.NewAPIErrHandler(defaultErr, app.Logger)
+	app.APIRouter.Use(apiErrHandler.Handler)
 	app.APIRouter.Use(LoggerRequest(app.Options)...)
 	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
 
