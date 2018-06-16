@@ -1,4 +1,4 @@
-package bastion_test
+package middleware_test
 
 import (
 	"bytes"

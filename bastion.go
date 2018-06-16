@@ -124,7 +124,7 @@ func initialize(app *Bastion) {
 	api500Err := errors.New(app.Options.API500ErrMessage)
 	app.APIRouter.Use(middleware.APIErrHandler(api500Err, app.Logger))
 	app.APIRouter.Use(middleware.Recovery(app.Logger))
-	app.APIRouter.Use(LoggerRequest(app.Options)...)
+	app.APIRouter.Use(middleware.LoggerRequest(!app.Options.isDEV())...)
 	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
 
 	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}
