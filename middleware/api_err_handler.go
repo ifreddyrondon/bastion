@@ -55,41 +55,33 @@ func newWriterCollector() *writerCollector {
 	return &writerCollector{code: http.StatusOK}
 }
 
-// APIErrHandler is the container for error handler middleware
-type APIErrHandler struct {
-	defaultErr error
-	logger     *zerolog.Logger
-}
-
-// NewAPIErrHandler returns a new instance of APIErrorHandler
-func NewAPIErrHandler(defaultErr error, logger *zerolog.Logger) *APIErrHandler {
-	return &APIErrHandler{defaultErr: defaultErr, logger: logger}
-}
-
-// Handler intercept responses to verify if his status code is >= 500.
+// APIErrHandler intercept responses to verify if his status code is >= 500.
 // If status is >= 500, it'll response with a default error.
 // This middleware allows to response with the same error without disclosure
 // internal information, also the real error is logged.
-func (a *APIErrHandler) Handler(next http.Handler) http.Handler {
-	l := a.logger.With().Str("component", "api_error_handler").Logger()
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		m := newWriterCollector()
+func APIErrHandler(defaultErr error, logger *zerolog.Logger) func(http.Handler) http.Handler {
+	l := logger.With().Str("component", "api_error_handler").Logger()
 
-		snoopw := httpsnoop.Wrap(w, hooks(m))
-		defer func(logger zerolog.Logger) {
-			if m.code >= 500 {
-				logger.Error().Int("status", m.code).Bytes("response", m.buf.Bytes()).Msg("")
-				if err := json.NewRender(w).InternalServerError(a.defaultErr); err != nil {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			m := newWriterCollector()
+
+			snoopw := httpsnoop.Wrap(w, hooks(m))
+			defer func(logger zerolog.Logger) {
+				if m.code >= 500 {
+					logger.Error().Int("status", m.code).Bytes("response", m.buf.Bytes()).Msg("")
+					if err := json.NewRender(w).InternalServerError(defaultErr); err != nil {
+						logger.Error().Err(err).Msg("")
+					}
+					return
+				}
+				w.WriteHeader(m.code)
+				if _, err := w.Write(m.buf.Bytes()); err != nil {
 					logger.Error().Err(err).Msg("")
 				}
-				return
-			}
-			w.WriteHeader(m.code)
-			if _, err := w.Write(m.buf.Bytes()); err != nil {
-				logger.Error().Err(err).Msg("")
-			}
-		}(l)
-		next.ServeHTTP(snoopw, r)
+			}(l)
+			next.ServeHTTP(snoopw, r)
+		}
+		return http.HandlerFunc(fn)
 	}
-	return http.HandlerFunc(fn)
 }

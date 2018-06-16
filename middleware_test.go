@@ -6,37 +6,30 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/ifreddyrondon/bastion/render/json"
-
 	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRecovery(t *testing.T) {
 	t.Parallel()
 
 	tt := []struct {
-		name                    string
-		panicArg                interface{}
-		expectedMessageResponse string
+		name     string
+		panicArg interface{}
 	}{
 		{
 			"recovery with err panic call",
 			errors.New("testing recovery"),
-			"testing recovery",
 		},
 		{
 			"recovery with string panic call",
-			"testing recovery",
 			"testing recovery",
 		},
 		{
 			"recovery with empty panic call",
 			500,
-			"500",
 		},
 	}
 
@@ -50,7 +43,7 @@ func TestRecovery(t *testing.T) {
 			app.APIRouter.Mount("/", handler)
 
 			expectedRes := map[string]interface{}{
-				"message": tc.expectedMessageResponse,
+				"message": "looks like something went wrong!",
 				"error":   "Internal Server Error",
 				"status":  500,
 			}
@@ -165,7 +158,7 @@ func TestLoggerRequesLevelErrorForStatusGreaterThan500(t *testing.T) {
 		}
 	})
 
-	response500 := map[string]interface{}{"message": "test", "error": "Internal Server Error", "status": 500}
+	response500 := map[string]interface{}{"message": "looks like something went wrong!", "error": "Internal Server Error", "status": 500}
 	handler500 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewRender(w).InternalServerError(errors.New("test")); err != nil {
 			require.NotNil(t, err)
@@ -207,7 +200,7 @@ func TestLoggerRequestForProductionAppendMoreInfo(t *testing.T) {
 	// production should append extra info to the log, like ip, user_agent and referer
 	t.Parallel()
 
-	response500 := map[string]interface{}{"message": "test", "error": "Internal Server Error", "status": 500}
+	response500 := map[string]interface{}{"message": "looks like something went wrong!", "error": "Internal Server Error", "status": 500}
 	handler500 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewRender(w).InternalServerError(errors.New("test")); err != nil {
 			require.NotNil(t, err)
@@ -252,7 +245,7 @@ func TestLoggerRequestErrorLvl(t *testing.T) {
 		}
 	})
 
-	response500 := map[string]interface{}{"message": "test", "error": "Internal Server Error", "status": 500}
+	response500 := map[string]interface{}{"message": "looks like something went wrong!", "error": "Internal Server Error", "status": 500}
 	handler500 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewRender(w).InternalServerError(errors.New("test")); err != nil {
 			require.NotNil(t, err)

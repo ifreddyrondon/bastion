@@ -14,7 +14,8 @@ const (
 	defaultEnv      = "development"
 	defaultDevAddrs = "127.0.0.1"
 	// api defaults
-	defaultBasePath = "/"
+	defaultBasePath      = "/"
+	default500ErrMessage = "looks like something went wrong!"
 )
 
 // Level defines log levels.
@@ -43,6 +44,8 @@ const (
 type Options struct {
 	// APIBasepath is the path where the bastion api router is going to be mounted. Default `/`.
 	APIBasepath string `yaml:"apiBasepath"`
+	// API500ErrMessage is the default message returned to the user when catch a 500 status error.
+	API500ErrMessage string `yaml:"api500ErrMessage"`
 	// Addr is the bind address provided to http.Server. Default is "127.0.0.1:8080"
 	// Can be set using ENV vars "ADDR" and "PORT".
 	Addr string `yaml:"addr"`
@@ -75,6 +78,7 @@ func optionsWithDefaults(opts *Options) *Options {
 	envAddr := envy.Get("ADDR", addr)
 	opts.Addr = defaults.String(opts.Addr, fmt.Sprintf("%s:%s", envAddr, port))
 	opts.APIBasepath = defaults.String(opts.APIBasepath, defaultBasePath)
+	opts.API500ErrMessage = defaults.String(opts.API500ErrMessage, default500ErrMessage)
 	if opts.LoggerWriter == nil {
 		opts.LoggerWriter = os.Stdout
 	}

@@ -29,6 +29,7 @@ Allows to have commons handlers and middleware between projects with the need fo
 5. [Options](#options)
     1. [Structure](#structure)
         * [APIBasepath](#apibasepath)
+        * [API500ErrMessage](#API500ErrMessage)
         * [Addr](#addr)
         * [Env](#env)
         * [NoPrettyLogging](#noprettylogging)
@@ -149,9 +150,10 @@ Bastion comes equipped with a set of commons middlewares, providing a suite of s
 
 Name | Description
 ---- | -----------
-Logger | Logs the start and end of each request with the elapsed processing time
-Recovery | Gracefully absorb panics and prints the stack trace
-RequestID | Injects a request ID into the context of each request
+Logger | Logs the start and end of each request with the elapsed processing time.
+Recovery | Gracefully absorb panics and prints the stack trace.
+RequestID | Injects a request ID into the context of each request.
+APIErrHandler | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#API500ErrMessage). IT allows to response with the same error without disclosure internal information, also the real error is logged.
 
 ## Register on shutdown
 
@@ -194,6 +196,8 @@ Options are used to define how the application should run.
 type Options struct {
 	// APIBasepath is the path where the bastion api router is going to be mounted. Default `/`.
 	APIBasepath string `yaml:"apiBasepath"`
+	// API500ErrMessage is the default message returned to the user when catch a 500 status error.
+	API500ErrMessage string `yaml:"api500ErrMessage"`
 	// Addr is the bind address provided to http.Server. Default is "127.0.0.1:8080"
 	// Can be set using ENV vars "ADDR" and "PORT".
 	Addr string `yaml:"addr"`
@@ -210,12 +214,22 @@ type Options struct {
 
 #### `APIBasepath`
 
-Api base path value where the bastion api router is going to be mounted. Default `/`. It's JSON tagged as `apiBasepath`
+Api base path value is where the bastion api router is going to be mounted. Default `/`. It's JSON tagged as `apiBasepath`
 
 When:
 
 ```json
 "apiBasepath": "/foo/test",
+```
+
+#### `API500ErrMessage`
+
+Api 500 error message represent the message returned to the user when a http 500 error is caught by the APIErrHandler middleware. Default `looks like something went wrong!`. It's JSON tagged as `api500ErrMessage`
+
+When:
+
+```json
+"api500ErrMessage": "looks like something went wrong!",
 ```
 
 Then: `http://localhost:8080/foo/test`

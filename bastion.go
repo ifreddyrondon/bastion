@@ -110,7 +110,6 @@ func initialize(app *Bastion) {
 	 * internal router
 	 */
 	app.r = chi.NewRouter()
-	app.r.Use(Recovery(app.Logger))
 	app.r.Use(hlog.NewHandler(*app.Logger))
 
 	/**
@@ -122,9 +121,9 @@ func initialize(app *Bastion) {
 	 * API Router
 	 */
 	app.APIRouter = chi.NewRouter()
-	defaultErr := errors.New("test")
-	apiErrHandler := middleware.NewAPIErrHandler(defaultErr, app.Logger)
-	app.APIRouter.Use(apiErrHandler.Handler)
+	api500Err := errors.New(app.Options.API500ErrMessage)
+	app.APIRouter.Use(middleware.APIErrHandler(api500Err, app.Logger))
+	app.APIRouter.Use(Recovery(app.Logger))
 	app.APIRouter.Use(LoggerRequest(app.Options)...)
 	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
 
