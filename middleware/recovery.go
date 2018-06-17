@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
@@ -37,7 +37,7 @@ func logreq(r *http.Request) *zerolog.Event {
 // Recovery is a middleware that recovers from panics, logs the panic (and a
 // backtrace), and returns a HTTP 500 (Internal Server Error) status if
 // possible. Recovery prints a request ID if one is provided.
-func Recovery(logger *zerolog.Logger) func(http.Handler) http.Handler {
+func Recovery(logger *zerolog.Logger, render render.Render) func(http.Handler) http.Handler {
 	l := logger.With().Str("component", "recovery").Logger()
 
 	return func(next http.Handler) http.Handler {
@@ -55,7 +55,7 @@ func Recovery(logger *zerolog.Logger) func(http.Handler) http.Handler {
 					}
 
 					logger.Error().Err(err).Dict("req", logreq(req)).Msg("")
-					if err = json.NewRender(w).InternalServerError(err); err != nil {
+					if err = render(w).InternalServerError(err); err != nil {
 						logger.Error().Err(err).Msg("")
 					}
 					return

@@ -5,8 +5,7 @@ import (
 	"net/http"
 
 	"github.com/felixge/httpsnoop"
-	"github.com/ifreddyrondon/bastion/render/json"
-
+	"github.com/ifreddyrondon/bastion/render"
 	"github.com/rs/zerolog"
 )
 
@@ -59,7 +58,7 @@ func newWriterCollector() *writerCollector {
 // If status is >= 500, it'll response with a default error.
 // This middleware allows to response with the same error without disclosure
 // internal information, also the real error is logged.
-func APIErrHandler(defaultErr error, logger *zerolog.Logger) func(http.Handler) http.Handler {
+func APIErrHandler(defaultErr error, logger *zerolog.Logger, render render.Render) func(http.Handler) http.Handler {
 	l := logger.With().Str("component", "api_error_handler").Logger()
 
 	return func(next http.Handler) http.Handler {
@@ -70,7 +69,7 @@ func APIErrHandler(defaultErr error, logger *zerolog.Logger) func(http.Handler) 
 			defer func(logger zerolog.Logger) {
 				if m.code >= 500 {
 					logger.Error().Int("status", m.code).Bytes("response", m.buf.Bytes()).Msg("")
-					if err := json.NewRender(w).InternalServerError(defaultErr); err != nil {
+					if err := render(w).InternalServerError(defaultErr); err != nil {
 						logger.Error().Err(err).Msg("")
 					}
 					return
