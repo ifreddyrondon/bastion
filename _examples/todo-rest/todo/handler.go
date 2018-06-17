@@ -2,6 +2,7 @@ package todo
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -26,6 +27,8 @@ func (h *Handler) Routes() http.Handler {
 		r.Put("/", h.update)    // PUT /todos/{id} - update a single todo by :id
 		r.Delete("/", h.delete) // DELETE /todos/{id} - delete a single todo by :id
 	})
+
+	r.Get("/error500", h.error500) // GET /panic - testing 500 error
 
 	return r
 }
@@ -65,4 +68,9 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	// handle delete logic
 	h.Render(w).NoContent()
+}
+
+func (h *Handler) error500(w http.ResponseWriter, r *http.Request) {
+	err := errors.New("test")
+	h.Render(w).InternalServerError(err)
 }

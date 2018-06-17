@@ -2,19 +2,25 @@ package bastion
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"syscall"
 
+	"github.com/ifreddyrondon/bastion/render/json"
+
 	"github.com/go-chi/chi"
+	"github.com/ifreddyrondon/bastion/middleware"
 	"github.com/markbates/sigtx"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	yaml "gopkg.in/yaml.v2"
 )
+
+// DefaultRender is the default engine render that bastion uses to reply http responses.
+// Default is json.NewRender
+var DefaultRender = json.NewRender
 
 // onShutdown is a function to be implemented when is necessary
 // to run something before a shutdown of the server or in graceful shutdown.
@@ -92,7 +98,7 @@ func (app *Bastion) Serve() error {
 
 	app.Logger.Info().Msgf("app starting at %v", app.Options.Addr)
 	if err := app.server.ListenAndServe(); err != nil {
-		fmt.Println(err)
+		app.Logger.Error().Err(err).Msg("listenAndServe err")
 		return err
 	}
 	return nil
@@ -108,7 +114,6 @@ func initialize(app *Bastion) {
 	 * internal router
 	 */
 	app.r = chi.NewRouter()
-	app.r.Use(Recovery(app.Logger))
 	app.r.Use(hlog.NewHandler(*app.Logger))
 
 	/**
@@ -120,7 +125,10 @@ func initialize(app *Bastion) {
 	 * API Router
 	 */
 	app.APIRouter = chi.NewRouter()
-	app.APIRouter.Use(LoggerRequest(app.Options)...)
+	api500Err := errors.New(app.Options.API500ErrMessage)
+	app.APIRouter.Use(middleware.APIErrHandler(api500Err, app.Logger, DefaultRender))
+	app.APIRouter.Use(middleware.Recovery(app.Logger, DefaultRender))
+	app.APIRouter.Use(middleware.LoggerRequest(!app.Options.isDEV())...)
 	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
 
 	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}

@@ -1,4 +1,4 @@
-package bastion_test
+package middleware_test
 
 import (
 	"bytes"
@@ -6,124 +6,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/ifreddyrondon/bastion/render/json"
-
 	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
-
-func TestRecovery(t *testing.T) {
-	t.Parallel()
-
-	tt := []struct {
-		name                    string
-		panicArg                interface{}
-		expectedMessageResponse string
-	}{
-		{
-			"recovery with err panic call",
-			errors.New("testing recovery"),
-			"testing recovery",
-		},
-		{
-			"recovery with string panic call",
-			"testing recovery",
-			"testing recovery",
-		},
-		{
-			"recovery with empty panic call",
-			500,
-			"500",
-		},
-	}
-
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				panic(tc.panicArg)
-			})
-
-			app := bastion.New(bastion.Options{})
-			app.APIRouter.Mount("/", handler)
-
-			expectedRes := map[string]interface{}{
-				"message": tc.expectedMessageResponse,
-				"error":   "Internal Server Error",
-				"status":  500,
-			}
-
-			e := bastion.Tester(t, app)
-			e.GET("/").Expect().Status(500).JSON().
-				Object().ContainsMap(expectedRes)
-		})
-	}
-}
-
-func TestRecoveryLogRequestGET(t *testing.T) {
-	t.Parallel()
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		panic("test")
-	})
-
-	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
-	app.APIRouter.Mount("/", handler)
-
-	e := bastion.Tester(t, app)
-	e.GET("/").Expect().Status(500).JSON()
-	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
-	assert.Contains(t, out.String(), `"component":"recovery"`)
-	assert.Contains(t, out.String(), `"error":"test"`)
-	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"","headers":{},"body":""}`)
-}
-
-func TestRecoveryLogRequestWithHeaders(t *testing.T) {
-	t.Parallel()
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		panic("test")
-	})
-
-	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
-	app.APIRouter.Mount("/", handler)
-
-	e := bastion.Tester(t, app)
-	e.GET("/").WithHeader("User-Agent", "Mozilla").Expect().Status(500).JSON()
-	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
-	assert.Contains(t, out.String(), `"component":"recovery"`)
-	assert.Contains(t, out.String(), `"error":"test"`)
-	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"","headers":{"user-agent":"Mozilla"}`)
-}
-
-func TestRecoveryLogRequestPOST(t *testing.T) {
-	t.Parallel()
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		panic("test")
-	})
-
-	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
-	app.APIRouter.Mount("/", handler)
-
-	payload := map[string]string{"hello": "world"}
-
-	e := bastion.Tester(t, app)
-	e.POST("/").WithJSON(payload).
-		Expect().Status(500).JSON()
-	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
-	assert.Contains(t, out.String(), `"component":"recovery"`)
-	assert.Contains(t, out.String(), `"error":"test"`)
-	assert.Contains(t, out.String(), `"req":{"url":"/","method":"POST","proto":"HTTP/1.1","host":"","headers":{"content-type":"application/json; charset=utf-8"},"body":"{\"hello\":\"world\"}"}`)
-}
 
 func TestLoggerRequestForDevelopment(t *testing.T) {
 	// default
@@ -165,7 +52,7 @@ func TestLoggerRequesLevelErrorForStatusGreaterThan500(t *testing.T) {
 		}
 	})
 
-	response500 := map[string]interface{}{"message": "test", "error": "Internal Server Error", "status": 500}
+	response500 := map[string]interface{}{"message": "looks like something went wrong!", "error": "Internal Server Error", "status": 500}
 	handler500 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewRender(w).InternalServerError(errors.New("test")); err != nil {
 			require.NotNil(t, err)
@@ -207,7 +94,7 @@ func TestLoggerRequestForProductionAppendMoreInfo(t *testing.T) {
 	// production should append extra info to the log, like ip, user_agent and referer
 	t.Parallel()
 
-	response500 := map[string]interface{}{"message": "test", "error": "Internal Server Error", "status": 500}
+	response500 := map[string]interface{}{"message": "looks like something went wrong!", "error": "Internal Server Error", "status": 500}
 	handler500 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewRender(w).InternalServerError(errors.New("test")); err != nil {
 			require.NotNil(t, err)
@@ -252,7 +139,7 @@ func TestLoggerRequestErrorLvl(t *testing.T) {
 		}
 	})
 
-	response500 := map[string]interface{}{"message": "test", "error": "Internal Server Error", "status": 500}
+	response500 := map[string]interface{}{"message": "looks like something went wrong!", "error": "Internal Server Error", "status": 500}
 	handler500 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewRender(w).InternalServerError(errors.New("test")); err != nil {
 			require.NotNil(t, err)
