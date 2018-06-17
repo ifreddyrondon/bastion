@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/ifreddyrondon/bastion/render/json"
+
+	"github.com/ifreddyrondon/bastion/render"
+
 	"github.com/ifreddyrondon/bastion"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -114,4 +118,30 @@ func TestRecoveryLogRequestPOST(t *testing.T) {
 	assert.Contains(t, out.String(), `"component":"recovery"`)
 	assert.Contains(t, out.String(), `"error":"test"`)
 	assert.Contains(t, out.String(), `"req":{"url":"/","method":"POST","proto":"HTTP/1.1","host":"","headers":{"content-type":"application/json; charset=utf-8"},"body":"{\"hello\":\"world\"}"}`)
+}
+
+func TestRecoveryFailRender(t *testing.T) {
+	bastion.DefaultRender = func(http.ResponseWriter) render.Engine {
+		return &mockRenderEngine{}
+	}
+
+	teardown := func() {
+		bastion.DefaultRender = json.NewRender
+	}
+	defer teardown()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		panic("test")
+	})
+
+	out := &bytes.Buffer{}
+	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
+	app.APIRouter.Mount("/", handler)
+
+	e := bastion.Tester(t, app)
+	e.GET("/").Expect().Status(200)
+	assert.Contains(t, out.String(), `"level":"error`)
+	assert.Contains(t, out.String(), `"app":"bastion"`)
+	assert.Contains(t, out.String(), `"component":"recovery"`)
+	assert.Contains(t, out.String(), `"error":"error render"`)
 }
