@@ -1,6 +1,7 @@
 package render_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -98,4 +99,60 @@ func TestXMLNoContent(t *testing.T) {
 	render.NewXML(rr).NoContent()
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNoContent).NoContent()
+}
+
+func TestXMLBadRequest(t *testing.T) {
+	t.Parallel()
+
+	e := errors.New("test")
+	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTTPError message=\"test\" error=\"Bad Request\" status=\"400\"></HTTPError>"
+
+	rr := httptest.NewRecorder()
+	render.NewXML(rr).BadRequest(e)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusBadRequest).
+		Body().
+		Equal(expected)
+}
+
+func TestXMLNotFound(t *testing.T) {
+	t.Parallel()
+
+	e := errors.New("test")
+	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTTPError message=\"test\" error=\"Not Found\" status=\"404\"></HTTPError>"
+
+	rr := httptest.NewRecorder()
+	render.NewXML(rr).NotFound(e)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusNotFound).
+		Body().
+		Equal(expected)
+}
+
+func TestXMLMethodNotAllowed(t *testing.T) {
+	t.Parallel()
+
+	e := errors.New("test")
+	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTTPError message=\"test\" error=\"Method Not Allowed\" status=\"405\"></HTTPError>"
+
+	rr := httptest.NewRecorder()
+	render.NewXML(rr).MethodNotAllowed(e)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusMethodNotAllowed).
+		Body().
+		Equal(expected)
+}
+
+func TestXMLInternalServerError(t *testing.T) {
+	t.Parallel()
+
+	e := errors.New("test")
+	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTTPError message=\"test\" error=\"Internal Server Error\" status=\"500\"></HTTPError>"
+
+	rr := httptest.NewRecorder()
+	render.NewXML(rr).InternalServerError(e)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusInternalServerError).
+		Body().
+		Equal(expected)
 }

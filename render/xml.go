@@ -82,3 +82,35 @@ func (x *XML) Created(v interface{}) {
 func (x *XML) NoContent() {
 	x.w.WriteHeader(http.StatusNoContent)
 }
+
+// BadRequest sends a XML-encoded error response in the body of a request with the 400 status code.
+// The response will contains the status 400 and error "Bad Request".
+func (x *XML) BadRequest(err error) {
+	s := http.StatusBadRequest
+	message := NewHTTPError(err.Error(), http.StatusText(s), s)
+	x.Response(http.StatusBadRequest, message)
+}
+
+// NotFound sends a XML-encoded error response in the body of a request with the 404 status code.
+// The response will contains the status 404 and error "Not Found".
+func (x *XML) NotFound(err error) {
+	s := http.StatusNotFound
+	message := NewHTTPError(err.Error(), http.StatusText(s), s)
+	x.Response(http.StatusNotFound, message)
+}
+
+// MethodNotAllowed sends a XML-encoded error response in the body of a request with the 405 status code.
+// The response will contains the status 405 and error "Method Not Allowed".
+func (x *XML) MethodNotAllowed(err error) {
+	s := http.StatusMethodNotAllowed
+	message := NewHTTPError(err.Error(), http.StatusText(s), s)
+	x.Response(http.StatusMethodNotAllowed, message)
+}
+
+// InternalServerError sends a XML-encoded error response in the body of a request with the 500 status code.
+// The response will contains the status 500 and error "Internal Server Error".
+func (x *XML) InternalServerError(err error) {
+	s := http.StatusInternalServerError
+	message := NewHTTPError(err.Error(), http.StatusText(s), s)
+	x.Response(http.StatusInternalServerError, message)
+}

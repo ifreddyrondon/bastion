@@ -20,9 +20,9 @@ type APIRenderer interface {
 
 // HTTPError represents an error that occurred while handling a request.
 type HTTPError struct {
-	Message string `json:"message,omitempty"`
-	Error   string `json:"error,omitempty"`
-	Status  int    `json:"status,omitempty"`
+	Message string `json:"message,omitempty" xml:"message,attr,omitempty"`
+	Error   string `json:"error,omitempty" xml:"error,attr,omitempty"`
+	Status  int    `json:"status,omitempty" xml:"status,attr,omitempty"`
 }
 
 // NewHTTPError returns a new HTTPError instance.
