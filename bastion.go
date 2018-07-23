@@ -7,7 +7,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 
 	"github.com/go-chi/chi"
 	"github.com/ifreddyrondon/bastion/middleware"
@@ -20,7 +20,7 @@ import (
 
 // DefaultRender is the default engine render that bastion uses to reply http responses.
 // Default is json.NewRender
-var DefaultRender = json.NewRender
+var DefaultRender = json.JSON
 
 // onShutdown is a function to be implemented when is necessary
 // to run something before a shutdown of the server or in graceful shutdown.
