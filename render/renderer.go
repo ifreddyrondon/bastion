@@ -1,21 +1,50 @@
 package render
 
-// Renderer interface for managing general response payloads.
+import "net/http"
+
+// StringRenderer interface manage string responses.
+type StringRenderer interface {
+	// Response encoded string into ResponseWriter with the HTTP status code.
+	Response(w http.ResponseWriter, code int, response string)
+}
+
+// ByteRenderer interface manage []byte responses.
+type ByteRenderer interface {
+	// Response encoded []byte into ResponseWriter with the HTTP status code.
+	Response(w http.ResponseWriter, code int, response []byte)
+}
+
+// Renderer interface for managing response payloads.
 type Renderer interface {
-	// Response encoded responses in the body of a request with the HTTP status code.
-	Response(code int, response interface{})
+	// Response encoded responses in the ResponseWriter with the HTTP status code.
+	Response(w http.ResponseWriter, code int, response interface{})
 }
 
 // APIRenderer interface for managing API response payloads.
 type APIRenderer interface {
 	Renderer
-	Send(response interface{})
-	Created(response interface{})
-	NoContent()
-	BadRequest(err error)
-	NotFound(err error)
-	MethodNotAllowed(err error)
-	InternalServerError(err error)
+	OKRenderer
+	ClientErrRenderer
+	ServerErrRenderer
+}
+
+// OKRenderer interface for managing success API response payloads.
+type OKRenderer interface {
+	Send(w http.ResponseWriter, response interface{})
+	Created(w http.ResponseWriter, response interface{})
+	NoContent(w http.ResponseWriter)
+}
+
+// ClientErrRenderer interface for managing API responses when client error.
+type ClientErrRenderer interface {
+	BadRequest(w http.ResponseWriter, err error)
+	NotFound(w http.ResponseWriter, err error)
+	MethodNotAllowed(w http.ResponseWriter, err error)
+}
+
+// ServerErrRenderer interface for managing API responses when server error.
+type ServerErrRenderer interface {
+	InternalServerError(w http.ResponseWriter, err error)
 }
 
 // HTTPError represents an error that occurred while handling a request.
@@ -32,4 +61,9 @@ func NewHTTPError(message, err string, status int) *HTTPError {
 		Error:   err,
 		Status:  status,
 	}
+}
+
+func write(w http.ResponseWriter, code int, v []byte) {
+	w.WriteHeader(code)
+	w.Write(v)
 }

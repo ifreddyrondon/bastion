@@ -7,8 +7,6 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/ifreddyrondon/bastion/render"
-
 	"github.com/go-chi/chi"
 	"github.com/ifreddyrondon/bastion/middleware"
 	"github.com/markbates/sigtx"
@@ -17,10 +15,6 @@ import (
 	"github.com/rs/zerolog/hlog"
 	yaml "gopkg.in/yaml.v2"
 )
-
-// DefaultRender is the default engine render that bastion uses to reply http responses.
-// Default is json.NewRender
-var DefaultRender = json.JSON
 
 // onShutdown is a function to be implemented when is necessary
 // to run something before a shutdown of the server or in graceful shutdown.
@@ -125,10 +119,14 @@ func initialize(app *Bastion) {
 	 * API Router
 	 */
 	app.APIRouter = chi.NewRouter()
-	api500Err := errors.New(app.Options.API500ErrMessage)
-	app.APIRouter.Use(middleware.APIErrHandler(api500Err, app.Logger, DefaultRender))
-	app.APIRouter.Use(middleware.Recovery(app.Logger, DefaultRender))
-	app.APIRouter.Use(middleware.LoggerRequest(!app.Options.isDEV())...)
+	// TODO: set logger output
+	apiErr := middleware.APIError(
+		middleware.APIErrorDefault500(errors.New(app.Options.API500ErrMessage)),
+	)
+	app.APIRouter.Use(apiErr)
+	// TODO: set logger output
+	app.APIRouter.Use(middleware.Recovery())
+	app.APIRouter.Use(middleware.Logger(!app.Options.isDEV())...)
 	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
 
 	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}

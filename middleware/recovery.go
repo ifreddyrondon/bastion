@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/ifreddyrondon/bastion/render"
@@ -34,15 +35,42 @@ func logreq(r *http.Request) *zerolog.Event {
 	return evt
 }
 
+type recoveryCfg struct {
+	render       render.ServerErrRenderer
+	loggerWriter io.Writer
+	logger       zerolog.Logger
+}
+
+// RecoveryLoggerOutput set the output for the logger
+func RecoveryLoggerOutput(w io.Writer) func(*recoveryCfg) {
+	return func(r *recoveryCfg) {
+		r.loggerWriter = w
+	}
+}
+
+func getRecoveryCfg(opts ...func(*recoveryCfg)) *recoveryCfg {
+	r := &recoveryCfg{
+		render:       render.NewJSON(),
+		loggerWriter: os.Stdout,
+	}
+
+	for _, opt := range opts {
+		opt(r)
+	}
+
+	r.logger = zerolog.New(r.loggerWriter).With().Timestamp().Logger()
+	return r
+}
+
 // Recovery is a middleware that recovers from panics, logs the panic (and a
 // backtrace), and returns a HTTP 500 (Internal Server Error) status if
 // possible. Recovery prints a request ID if one is provided.
-func Recovery(logger *zerolog.Logger, render render.Render) func(http.Handler) http.Handler {
-	l := logger.With().Str("component", "recovery").Logger()
+func Recovery(opts ...func(*recoveryCfg)) func(http.Handler) http.Handler {
+	confg := getRecoveryCfg(opts...)
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, req *http.Request) {
-			defer func(logger zerolog.Logger) {
+			defer func() {
 				if r := recover(); r != nil {
 					var err error
 					switch t := r.(type) {
@@ -53,14 +81,14 @@ func Recovery(logger *zerolog.Logger, render render.Render) func(http.Handler) h
 					default:
 						err = errors.New(fmt.Sprint(t))
 					}
-
-					logger.Error().Err(err).Dict("req", logreq(req)).Msg("")
-					if err = render(w).InternalServerError(err); err != nil {
-						logger.Error().Err(err).Msg("")
-					}
+					confg.logger.Error().
+						Str("component", "recovery").
+						Err(err).Dict("req", logreq(req)).
+						Msg("Recovery middleware catch an error")
+					confg.render.InternalServerError(w, err)
 					return
 				}
-			}(l)
+			}()
 			next.ServeHTTP(w, req)
 		}
 		return http.HandlerFunc(fn)

@@ -2,16 +2,15 @@ package middleware_test
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/render/json"
-
-	"github.com/ifreddyrondon/bastion/render"
-
-	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/middleware"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	httpexpect "gopkg.in/gavv/httpexpect.v1"
 )
 
 func TestRecovery(t *testing.T) {
@@ -37,22 +36,28 @@ func TestRecovery(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				panic(tc.panicArg)
 			})
 
-			app := bastion.New(bastion.Options{})
-			app.APIRouter.Mount("/", handler)
-
+			out := &bytes.Buffer{}
+			m := middleware.Recovery(middleware.RecoveryLoggerOutput(out))
+			server := httptest.NewServer(m(h))
+			defer server.Close()
 			expectedRes := map[string]interface{}{
-				"message": "looks like something went wrong!",
+				"message": fmt.Sprintf("%v", tc.panicArg),
 				"error":   "Internal Server Error",
 				"status":  500,
 			}
 
-			e := bastion.Tester(t, app)
-			e.GET("/").Expect().Status(500).JSON().
+			e := httpexpect.New(t, server.URL)
+			e.GET("/").Expect().Status(500).
+				JSON().
 				Object().ContainsMap(expectedRes)
+
+			output := out.String()
+			assert.Contains(t, output, `"component":"recovery`)
+			assert.Contains(t, output, `"message":"Recovery middleware catch an error`)
 		})
 	}
 }
@@ -60,88 +65,65 @@ func TestRecovery(t *testing.T) {
 func TestRecoveryLogRequestGET(t *testing.T) {
 	t.Parallel()
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic("test")
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
-	app.APIRouter.Mount("/", handler)
+	m := middleware.Recovery(middleware.RecoveryLoggerOutput(out))
+	server := httptest.NewServer(m(h))
+	defer server.Close()
 
-	e := bastion.Tester(t, app)
+	e := httpexpect.New(t, server.URL)
 	e.GET("/").Expect().Status(500).JSON()
 	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
 	assert.Contains(t, out.String(), `"component":"recovery"`)
 	assert.Contains(t, out.String(), `"error":"test"`)
-	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"","headers":{},"body":""}`)
+	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"`)
+	assert.Contains(t, out.String(), `"headers":{"user-agent":"Go-http-client/1.1","accept-encoding":"gzip"},"body":""}`)
+
 }
 
 func TestRecoveryLogRequestWithHeaders(t *testing.T) {
 	t.Parallel()
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic("test")
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
-	app.APIRouter.Mount("/", handler)
+	m := middleware.Recovery(middleware.RecoveryLoggerOutput(out))
+	server := httptest.NewServer(m(h))
+	defer server.Close()
 
-	e := bastion.Tester(t, app)
+	e := httpexpect.New(t, server.URL)
 	e.GET("/").WithHeader("User-Agent", "Mozilla").Expect().Status(500).JSON()
 	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
 	assert.Contains(t, out.String(), `"component":"recovery"`)
 	assert.Contains(t, out.String(), `"error":"test"`)
-	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"","headers":{"user-agent":"Mozilla"}`)
+	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"`)
+	assert.Contains(t, out.String(), `"headers":{"user-agent":"Mozilla","accept-encoding":"gzip"},"body":""}`)
 }
 
 func TestRecoveryLogRequestPOST(t *testing.T) {
 	t.Parallel()
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic("test")
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
-	app.APIRouter.Mount("/", handler)
+	m := middleware.Recovery(middleware.RecoveryLoggerOutput(out))
+	server := httptest.NewServer(m(h))
+	defer server.Close()
 
 	payload := map[string]string{"hello": "world"}
-
-	e := bastion.Tester(t, app)
+	e := httpexpect.New(t, server.URL)
 	e.POST("/").WithJSON(payload).
 		Expect().Status(500).JSON()
 	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
 	assert.Contains(t, out.String(), `"component":"recovery"`)
 	assert.Contains(t, out.String(), `"error":"test"`)
-	assert.Contains(t, out.String(), `"req":{"url":"/","method":"POST","proto":"HTTP/1.1","host":"","headers":{"content-type":"application/json; charset=utf-8"},"body":"{\"hello\":\"world\"}"}`)
-}
-
-func TestRecoveryFailRender(t *testing.T) {
-	bastion.DefaultRender = func(http.ResponseWriter) render.Engine {
-		return &mockRenderEngine{}
-	}
-
-	teardown := func() {
-		bastion.DefaultRender = json.NewRender
-	}
-	defer teardown()
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		panic("test")
-	})
-
-	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
-	app.APIRouter.Mount("/", handler)
-
-	e := bastion.Tester(t, app)
-	e.GET("/").Expect().Status(200)
-	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
-	assert.Contains(t, out.String(), `"component":"recovery"`)
-	assert.Contains(t, out.String(), `"error":"error render"`)
+	assert.Contains(t, out.String(), `"req":{"url":"/","method":"POST","proto":"HTTP/1.1","host":"`)
+	assert.Contains(t, out.String(), `"body":"{\"hello\":\"world\"}"`)
 }

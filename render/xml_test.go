@@ -44,7 +44,7 @@ func TestXMLResponse(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			render.NewXML(rr, tc.opts...).Response(http.StatusOK, tc.a)
+			render.NewXML(tc.opts...).Response(rr, http.StatusOK, tc.a)
 			httpexpect.NewResponse(t, rr.Result()).
 				Status(http.StatusOK).
 				Body().
@@ -57,7 +57,7 @@ func TestXMLResponseError(t *testing.T) {
 	t.Parallel()
 
 	rr := httptest.NewRecorder()
-	render.NewXML(rr).Response(http.StatusOK, make(chan int))
+	render.NewXML().Response(rr, http.StatusOK, make(chan int))
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusInternalServerError).
 		Text().
@@ -71,7 +71,7 @@ func TestXMLSend(t *testing.T) {
 	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<addressXML><address>test address</address><lat>1</lat><lng>1</lng></addressXML>"
 
 	rr := httptest.NewRecorder()
-	render.NewXML(rr).Send(&a)
+	render.NewXML().Send(rr, &a)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusOK).
 		Body().
@@ -85,7 +85,7 @@ func TestXMLCreated(t *testing.T) {
 	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<addressXML><address>test address</address><lat>1</lat><lng>1</lng></addressXML>"
 
 	rr := httptest.NewRecorder()
-	render.NewXML(rr).Created(&a)
+	render.NewXML().Created(rr, &a)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusCreated).
 		Body().
@@ -96,7 +96,7 @@ func TestXMLNoContent(t *testing.T) {
 	t.Parallel()
 
 	rr := httptest.NewRecorder()
-	render.NewXML(rr).NoContent()
+	render.NewXML().NoContent(rr)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNoContent).NoContent()
 }
@@ -108,7 +108,7 @@ func TestXMLBadRequest(t *testing.T) {
 	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTTPError message=\"test\" error=\"Bad Request\" status=\"400\"></HTTPError>"
 
 	rr := httptest.NewRecorder()
-	render.NewXML(rr).BadRequest(e)
+	render.NewXML().BadRequest(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusBadRequest).
 		Body().
@@ -122,7 +122,7 @@ func TestXMLNotFound(t *testing.T) {
 	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTTPError message=\"test\" error=\"Not Found\" status=\"404\"></HTTPError>"
 
 	rr := httptest.NewRecorder()
-	render.NewXML(rr).NotFound(e)
+	render.NewXML().NotFound(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNotFound).
 		Body().
@@ -136,7 +136,7 @@ func TestXMLMethodNotAllowed(t *testing.T) {
 	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTTPError message=\"test\" error=\"Method Not Allowed\" status=\"405\"></HTTPError>"
 
 	rr := httptest.NewRecorder()
-	render.NewXML(rr).MethodNotAllowed(e)
+	render.NewXML().MethodNotAllowed(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusMethodNotAllowed).
 		Body().
@@ -150,7 +150,7 @@ func TestXMLInternalServerError(t *testing.T) {
 	expected := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HTTPError message=\"test\" error=\"Internal Server Error\" status=\"500\"></HTTPError>"
 
 	rr := httptest.NewRecorder()
-	render.NewXML(rr).InternalServerError(e)
+	render.NewXML().InternalServerError(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusInternalServerError).
 		Body().

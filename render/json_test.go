@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/ifreddyrondon/bastion/render"
-	httpexpect "gopkg.in/gavv/httpexpect.v1"
+	"gopkg.in/gavv/httpexpect.v1"
 )
 
 type address struct {
@@ -24,7 +24,7 @@ func TestJSONResponse(t *testing.T) {
 	expected := map[string]interface{}{"address": "test address", "lat": 1, "lng": 1}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON(rr).Response(http.StatusOK, &a)
+	render.NewJSON().Response(rr, http.StatusOK, &a)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusOK).
 		JSON().Object().Equal(expected)
@@ -58,7 +58,7 @@ func TestJSONOptions(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			render.NewJSON(rr, tc.opts...).Response(http.StatusOK, tc.a)
+			render.NewJSON(tc.opts...).Response(rr, http.StatusOK, tc.a)
 			httpexpect.NewResponse(t, rr.Result()).
 				Status(http.StatusOK).
 				Body().
@@ -71,7 +71,7 @@ func TestJSONResponseError(t *testing.T) {
 	t.Parallel()
 
 	rr := httptest.NewRecorder()
-	render.NewJSON(rr).Response(http.StatusOK, math.Inf(1))
+	render.NewJSON().Response(rr, http.StatusOK, math.Inf(1))
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusInternalServerError).
 		Text().
@@ -85,7 +85,7 @@ func TestJSONSend(t *testing.T) {
 	expected := map[string]interface{}{"address": "test address", "lat": 1, "lng": 1}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON(rr).Send(&a)
+	render.NewJSON().Send(rr, &a)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusOK).
 		JSON().Object().Equal(expected)
@@ -98,7 +98,7 @@ func TestJSONCreated(t *testing.T) {
 	expected := map[string]interface{}{"address": "test address", "lat": 1, "lng": 1}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON(rr).Created(&a)
+	render.NewJSON().Created(rr, &a)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusCreated).
 		JSON().Object().Equal(expected)
@@ -108,7 +108,7 @@ func TestJSONNoContent(t *testing.T) {
 	t.Parallel()
 
 	rr := httptest.NewRecorder()
-	render.NewJSON(rr).NoContent()
+	render.NewJSON().NoContent(rr)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNoContent).NoContent()
 }
@@ -120,7 +120,7 @@ func TestJSONBadRequest(t *testing.T) {
 	expected := map[string]interface{}{"message": "test", "error": "Bad Request", "status": 400}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON(rr).BadRequest(e)
+	render.NewJSON().BadRequest(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusBadRequest).
 		JSON().Object().Equal(expected)
@@ -133,7 +133,7 @@ func TestJSONNotFound(t *testing.T) {
 	expected := map[string]interface{}{"message": "test", "error": "Not Found", "status": 404}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON(rr).NotFound(e)
+	render.NewJSON().NotFound(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNotFound).
 		JSON().Object().Equal(expected)
@@ -146,7 +146,7 @@ func TestJSONMethodNotAllowed(t *testing.T) {
 	expected := map[string]interface{}{"message": "test", "error": "Method Not Allowed", "status": 405}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON(rr).MethodNotAllowed(e)
+	render.NewJSON().MethodNotAllowed(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusMethodNotAllowed).
 		JSON().Object().Equal(expected)
@@ -159,7 +159,7 @@ func TestJSONInternalServerError(t *testing.T) {
 	expected := map[string]interface{}{"message": "test", "error": "Internal Server Error", "status": 500}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON(rr).InternalServerError(e)
+	render.NewJSON().InternalServerError(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusInternalServerError).
 		JSON().Object().Equal(expected)

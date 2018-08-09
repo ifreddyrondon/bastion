@@ -9,10 +9,9 @@ import (
 	httpexpect "gopkg.in/gavv/httpexpect.v1"
 )
 
-func TestTextResponse(t *testing.T) {
+func TestDataResponse(t *testing.T) {
 	rr := httptest.NewRecorder()
-	render.NewText(rr).Response(http.StatusOK, "test")
+	render.Data.Response(rr, http.StatusOK, []byte("test"))
 	httpexpect.NewResponse(t, rr.Result()).
-		Status(http.StatusOK).
-		Text().Equal("test")
+		Status(http.StatusOK).ContentType("application/octet-stream")
 }

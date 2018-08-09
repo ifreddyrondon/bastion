@@ -27,14 +27,13 @@ func PrettyPrintXML() func(*XML) {
 // XML encode the response as "application/xml" content type
 // and implement the Renderer and APIRenderer interface.
 type XML struct {
-	w            http.ResponseWriter
 	indentPrefix string
 	indentValue  string
 }
 
 // NewXML returns a new XML responder instance.
-func NewXML(w http.ResponseWriter, opts ...func(*XML)) *XML {
-	j := &XML{w: w}
+func NewXML(opts ...func(*XML)) *XML {
+	j := &XML{}
 	for _, o := range opts {
 		o(j)
 	}
@@ -44,16 +43,14 @@ func NewXML(w http.ResponseWriter, opts ...func(*XML)) *XML {
 // Response marshals 'v' to XML, setting the Content-Type as application/xml. It
 // will automatically prepend a generic XML header (see encoding/xml.Header) if
 // one is not found in the first 100 bytes of 'v'.
-func (x *XML) Response(code int, v interface{}) {
+func (x *XML) Response(w http.ResponseWriter, code int, v interface{}) {
 	b, err := xml.MarshalIndent(v, x.indentPrefix, x.indentValue)
 	if err != nil {
-		http.Error(x.w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	x.w.Header().Set("Content-Type", "application/xml; charset=utf-8")
-	x.w.WriteHeader(code)
-
+	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	// Try to find <?xml header in first DefaultFindHeaderIndex bytes
 	// (just in case there're some XML comments).
 	findHeaderUntil := len(b)
@@ -62,55 +59,55 @@ func (x *XML) Response(code int, v interface{}) {
 	}
 	if !bytes.Contains(b[:findHeaderUntil], []byte("<?xml")) {
 		// No header found. Print it out first.
-		x.w.Write([]byte(xml.Header))
+		write(w, code, []byte(xml.Header))
 	}
 
-	x.w.Write(b)
+	write(w, code, b)
 }
 
 // Send sends a XML-encoded v in the body of a request with the 200 status code.
-func (x *XML) Send(v interface{}) {
-	x.Response(http.StatusOK, v)
+func (x *XML) Send(w http.ResponseWriter, v interface{}) {
+	x.Response(w, http.StatusOK, v)
 }
 
 // Created sends a XML-encoded v in the body of a request with the 201 status code.
-func (x *XML) Created(v interface{}) {
-	x.Response(http.StatusCreated, v)
+func (x *XML) Created(w http.ResponseWriter, v interface{}) {
+	x.Response(w, http.StatusCreated, v)
 }
 
 // NoContent sends a v without no content with the 204 status code.
-func (x *XML) NoContent() {
-	x.w.WriteHeader(http.StatusNoContent)
+func (x *XML) NoContent(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // BadRequest sends a XML-encoded error response in the body of a request with the 400 status code.
 // The response will contains the status 400 and error "Bad Request".
-func (x *XML) BadRequest(err error) {
+func (x *XML) BadRequest(w http.ResponseWriter, err error) {
 	s := http.StatusBadRequest
 	message := NewHTTPError(err.Error(), http.StatusText(s), s)
-	x.Response(http.StatusBadRequest, message)
+	x.Response(w, http.StatusBadRequest, message)
 }
 
 // NotFound sends a XML-encoded error response in the body of a request with the 404 status code.
 // The response will contains the status 404 and error "Not Found".
-func (x *XML) NotFound(err error) {
+func (x *XML) NotFound(w http.ResponseWriter, err error) {
 	s := http.StatusNotFound
 	message := NewHTTPError(err.Error(), http.StatusText(s), s)
-	x.Response(http.StatusNotFound, message)
+	x.Response(w, http.StatusNotFound, message)
 }
 
 // MethodNotAllowed sends a XML-encoded error response in the body of a request with the 405 status code.
 // The response will contains the status 405 and error "Method Not Allowed".
-func (x *XML) MethodNotAllowed(err error) {
+func (x *XML) MethodNotAllowed(w http.ResponseWriter, err error) {
 	s := http.StatusMethodNotAllowed
 	message := NewHTTPError(err.Error(), http.StatusText(s), s)
-	x.Response(http.StatusMethodNotAllowed, message)
+	x.Response(w, http.StatusMethodNotAllowed, message)
 }
 
 // InternalServerError sends a XML-encoded error response in the body of a request with the 500 status code.
 // The response will contains the status 500 and error "Internal Server Error".
-func (x *XML) InternalServerError(err error) {
+func (x *XML) InternalServerError(w http.ResponseWriter, err error) {
 	s := http.StatusInternalServerError
 	message := NewHTTPError(err.Error(), http.StatusText(s), s)
-	x.Response(http.StatusInternalServerError, message)
+	x.Response(w, http.StatusInternalServerError, message)
 }
