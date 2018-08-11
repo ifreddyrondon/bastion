@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/ifreddyrondon/bastion/render"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
 )
 
 func TestDefaultBastion(t *testing.T) {
@@ -29,8 +29,7 @@ func TestBastionHelloWorld(t *testing.T) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
-		err := json.NewRender(w).Send(res)
-		assert.Nil(t, err)
+		render.NewJSON().Send(w, res)
 	})
 
 	expected := map[string]interface{}{"message": "world"}
@@ -64,8 +63,7 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 				res := struct {
 					Message string `json:"message"`
 				}{"world"}
-				err := json.NewRender(w).Send(res)
-				assert.Nil(t, err)
+				render.NewJSON().Send(w, res)
 			})
 
 			expected := map[string]interface{}{"message": "world"}

@@ -1,4 +1,4 @@
-package middleware
+package bastion
 
 import (
 	"net/http"
@@ -10,7 +10,6 @@ import (
 
 // ProductionLoggers is a list of logger added for production
 var ProductionLoggers = []func(next http.Handler) http.Handler{
-	hlog.RequestIDHandler("req_id", "Request-Id"),
 	hlog.RemoteAddrHandler("ip"),
 	hlog.UserAgentHandler("user_agent"),
 	hlog.RefererHandler("referer"),
@@ -24,7 +23,7 @@ func getLoggerWithLevel(r *http.Request, status int) *zerolog.Event {
 }
 
 // Logger middleware to log request.
-func Logger(isProd bool) []func(next http.Handler) http.Handler {
+func loggerRequest(isProd bool) []func(next http.Handler) http.Handler {
 	access := hlog.AccessHandler(func(r *http.Request, status, size int, duration time.Duration) {
 		getLoggerWithLevel(r, status).
 			Str("method", r.Method).
@@ -34,7 +33,10 @@ func Logger(isProd bool) []func(next http.Handler) http.Handler {
 			Dur("duration", duration).
 			Msg("")
 	})
-	hdls := []func(next http.Handler) http.Handler{access}
+	hdls := []func(next http.Handler) http.Handler{
+		access,
+		hlog.RequestIDHandler("req_id", "Request-Id"),
+	}
 	if isProd {
 		hdls = append(hdls, ProductionLoggers...)
 	}

@@ -6,9 +6,8 @@ import (
 	"testing"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestLogWithBastionLogger(t *testing.T) {
@@ -24,13 +23,11 @@ func TestLogWithBastionLogger(t *testing.T) {
 func TestLogFromHandlerWithContext(t *testing.T) {
 	t.Parallel()
 
-	rensponse := map[string]string{"response": "ok"}
+	res := map[string]string{"response": "ok"}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		l := bastion.LoggerFromCtx(r.Context())
 		l.Info().Msg("handler")
-		if err := json.NewRender(w).Send(rensponse); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().Send(w, res)
 	})
 
 	out := &bytes.Buffer{}
@@ -39,7 +36,7 @@ func TestLogFromHandlerWithContext(t *testing.T) {
 
 	e := bastion.Tester(t, app)
 	e.GET("/").Expect().Status(200).JSON().
-		Object().ContainsMap(rensponse)
+		Object().ContainsMap(res)
 
 	assert.Contains(t, out.String(), `handler`)
 }

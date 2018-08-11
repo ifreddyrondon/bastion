@@ -128,12 +128,12 @@ import (
     "net/http"
 
     "github.com/ifreddyrondon/bastion"
-    "github.com/ifreddyrondon/bastion/render/json"
+    "github.com/ifreddyrondon/bastion/render"
 )
 
 func handler(w http.ResponseWriter, _ *http.Request) {
     res := struct {Message string `json:"message"`}{"world"}
-    json.NewRender(w).Send(res)
+    render.NewJSON().Send(w, res)
 }
 
 func main() {
@@ -224,12 +224,12 @@ When:
 
 #### `API500ErrMessage`
 
-Api 500 error message represent the message returned to the user when a http 500 error is caught by the APIErrHandler middleware. Default `looks like something went wrong!`. It's JSON tagged as `api500ErrMessage`
+Api 500 error message represent the message returned to the user when a http 500 error is caught by the APIErrHandler middleware. Default `looks like something went wrong`. It's JSON tagged as `api500ErrMessage`
 
 When:
 
 ```json
-"api500ErrMessage": "looks like something went wrong!",
+"api500ErrMessage": "looks like something went wrong",
 ```
 
 Then: `http://localhost:8080/foo/test`
@@ -320,13 +320,13 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
-    "github.com/ifreddyrondon/bastion/render/json"
+    "github.com/ifreddyrondon/bastion/render"
 )
 
 func setup() *bastion.Bastion {
 	app := bastion.New(bastion.Options{})
 	handler := todo.Handler{
-		Render: json.NewRender,
+		Render: render.NewJSON(),
 	}
 	app.APIRouter.Mount("/todo/", handler.Routes())
 	return app
@@ -384,14 +384,14 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func handler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
 		Message string `json:"message"`
 	}{"world"}
-	json.NewRender(w).Send(res)
+	render.NewJSON().Send(w, res)
 }
 
 func main() {
@@ -432,7 +432,7 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -442,7 +442,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
 
-	json.NewRender(w).Send(res)
+	render.NewJSON().Send(w, res)
 }
 
 func main() {

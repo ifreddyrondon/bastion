@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +14,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
 
-	json.NewRender(w).Send(res)
+	render.NewJSON().Send(w, res)
 }
 
 func main() {

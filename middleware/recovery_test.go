@@ -80,8 +80,9 @@ func TestRecoveryLogRequestGET(t *testing.T) {
 	assert.Contains(t, out.String(), `"component":"recovery"`)
 	assert.Contains(t, out.String(), `"error":"test"`)
 	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"`)
-	assert.Contains(t, out.String(), `"headers":{"user-agent":"Go-http-client/1.1","accept-encoding":"gzip"},"body":""}`)
-
+	assert.Contains(t, out.String(), `"body":""`)
+	assert.Contains(t, out.String(), `"user-agent":"Go-http-client/1.1"`)
+	assert.Contains(t, out.String(), `"accept-encoding":"gzip"`)
 }
 
 func TestRecoveryLogRequestWithHeaders(t *testing.T) {
@@ -102,7 +103,7 @@ func TestRecoveryLogRequestWithHeaders(t *testing.T) {
 	assert.Contains(t, out.String(), `"component":"recovery"`)
 	assert.Contains(t, out.String(), `"error":"test"`)
 	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"`)
-	assert.Contains(t, out.String(), `"headers":{"user-agent":"Mozilla","accept-encoding":"gzip"},"body":""}`)
+	assert.Contains(t, out.String(), `"user-agent":"Mozilla"`)
 }
 
 func TestRecoveryLogRequestPOST(t *testing.T) {

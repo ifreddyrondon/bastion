@@ -15,7 +15,7 @@ const (
 	defaultDevAddrs = "127.0.0.1"
 	// api defaults
 	defaultBasePath      = "/"
-	default500ErrMessage = "looks like something went wrong!"
+	default500ErrMessage = "looks like something went wrong"
 )
 
 // Level defines log levels.

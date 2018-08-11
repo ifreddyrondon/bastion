@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // onShutdown is a function to be implemented when is necessary
@@ -119,14 +119,14 @@ func initialize(app *Bastion) {
 	 * API Router
 	 */
 	app.APIRouter = chi.NewRouter()
-	// TODO: set logger output
 	apiErr := middleware.APIError(
 		middleware.APIErrorDefault500(errors.New(app.Options.API500ErrMessage)),
+		middleware.APIErrorLoggerOutput(app.Options.LoggerWriter),
 	)
 	app.APIRouter.Use(apiErr)
-	// TODO: set logger output
-	app.APIRouter.Use(middleware.Recovery())
-	app.APIRouter.Use(middleware.Logger(!app.Options.isDEV())...)
+	recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(app.Options.LoggerWriter))
+	app.APIRouter.Use(recovery)
+	app.APIRouter.Use(loggerRequest(!app.Options.isDEV())...)
 	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
 
 	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}
