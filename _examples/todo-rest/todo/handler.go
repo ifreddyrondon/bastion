@@ -50,7 +50,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	i, _ := strconv.Atoi(id) // the error should be handle
-	todo1 := todo{Id: i, Description: fmt.Sprintf("do something %v", id)}
+	todo1 := todo{ID: i, Description: fmt.Sprintf("do something %v", id)}
 	h.Render.Send(w, todo1)
 }
 
@@ -61,7 +61,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&todo1); err != nil {
 		panic(err) // the error should be handle
 	}
-	todo1.Id = i
+	todo1.ID = i
 	h.Render.Send(w, todo1)
 }
 
