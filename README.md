@@ -42,7 +42,9 @@ Allows to have commons handlers and middleware between projects with the need fo
 6. [Testing](#testing)
     * [Quick start](#quick-start)
 7. [Render](#render)
-    * [Example](#render-example)
+    * [StringRenderer](#stringRenderer)
+	* [ByteRenderer](#byteRenderer)
+	* [Renderer](#renderer)
 8. [Logger](#logger)
     * [Logging from bastion instance](#logging-from-bastion-instance)
 	* [Logging from handler](#logging-from-handler)
@@ -379,28 +381,73 @@ Go and check the [full test](https://github.com/ifreddyrondon/bastion/blob/maste
 ## Render
 
 Render a HTTP status code and content type to the associated Response.
-The render engine implements `Engine` and is obtained through `Render` function.
 
+### StringRenderer
+- **render.Text** response strings with text/plain Content-Type.
 ```go
-// Engine define methods to encoded response in the body of a request with the HTTP status code.
-type Engine interface {
-	Response(code int, response interface{}) error
-	Send(response interface{}) error
-	Created(response interface{}) error
-	NoContent()
-	BadRequest(err error) error
-	NotFound(err error) error
-	MethodNotAllowed(err error) error
-	InternalServerError(err error) error
-}
-
-// Render returns a Engine to response a request with the HTTP status code.
-type Render func(http.ResponseWriter) Engine
+render.Text.Response(rr, http.StatusOK, "test")
+```
+- **render.HTML** response strings with text/html Content-Type.
+```go
+render.HTML.Response(rr, http.StatusOK, "<h1>Hello World</h1>")
 ```
 
-Bastion define a `json.Render` [implementation](https://github.com/ifreddyrondon/bastion/blob/master/render/json/json.go) of `Engine` and is available through `json.NewRender`
+### ByteRenderer
+- **render.Data** response []byte with application/octet-stream Content-Type.
+```go
+render.Data.Response(rr, http.StatusOK, []byte("test"))
+```
 
-### Render example
+### Renderer
+
+Handle the marshaler of structs responses to the client.
+
+```go
+// Renderer interface for managing response payloads.
+type Renderer interface {
+	// Response encoded responses in the ResponseWriter with the HTTP status code.
+	Response(w http.ResponseWriter, code int, response interface{})
+}
+```
+
+APIRenderer are convenient methods for api responses.
+
+```go
+
+// APIRenderer interface for managing API response payloads.
+type APIRenderer interface {
+	Renderer
+	OKRenderer
+	ClientErrRenderer
+	ServerErrRenderer
+}
+
+// OKRenderer interface for managing success API response payloads.
+type OKRenderer interface {
+	Send(w http.ResponseWriter, response interface{})
+	Created(w http.ResponseWriter, response interface{})
+	NoContent(w http.ResponseWriter)
+}
+
+// ClientErrRenderer interface for managing API responses when client error.
+type ClientErrRenderer interface {
+	BadRequest(w http.ResponseWriter, err error)
+	NotFound(w http.ResponseWriter, err error)
+	MethodNotAllowed(w http.ResponseWriter, err error)
+}
+
+// ServerErrRenderer interface for managing API responses when server error.
+type ServerErrRenderer interface {
+	InternalServerError(w http.ResponseWriter, err error)
+}
+```
+
+[JSON](https://github.com/ifreddyrondon/bastion/blob/master/render/json.go) and [XML](https://github.com/ifreddyrondon/bastion/blob/master/render/xml.go) implements APIRenderer and they can be configured with optional functions.
+
+#### E.g.
+
+- [JSON](https://github.com/ifreddyrondon/bastion/blob/master/render/json_test.go)
+- [XML](https://github.com/ifreddyrondon/bastion/blob/master/render/xml_test.go)
 
 Response a JSON with a 200 HTTP status code.
 
