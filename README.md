@@ -271,7 +271,7 @@ Each logging operation makes a single call to the Writer's Write method. There i
 Bastion can be configured with optionals funtions that are optional when using `bastion.New()`.
 
 - `APIBasePath(path string)` set path where the bastion api router is going to be mounted.
-- `API500ErrMessage(msg string) set the message returned to the user when catch a 500 status error.
+- `API500ErrMessage(msg string)` set the message returned to the user when catch a 500 status error.
 - `Addr(add string)` bind address provided to http.Server.
 - `Env(env string)` set the "environment" in which the App is running.
 - `NoPrettyLogging()` turn off the pretty logging.
