@@ -4,16 +4,16 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/ifreddyrondon/bastion/render"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
 )
 
 func TestDefaultBastion(t *testing.T) {
 	t.Parallel()
 
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	e := bastion.Tester(t, app)
 	e.GET("/ping").
 		Expect().
@@ -24,13 +24,12 @@ func TestDefaultBastion(t *testing.T) {
 func TestBastionHelloWorld(t *testing.T) {
 	t.Parallel()
 
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
-		err := json.NewRender(w).Send(res)
-		assert.Nil(t, err)
+		render.NewJSON().Send(w, res)
 	})
 
 	expected := map[string]interface{}{"message": "world"}
@@ -64,8 +63,7 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 				res := struct {
 					Message string `json:"message"`
 				}{"world"}
-				err := json.NewRender(w).Send(res)
-				assert.Nil(t, err)
+				render.NewJSON().Send(w, res)
 			})
 
 			expected := map[string]interface{}{"message": "world"}

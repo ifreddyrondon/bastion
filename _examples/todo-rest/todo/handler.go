@@ -13,7 +13,7 @@ import (
 )
 
 type Handler struct {
-	render.Render
+	Render render.APIRenderer
 }
 
 // Routes creates a REST router for the todos resource
@@ -36,7 +36,7 @@ func (h *Handler) Routes() http.Handler {
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	todo1 := todo{Description: "do something 1"}
 	todo2 := todo{Description: "do something 2"}
-	h.Render(w).Send([]todo{todo1, todo2})
+	h.Render.Send(w, []todo{todo1, todo2})
 }
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
@@ -44,14 +44,14 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&todo1); err != nil {
 		panic(err) // the error should be handle
 	}
-	h.Render(w).Created(todo1)
+	h.Render.Created(w, todo1)
 }
 
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	i, _ := strconv.Atoi(id) // the error should be handle
-	todo1 := todo{Id: i, Description: fmt.Sprintf("do something %v", id)}
-	h.Render(w).Send(todo1)
+	todo1 := todo{ID: i, Description: fmt.Sprintf("do something %v", id)}
+	h.Render.Send(w, todo1)
 }
 
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
@@ -61,16 +61,16 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&todo1); err != nil {
 		panic(err) // the error should be handle
 	}
-	todo1.Id = i
-	h.Render(w).Send(todo1)
+	todo1.ID = i
+	h.Render.Send(w, todo1)
 }
 
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	// handle delete logic
-	h.Render(w).NoContent()
+	h.Render.NoContent(w)
 }
 
 func (h *Handler) error500(w http.ResponseWriter, r *http.Request) {
 	err := errors.New("test")
-	h.Render(w).InternalServerError(err)
+	h.Render.InternalServerError(w, err)
 }

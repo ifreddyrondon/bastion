@@ -34,14 +34,17 @@ Allows to have commons handlers and middleware between projects with the need fo
         * [Env](#env)
         * [NoPrettyLogging](#noprettylogging)
         * [LoggerLevel](#loggerlevel)
-        * [LoggerWriter](#loggerwriter)
-    2. [From options file](#from-options-file)
+        * [LoggerOutput](#loggerOutput)
+	2. [From optionals functions](#from-optionals-functions)
+    3. [From options file](#from-options-file)
         * [YAML](#yaml)
         * [JSON](#json)
 6. [Testing](#testing)
     * [Quick start](#quick-start)
 7. [Render](#render)
-    * [Example](#render-example)
+    * [StringRenderer](#stringRenderer)
+	* [ByteRenderer](#byteRenderer)
+	* [Renderer](#renderer)
 8. [Logger](#logger)
     * [Logging from bastion instance](#logging-from-bastion-instance)
 	* [Logging from handler](#logging-from-handler)
@@ -113,7 +116,7 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Mount("/todo/", new(Handler).Routes())
 	app.Serve()
 }
@@ -128,16 +131,16 @@ import (
     "net/http"
 
     "github.com/ifreddyrondon/bastion"
-    "github.com/ifreddyrondon/bastion/render/json"
+    "github.com/ifreddyrondon/bastion/render"
 )
 
 func handler(w http.ResponseWriter, _ *http.Request) {
     res := struct {Message string `json:"message"`}{"world"}
-    json.NewRender(w).Send(res)
+    render.NewJSON().Send(w, res)
 }
 
 func main() {
-    app := bastion.New(bastion.Options{})
+    app := bastion.New()
     app.APIRouter.Get("/hello", handler)
     app.Serve()
 }
@@ -179,7 +182,7 @@ func onShutdown() {
 }
 
 func main() {
-    app := bastion.New(bastion.Options{})
+    app := bastion.New()
     app.RegisterOnShutdown(onShutdown)
     app.Serve()
 }
@@ -194,21 +197,21 @@ Options are used to define how the application should run.
 ```go
 // Options are used to define how the application should run.
 type Options struct {
-	// APIBasepath is the path where the bastion api router is going to be mounted. Default `/`.
+	// APIBasepath path where the bastion api router is going to be mounted. Default `/`.
 	APIBasepath string `yaml:"apiBasepath"`
-	// API500ErrMessage is the default message returned to the user when catch a 500 status error.
+	// API500ErrMessage message returned to the user when catch a 500 status error.
 	API500ErrMessage string `yaml:"api500ErrMessage"`
-	// Addr is the bind address provided to http.Server. Default is "127.0.0.1:8080"
+	// Addr bind address provided to http.Server. Default is "127.0.0.1:8080"
 	// Can be set using ENV vars "ADDR" and "PORT".
 	Addr string `yaml:"addr"`
-	// Env is the "environment" in which the App is running. Default is "development".
+	// Env "environment" in which the App is running. Default is "development".
 	Env string `yaml:"env"`
 	// NoPrettyLogging don't output a colored human readable version on the out writer.
 	NoPrettyLogging bool `yaml:"noPrettyLogging"`
 	// LoggerLevel defines log levels. Default is DebugLevel.
 	LoggerLevel Level `yaml:"loggerLevel"`
-	// LoggerWriter logger output writer. Default os.Stdout
-	LoggerWriter io.Writer
+	// LoggerOutput logger output writer. Default os.Stdout
+	LoggerOutput io.Writer
 }
 ```
 
@@ -224,12 +227,12 @@ When:
 
 #### `API500ErrMessage`
 
-Api 500 error message represent the message returned to the user when a http 500 error is caught by the APIErrHandler middleware. Default `looks like something went wrong!`. It's JSON tagged as `api500ErrMessage`
+Api 500 error message represent the message returned to the user when a http 500 error is caught by the APIErrHandler middleware. Default `looks like something went wrong`. It's JSON tagged as `api500ErrMessage`
 
 When:
 
 ```json
-"api500ErrMessage": "looks like something went wrong!",
+"api500ErrMessage": "looks like something went wrong",
 ```
 
 Then: `http://localhost:8080/foo/test`
@@ -259,11 +262,37 @@ LoggerLevel defines log levels. Allows for logging at the following levels (from
 
 Default `bastion.DebugLevel`, to turn off logging entirely, pass the bastion.Disabled constant. It's JSON tagged as `loggerLevel`.
 
-#### LoggerWriter
+#### LoggerOutput
 
-LoggerWriter is an `io.Writer` where the logger output write. Default os.Stdout.
+LoggerOutput is an `io.Writer` where the logger output write. Default os.Stdout.
 
 Each logging operation makes a single call to the Writer's Write method. There is no guaranty on access serialization to the Writer. If your Writer is not thread safe, you may consider using sync wrapper.
+
+### From optionals functions
+
+Bastion can be configured with optionals funtions that are optional when using `bastion.New()`.
+
+- `APIBasePath(path string)` set path where the bastion api router is going to be mounted.
+- `API500ErrMessage(msg string)` set the message returned to the user when catch a 500 status error.
+- `Addr(add string)` bind address provided to http.Server.
+- `Env(env string)` set the "environment" in which the App is running.
+- `NoPrettyLogging()` turn off the pretty logging.
+- `LoggerLevel(lvl Level)` set the logger level.
+- `LoggerOutput(w io.Writer)` set the logger output writer.
+
+```go
+package main
+
+import (
+    "github.com/ifreddyrondon/bastion"
+)
+
+func main() {
+	bastion.New() // defaults options
+
+	bastion.New(bastion.NoPrettyLogging(), bastion.Addr("0.0.0.0:3000")) // turn off pretty print logger and sets address to 0.0.0.0:3000
+}
+```
 
 ### From options file
 
@@ -320,13 +349,13 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
-    "github.com/ifreddyrondon/bastion/render/json"
+    "github.com/ifreddyrondon/bastion/render"
 )
 
 func setup() *bastion.Bastion {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	handler := todo.Handler{
-		Render: json.NewRender,
+		Render: render.NewJSON(),
 	}
 	app.APIRouter.Mount("/todo/", handler.Routes())
 	return app
@@ -352,28 +381,73 @@ Go and check the [full test](https://github.com/ifreddyrondon/bastion/blob/maste
 ## Render
 
 Render a HTTP status code and content type to the associated Response.
-The render engine implements `Engine` and is obtained through `Render` function.
 
+### StringRenderer
+- **render.Text** response strings with text/plain Content-Type.
 ```go
-// Engine define methods to encoded response in the body of a request with the HTTP status code.
-type Engine interface {
-	Response(code int, response interface{}) error
-	Send(response interface{}) error
-	Created(response interface{}) error
-	NoContent()
-	BadRequest(err error) error
-	NotFound(err error) error
-	MethodNotAllowed(err error) error
-	InternalServerError(err error) error
-}
-
-// Render returns a Engine to response a request with the HTTP status code.
-type Render func(http.ResponseWriter) Engine
+render.Text.Response(rr, http.StatusOK, "test")
+```
+- **render.HTML** response strings with text/html Content-Type.
+```go
+render.HTML.Response(rr, http.StatusOK, "<h1>Hello World</h1>")
 ```
 
-Bastion define a `json.Render` [implementation](https://github.com/ifreddyrondon/bastion/blob/master/render/json/json.go) of `Engine` and is available through `json.NewRender`
+### ByteRenderer
+- **render.Data** response []byte with application/octet-stream Content-Type.
+```go
+render.Data.Response(rr, http.StatusOK, []byte("test"))
+```
 
-### Render example
+### Renderer
+
+Handle the marshaler of structs responses to the client.
+
+```go
+// Renderer interface for managing response payloads.
+type Renderer interface {
+	// Response encoded responses in the ResponseWriter with the HTTP status code.
+	Response(w http.ResponseWriter, code int, response interface{})
+}
+```
+
+APIRenderer are convenient methods for api responses.
+
+```go
+
+// APIRenderer interface for managing API response payloads.
+type APIRenderer interface {
+	Renderer
+	OKRenderer
+	ClientErrRenderer
+	ServerErrRenderer
+}
+
+// OKRenderer interface for managing success API response payloads.
+type OKRenderer interface {
+	Send(w http.ResponseWriter, response interface{})
+	Created(w http.ResponseWriter, response interface{})
+	NoContent(w http.ResponseWriter)
+}
+
+// ClientErrRenderer interface for managing API responses when client error.
+type ClientErrRenderer interface {
+	BadRequest(w http.ResponseWriter, err error)
+	NotFound(w http.ResponseWriter, err error)
+	MethodNotAllowed(w http.ResponseWriter, err error)
+}
+
+// ServerErrRenderer interface for managing API responses when server error.
+type ServerErrRenderer interface {
+	InternalServerError(w http.ResponseWriter, err error)
+}
+```
+
+[JSON](https://github.com/ifreddyrondon/bastion/blob/master/render/json.go) and [XML](https://github.com/ifreddyrondon/bastion/blob/master/render/xml.go) implements APIRenderer and they can be configured with optional functions.
+
+#### E.g.
+
+- [JSON](https://github.com/ifreddyrondon/bastion/blob/master/render/json_test.go)
+- [XML](https://github.com/ifreddyrondon/bastion/blob/master/render/xml_test.go)
 
 Response a JSON with a 200 HTTP status code.
 
@@ -384,18 +458,18 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func handler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
 		Message string `json:"message"`
 	}{"world"}
-	json.NewRender(w).Send(res)
+	render.NewJSON().Send(w, res)
 }
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }
@@ -417,7 +491,7 @@ import (
 )
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.Logger.Info().Str("app", "demo").Msg("main")
 	app.Serve()
 }
@@ -432,7 +506,7 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -442,11 +516,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
 
-	json.NewRender(w).Send(res)
+	render.NewJSON().Send(w, res)
 }
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }

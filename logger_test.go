@@ -6,16 +6,15 @@ import (
 	"testing"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestLogWithBastionLogger(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
 
 	app.Logger.Info().Msg("main")
 	assert.Contains(t, out.String(), `"main"`)
@@ -24,22 +23,20 @@ func TestLogWithBastionLogger(t *testing.T) {
 func TestLogFromHandlerWithContext(t *testing.T) {
 	t.Parallel()
 
-	rensponse := map[string]string{"response": "ok"}
+	res := map[string]string{"response": "ok"}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		l := bastion.LoggerFromCtx(r.Context())
 		l.Info().Msg("handler")
-		if err := json.NewRender(w).Send(rensponse); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().Send(w, res)
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
 	app.APIRouter.Mount("/", handler)
 
 	e := bastion.Tester(t, app)
 	e.GET("/").Expect().Status(200).JSON().
-		Object().ContainsMap(rensponse)
+		Object().ContainsMap(res)
 
 	assert.Contains(t, out.String(), `handler`)
 }

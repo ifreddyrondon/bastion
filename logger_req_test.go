@@ -1,35 +1,31 @@
-package middleware_test
+package bastion_test
 
 import (
 	"bytes"
-	"errors"
 	"net/http"
 	"testing"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestLoggerRequestForDevelopment(t *testing.T) {
-	// default
+func TestLoggerForDevelopment(t *testing.T) {
 	t.Parallel()
 
-	rensponse := map[string]string{"response": "ok"}
+	res := map[string]string{"response": "ok"}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewRender(w).Send(rensponse); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().Send(w, res)
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
 	app.APIRouter.Mount("/", handler)
 
 	e := bastion.Tester(t, app)
 	e.GET("/").Expect().Status(200).JSON().
-		Object().ContainsMap(rensponse)
+		Object().ContainsMap(res)
 	assert.Contains(t, out.String(), `"app":"bastion"`)
 	assert.Contains(t, out.String(), `"status":200`)
 	assert.Contains(t, out.String(), `"method":"GET"`)
@@ -41,26 +37,22 @@ func TestLoggerRequestForDevelopment(t *testing.T) {
 	assert.NotContains(t, out.String(), `"user_agent"`)
 }
 
-func TestLoggerRequesLevelErrorForStatusGreaterThan500(t *testing.T) {
+func TestLoggerRequestLevelErrorForStatusGreaterThan500(t *testing.T) {
 	// request with http >= 500 should be tagged as error
 	t.Parallel()
 
 	response400 := map[string]interface{}{"message": "test", "error": "Bad Request", "status": 400}
 	handler400 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewRender(w).BadRequest(errors.New("test")); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().BadRequest(w, errors.New("test"))
 	})
 
-	response500 := map[string]interface{}{"message": "looks like something went wrong!", "error": "Internal Server Error", "status": 500}
+	response500 := map[string]interface{}{"message": "looks like something went wrong", "error": "Internal Server Error", "status": 500}
 	handler500 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewRender(w).InternalServerError(errors.New("test")); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().InternalServerError(w, errors.New("test"))
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
 	app.APIRouter.Mount("/400", handler400)
 	app.APIRouter.Mount("/500", handler500)
 
@@ -94,15 +86,13 @@ func TestLoggerRequestForProductionAppendMoreInfo(t *testing.T) {
 	// production should append extra info to the log, like ip, user_agent and referer
 	t.Parallel()
 
-	response500 := map[string]interface{}{"message": "looks like something went wrong!", "error": "Internal Server Error", "status": 500}
+	response500 := map[string]interface{}{"message": "looks like something went wrong", "error": "Internal Server Error", "status": 500}
 	handler500 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewRender(w).InternalServerError(errors.New("test")); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().InternalServerError(w, errors.New("test"))
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, Env: "production", NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out), bastion.Env("production"))
 	app.APIRouter.Mount("/500", handler500)
 
 	e := bastion.Tester(t, app)
@@ -127,27 +117,25 @@ func TestLoggerRequestErrorLvl(t *testing.T) {
 
 	rensponse200 := map[string]string{"response": "ok"}
 	handler200 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewRender(w).Send(rensponse200); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().Send(w, rensponse200)
 	})
 
 	response400 := map[string]interface{}{"message": "test", "error": "Bad Request", "status": 400}
 	handler400 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewRender(w).BadRequest(errors.New("test")); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().BadRequest(w, errors.New("test"))
 	})
 
-	response500 := map[string]interface{}{"message": "looks like something went wrong!", "error": "Internal Server Error", "status": 500}
+	response500 := map[string]interface{}{"message": "looks like something went wrong", "error": "Internal Server Error", "status": 500}
 	handler500 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewRender(w).InternalServerError(errors.New("test")); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().InternalServerError(w, errors.New("test"))
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, LoggerLevel: bastion.ErrorLevel, NoPrettyLogging: true})
+	app := bastion.New(
+		bastion.NoPrettyLogging(),
+		bastion.LoggerOutput(out),
+		bastion.LoggerLevel(bastion.ErrorLevel),
+	)
 	app.APIRouter.Mount("/200", handler200)
 	app.APIRouter.Mount("/400", handler400)
 	app.APIRouter.Mount("/500", handler500)
@@ -180,13 +168,11 @@ func TestLoggerRequestPrettyLogging(t *testing.T) {
 
 	rensponse := map[string]string{"response": "ok"}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewRender(w).Send(rensponse); err != nil {
-			require.NotNil(t, err)
-		}
+		render.NewJSON().Send(w, rensponse)
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Mount("/", handler)
 
 	e := bastion.Tester(t, app)

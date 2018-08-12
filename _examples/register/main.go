@@ -5,14 +5,14 @@ import (
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
 		Message string `json:"message"`
 	}{"world"}
-	json.NewRender(w).Send(res)
+	render.NewJSON().Send(w, res)
 }
 
 func onShutdown() {
@@ -20,7 +20,7 @@ func onShutdown() {
 }
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.RegisterOnShutdown(onShutdown)
 	app.APIRouter.Get("/hello", helloHandler)
 	app.Serve()

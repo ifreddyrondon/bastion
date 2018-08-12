@@ -2,10 +2,13 @@ package middleware
 
 import (
 	"bytes"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/felixge/httpsnoop"
 	"github.com/ifreddyrondon/bastion/render"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
 
@@ -54,31 +57,69 @@ func newWriterCollector() *writerCollector {
 	return &writerCollector{code: http.StatusOK}
 }
 
-// APIErrHandler intercept responses to verify if his status code is >= 500.
-// If status is >= 500, it'll response with a default error.
-// This middleware allows to response with the same error without disclosure
-// internal information, also the real error is logged.
-func APIErrHandler(defaultErr error, logger *zerolog.Logger, render render.Render) func(http.Handler) http.Handler {
-	l := logger.With().Str("component", "api_error_handler").Logger()
+// ErrAPIDefault default error message response when something happens.
+var ErrAPIDefault = errors.New("looks like something went wrong")
+
+type apiErrCfg struct {
+	defaultErr   error
+	render       render.ServerErrRenderer
+	loggerWriter io.Writer
+	logger       zerolog.Logger
+}
+
+// APIErrorLoggerOutput set the output for the logger
+func APIErrorLoggerOutput(w io.Writer) func(*apiErrCfg) {
+	return func(a *apiErrCfg) {
+		a.loggerWriter = w
+	}
+}
+
+// APIErrorDefault500 set default error message to be sent
+func APIErrorDefault500(err error) func(*apiErrCfg) {
+	return func(a *apiErrCfg) {
+		a.defaultErr = err
+	}
+}
+
+func getAPIErrCfg(opts ...func(*apiErrCfg)) *apiErrCfg {
+	a := &apiErrCfg{
+		defaultErr:   ErrAPIDefault,
+		render:       render.NewJSON(),
+		loggerWriter: os.Stdout,
+	}
+
+	for _, opt := range opts {
+		opt(a)
+	}
+
+	a.logger = zerolog.New(a.loggerWriter).With().Timestamp().Logger()
+	return a
+}
+
+// APIError intercept responses to verify their status and handle the error.
+// It gets the response code and if it's >= 500 handlers the error with a
+// default error message and without disclosure internal information.
+// The real error keeds logged.
+func APIError(opts ...func(*apiErrCfg)) func(http.Handler) http.Handler {
+	confg := getAPIErrCfg(opts...)
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			m := newWriterCollector()
 
 			snoopw := httpsnoop.Wrap(w, hooks(m))
-			defer func(logger zerolog.Logger) {
+			defer func() {
 				if m.code >= 500 {
-					logger.Error().Int("status", m.code).Bytes("response", m.buf.Bytes()).Msg("")
-					if err := render(w).InternalServerError(defaultErr); err != nil {
-						logger.Error().Err(err).Msg("")
-					}
+					confg.logger.Info().
+						Str("component", "api_error_handler").
+						Bytes("response", m.buf.Bytes()).
+						Msg("APIError middleware catch a response error >= 500")
+					confg.render.InternalServerError(w, confg.defaultErr)
 					return
 				}
 				w.WriteHeader(m.code)
-				if _, err := w.Write(m.buf.Bytes()); err != nil {
-					logger.Error().Err(err).Msg("")
-				}
-			}(l)
+				w.Write(m.buf.Bytes())
+			}()
 			next.ServeHTTP(snoopw, r)
 		}
 		return http.HandlerFunc(fn)

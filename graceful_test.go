@@ -21,7 +21,7 @@ func isServerClosed(server *http.Server, ch chan<- bool) {
 func TestGracefulShutdown(t *testing.T) {
 	t.Parallel()
 
-	app := New(Options{})
+	app := New()
 	app.server = &http.Server{}
 	visited := false
 	mu := sync.RWMutex{}

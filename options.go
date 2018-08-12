@@ -10,12 +10,12 @@ import (
 )
 
 const (
-	defaultPort     = "8080"
-	defaultEnv      = "development"
-	defaultDevAddrs = "127.0.0.1"
+	developmentEnv = "development"
+	defaultPort    = "8080"
+	defaultAddrs   = "127.0.0.1"
 	// api defaults
 	defaultBasePath      = "/"
-	default500ErrMessage = "looks like something went wrong!"
+	default500ErrMessage = "looks like something went wrong"
 )
 
 // Level defines log levels.
@@ -42,46 +42,91 @@ const (
 
 // Options are used to define how the application should run.
 type Options struct {
-	// APIBasepath is the path where the bastion api router is going to be mounted. Default `/`.
+	// APIBasepath path where the bastion api router is going to be mounted. Default `/`.
 	APIBasepath string `yaml:"apiBasepath"`
-	// API500ErrMessage is the default message returned to the user when catch a 500 status error.
+	// API500ErrMessage message returned to the user when catch a 500 status error.
 	API500ErrMessage string `yaml:"api500ErrMessage"`
-	// Addr is the bind address provided to http.Server. Default is "127.0.0.1:8080"
+	// Addr bind address provided to http.Server. Default is "127.0.0.1:8080"
 	// Can be set using ENV vars "ADDR" and "PORT".
 	Addr string `yaml:"addr"`
-	// Env is the "environment" in which the App is running. Default is "development".
+	// Env "environment" in which the App is running. Default is "development".
 	Env string `yaml:"env"`
 	// NoPrettyLogging don't output a colored human readable version on the out writer.
 	NoPrettyLogging bool `yaml:"prettyLogging"`
 	// LoggerLevel defines log levels. Default is DebugLevel defines an absent log level.
 	LoggerLevel Level `yaml:"loggerLevel"`
-	// LoggerWriter logger output writer. Default os.Stdout
-	LoggerWriter io.Writer
+	// LoggerOutput logger output writer. Default os.Stdout
+	LoggerOutput io.Writer
 }
 
 func (o *Options) isDEV() bool {
 	return o.Env == "development"
 }
 
-// NewOptions returns a new Options instance with sensible defaults
-func NewOptions() *Options {
-	return optionsWithDefaults(&Options{})
-}
-
-func optionsWithDefaults(opts *Options) *Options {
+func setDefaultsOpts(opts *Options) {
 	port := envy.Get("PORT", defaultPort)
-	opts.Env = defaults.String(opts.Env, envy.Get("GO_ENV", defaultEnv))
+	opts.Env = defaults.String(opts.Env, envy.Get("GO_ENV", developmentEnv))
 	addr := "0.0.0.0"
-	if opts.Env == defaultEnv {
-		addr = defaultDevAddrs
+	if opts.Env == developmentEnv {
+		addr = defaultAddrs
 	}
 	envAddr := envy.Get("ADDR", addr)
 	opts.Addr = defaults.String(opts.Addr, fmt.Sprintf("%s:%s", envAddr, port))
 	opts.APIBasepath = defaults.String(opts.APIBasepath, defaultBasePath)
 	opts.API500ErrMessage = defaults.String(opts.API500ErrMessage, default500ErrMessage)
-	if opts.LoggerWriter == nil {
-		opts.LoggerWriter = os.Stdout
+	if opts.LoggerOutput == nil {
+		opts.LoggerOutput = os.Stdout
 	}
+}
 
-	return opts
+// Opt helper type to create functional options
+type Opt func(*Bastion)
+
+// APIBasePath set path where the bastion api router is going to be mounted.
+func APIBasePath(path string) Opt {
+	return func(app *Bastion) {
+		app.APIBasepath = path
+	}
+}
+
+// API500ErrMessage set the message returned to the user when catch a 500 status error.
+func API500ErrMessage(msg string) Opt {
+	return func(app *Bastion) {
+		app.API500ErrMessage = msg
+	}
+}
+
+// Addr bind address provided to http.Server
+func Addr(add string) Opt {
+	return func(app *Bastion) {
+		app.Addr = add
+	}
+}
+
+// Env set the "environment" in which the App is running.
+func Env(env string) Opt {
+	return func(app *Bastion) {
+		app.Env = env
+	}
+}
+
+// NoPrettyLogging turn off the pretty logging.
+func NoPrettyLogging() Opt {
+	return func(app *Bastion) {
+		app.NoPrettyLogging = true
+	}
+}
+
+// LoggerLevel set the logger level.
+func LoggerLevel(lvl Level) Opt {
+	return func(app *Bastion) {
+		app.LoggerLevel = lvl
+	}
+}
+
+// LoggerOutput set the logger output writer
+func LoggerOutput(w io.Writer) Opt {
+	return func(app *Bastion) {
+		app.LoggerOutput = w
+	}
 }

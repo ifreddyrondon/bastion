@@ -6,13 +6,13 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
-	"github.com/ifreddyrondon/bastion/render/json"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func setup() *bastion.Bastion {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	handler := todo.Handler{
-		Render: json.NewRender,
+		Render: render.NewJSON(),
 	}
 	app.APIRouter.Mount("/todo/", handler.Routes())
 	return app
@@ -75,4 +75,19 @@ func TestHandlerDelete(t *testing.T) {
 	e := bastion.Tester(t, app)
 	e.DELETE("/todo/4").Expect().
 		Status(http.StatusNoContent).NoContent()
+}
+
+func Test500Err(t *testing.T) {
+	app := setup()
+	e := bastion.Tester(t, app)
+
+	expectedRes := map[string]interface{}{
+		"message": "looks like something went wrong",
+		"error":   "Internal Server Error",
+		"status":  500,
+	}
+	e.GET("/todo/error500").Expect().
+		Status(http.StatusInternalServerError).
+		JSON().
+		Object().ContainsMap(expectedRes)
 }

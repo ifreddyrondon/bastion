@@ -11,7 +11,7 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Get("/recovery", handler)
 	app.Serve()
 }
