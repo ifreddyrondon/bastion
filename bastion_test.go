@@ -13,7 +13,7 @@ import (
 func TestDefaultBastion(t *testing.T) {
 	t.Parallel()
 
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	e := bastion.Tester(t, app)
 	e.GET("/ping").
 		Expect().
@@ -24,7 +24,7 @@ func TestDefaultBastion(t *testing.T) {
 func TestBastionHelloWorld(t *testing.T) {
 	t.Parallel()
 
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
 			Message string `json:"message"`

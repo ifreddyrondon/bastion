@@ -34,8 +34,9 @@ Allows to have commons handlers and middleware between projects with the need fo
         * [Env](#env)
         * [NoPrettyLogging](#noprettylogging)
         * [LoggerLevel](#loggerlevel)
-        * [LoggerWriter](#loggerwriter)
-    2. [From options file](#from-options-file)
+        * [LoggerOutput](#loggerOutput)
+	2. [From optionals functions](#from-optionals-functions)
+    3. [From options file](#from-options-file)
         * [YAML](#yaml)
         * [JSON](#json)
 6. [Testing](#testing)
@@ -113,7 +114,7 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Mount("/todo/", new(Handler).Routes())
 	app.Serve()
 }
@@ -137,7 +138,7 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-    app := bastion.New(bastion.Options{})
+    app := bastion.New()
     app.APIRouter.Get("/hello", handler)
     app.Serve()
 }
@@ -179,7 +180,7 @@ func onShutdown() {
 }
 
 func main() {
-    app := bastion.New(bastion.Options{})
+    app := bastion.New()
     app.RegisterOnShutdown(onShutdown)
     app.Serve()
 }
@@ -194,21 +195,21 @@ Options are used to define how the application should run.
 ```go
 // Options are used to define how the application should run.
 type Options struct {
-	// APIBasepath is the path where the bastion api router is going to be mounted. Default `/`.
+	// APIBasepath path where the bastion api router is going to be mounted. Default `/`.
 	APIBasepath string `yaml:"apiBasepath"`
-	// API500ErrMessage is the default message returned to the user when catch a 500 status error.
+	// API500ErrMessage message returned to the user when catch a 500 status error.
 	API500ErrMessage string `yaml:"api500ErrMessage"`
-	// Addr is the bind address provided to http.Server. Default is "127.0.0.1:8080"
+	// Addr bind address provided to http.Server. Default is "127.0.0.1:8080"
 	// Can be set using ENV vars "ADDR" and "PORT".
 	Addr string `yaml:"addr"`
-	// Env is the "environment" in which the App is running. Default is "development".
+	// Env "environment" in which the App is running. Default is "development".
 	Env string `yaml:"env"`
 	// NoPrettyLogging don't output a colored human readable version on the out writer.
 	NoPrettyLogging bool `yaml:"noPrettyLogging"`
 	// LoggerLevel defines log levels. Default is DebugLevel.
 	LoggerLevel Level `yaml:"loggerLevel"`
-	// LoggerWriter logger output writer. Default os.Stdout
-	LoggerWriter io.Writer
+	// LoggerOutput logger output writer. Default os.Stdout
+	LoggerOutput io.Writer
 }
 ```
 
@@ -259,11 +260,37 @@ LoggerLevel defines log levels. Allows for logging at the following levels (from
 
 Default `bastion.DebugLevel`, to turn off logging entirely, pass the bastion.Disabled constant. It's JSON tagged as `loggerLevel`.
 
-#### LoggerWriter
+#### LoggerOutput
 
-LoggerWriter is an `io.Writer` where the logger output write. Default os.Stdout.
+LoggerOutput is an `io.Writer` where the logger output write. Default os.Stdout.
 
 Each logging operation makes a single call to the Writer's Write method. There is no guaranty on access serialization to the Writer. If your Writer is not thread safe, you may consider using sync wrapper.
+
+### From optionals functions
+
+Bastion can be configured with optionals funtions that are optional when using `bastion.New()`.
+
+- `APIBasePath(path string)` set path where the bastion api router is going to be mounted.
+- `API500ErrMessage(msg string) set the message returned to the user when catch a 500 status error.
+- `Addr(add string)` bind address provided to http.Server.
+- `Env(env string)` set the "environment" in which the App is running.
+- `NoPrettyLogging()` turn off the pretty logging.
+- `LoggerLevel(lvl Level)` set the logger level.
+- `LoggerOutput(w io.Writer)` set the logger output writer.
+
+```go
+package main
+
+import (
+    "github.com/ifreddyrondon/bastion"
+)
+
+func main() {
+	bastion.New() // defaults options
+
+	bastion.New(bastion.NoPrettyLogging(), bastion.Addr("0.0.0.0:3000")) // turn off pretty print logger and sets address to 0.0.0.0:3000
+}
+```
 
 ### From options file
 
@@ -324,7 +351,7 @@ import (
 )
 
 func setup() *bastion.Bastion {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	handler := todo.Handler{
 		Render: render.NewJSON(),
 	}
@@ -395,7 +422,7 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }
@@ -417,7 +444,7 @@ import (
 )
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.Logger.Info().Str("app", "demo").Msg("main")
 	app.Serve()
 }
@@ -446,7 +473,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Get("/hello", handler)
 	app.Serve()
 }

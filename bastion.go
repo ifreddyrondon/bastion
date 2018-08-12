@@ -31,7 +31,7 @@ type Bastion struct {
 	r      *chi.Mux
 	server *http.Server
 	Logger *zerolog.Logger
-	*Options
+	Options
 	APIRouter *chi.Mux
 }
 
@@ -42,9 +42,13 @@ type Bastion struct {
 //		Debug: false
 //		API:
 //			BasePath: "/"
-func New(opts Options) *Bastion {
-	app := new(Bastion)
-	app.Options = optionsWithDefaults(&opts)
+func New(opts ...Opt) *Bastion {
+	app := &Bastion{}
+	for _, opt := range opts {
+		opt(app)
+	}
+	setDefaultsOpts(&app.Options)
+
 	initialize(app)
 	return app
 }
@@ -65,8 +69,8 @@ func FromFile(path string) (*Bastion, error) {
 	if err := yaml.Unmarshal(b, &opts); err != nil {
 		return nil, errors.Wrap(err, "cannot unmarshal configuration file")
 	}
-	app := new(Bastion)
-	app.Options = optionsWithDefaults(&opts)
+	setDefaultsOpts(&opts)
+	app := &Bastion{Options: opts}
 	initialize(app)
 	return app, nil
 }
@@ -102,7 +106,7 @@ func initialize(app *Bastion) {
 	/**
 	 * init logger
 	 */
-	app.Logger = getLogger(app.Options)
+	app.Logger = getLogger(&app.Options)
 
 	/**
 	 * internal router
@@ -121,10 +125,10 @@ func initialize(app *Bastion) {
 	app.APIRouter = chi.NewRouter()
 	apiErr := middleware.APIError(
 		middleware.APIErrorDefault500(errors.New(app.Options.API500ErrMessage)),
-		middleware.APIErrorLoggerOutput(app.Options.LoggerWriter),
+		middleware.APIErrorLoggerOutput(app.Options.LoggerOutput),
 	)
 	app.APIRouter.Use(apiErr)
-	recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(app.Options.LoggerWriter))
+	recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(app.Options.LoggerOutput))
 	app.APIRouter.Use(recovery)
 	app.APIRouter.Use(loggerRequest(!app.Options.isDEV())...)
 	app.r.Mount(app.Options.APIBasepath, app.APIRouter)

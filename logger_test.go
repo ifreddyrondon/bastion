@@ -14,7 +14,7 @@ func TestLogWithBastionLogger(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
 
 	app.Logger.Info().Msg("main")
 	assert.Contains(t, out.String(), `"main"`)
@@ -31,7 +31,7 @@ func TestLogFromHandlerWithContext(t *testing.T) {
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
 	app.APIRouter.Mount("/", handler)
 
 	e := bastion.Tester(t, app)

@@ -20,7 +20,7 @@ func TestLoggerForDevelopment(t *testing.T) {
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
 	app.APIRouter.Mount("/", handler)
 
 	e := bastion.Tester(t, app)
@@ -52,7 +52,7 @@ func TestLoggerRequestLevelErrorForStatusGreaterThan500(t *testing.T) {
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
 	app.APIRouter.Mount("/400", handler400)
 	app.APIRouter.Mount("/500", handler500)
 
@@ -92,7 +92,7 @@ func TestLoggerRequestForProductionAppendMoreInfo(t *testing.T) {
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, Env: "production", NoPrettyLogging: true})
+	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out), bastion.Env("production"))
 	app.APIRouter.Mount("/500", handler500)
 
 	e := bastion.Tester(t, app)
@@ -131,7 +131,11 @@ func TestLoggerRequestErrorLvl(t *testing.T) {
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{LoggerWriter: out, LoggerLevel: bastion.ErrorLevel, NoPrettyLogging: true})
+	app := bastion.New(
+		bastion.NoPrettyLogging(),
+		bastion.LoggerOutput(out),
+		bastion.LoggerLevel(bastion.ErrorLevel),
+	)
 	app.APIRouter.Mount("/200", handler200)
 	app.APIRouter.Mount("/400", handler400)
 	app.APIRouter.Mount("/500", handler500)
@@ -168,7 +172,7 @@ func TestLoggerRequestPrettyLogging(t *testing.T) {
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	app.APIRouter.Mount("/", handler)
 
 	e := bastion.Tester(t, app)

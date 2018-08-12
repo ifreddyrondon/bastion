@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	app := bastion.New(bastion.Options{})
+	app := bastion.New()
 	handler := todo.Handler{
 		Render: render.NewJSON(),
 	}
