@@ -10,7 +10,7 @@ import (
 	"github.com/ifreddyrondon/bastion/middleware"
 	"github.com/stretchr/testify/assert"
 
-	httpexpect "gopkg.in/gavv/httpexpect.v1"
+	"gopkg.in/gavv/httpexpect.v1"
 )
 
 func TestAPIErrCatch500DefaultMsg(t *testing.T) {

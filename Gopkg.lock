@@ -85,6 +85,17 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/mailru/easyjson"
+  packages = [
+    ".",
+    "buffer",
+    "jlexer",
+    "jwriter"
+  ]
+  revision = "03f2033d19d5860aef995fe360ac7d395cd8ce65"
+
+[[projects]]
+  branch = "master"
   name = "github.com/markbates/going"
   packages = ["defaults"]
   revision = "0576708c56cea02331f864fe6e157ac7841923e4"
@@ -258,6 +269,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d4084e9743ccfe0f85b973766743e8a465be394abd25c66568e83943a57947a3"
+  inputs-digest = "5848b8cb289e07eef520c0fbafcd4e845ac1d8b8af315c04878003a5b91331b4"
   solver-name = "gps-cdcl"
   solver-version = 1
