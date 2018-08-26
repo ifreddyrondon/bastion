@@ -148,8 +148,10 @@ func main() {
 
 ## Middleware
 
-Bastion comes equipped with a set of commons middleware, providing a suite of standard
-`net/http` middleware.
+Bastion comes equipped with a set of commons middleware handlers, providing a suite of standard `net/http` middleware.
+They are just stdlib net/http middleware handlers. There is nothing special about them, which means the router and all the tooling is designed to be compatible and friendly with any middleware in the community.
+
+### Core middleware
 
 Name | Description
 ---- | -----------
@@ -157,6 +159,14 @@ Logger | Logs the start and end of each request with the elapsed processing time
 Recovery | Gracefully absorb panics and prints the stack trace.
 RequestID | Injects a request ID into the context of each request.
 APIErrHandler | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#api500errmessage). IT allows to response with the same error without disclosure internal information, also the real error is logged.
+
+### Auxiliary middleware
+
+Name | Description
+---- | -----------
+Listing | Parses the url from a request and stores a [listing.Listing](https://github.com/ifreddyrondon/bastion/blob/master/middleware/listing/listing.go#L11) on the context, it can be accessed through middleware.GetListing.
+
+For more references check [chi middleware](https://github.com/go-chi/chi/tree/master#middlewares)
 
 ## Register on shutdown
 
