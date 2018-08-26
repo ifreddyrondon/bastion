@@ -12,7 +12,7 @@ Allows to have commons handlers and middleware between projects with the need fo
 
 ## Examples
 
-* [helloworld](https://github.com/ifreddyrondon/bastion/blob/master/_examples/helloworld/main.go) - Quickstart, first Hello world with bastion.
+* [helloworld](https://github.com/ifreddyrondon/bastion/blob/master/_examples/helloworld/main.go) - Quick start, first Hello world with bastion.
 * [todo-rest](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
 * [Options with yaml](https://github.com/ifreddyrondon/bastion/blob/master/_examples/options-yaml/main.go) - Bastion with options file.
 * [Register on shutdown](https://github.com/ifreddyrondon/bastion/blob/master/_examples/register/main.go) - Registers functions to be call on Shutdown.
@@ -23,7 +23,7 @@ Allows to have commons handlers and middleware between projects with the need fo
 2. [Router](#router)
     * [NewRouter](#newrouter)
     * [Example](#router-example)
-3. [Middlewares](#middlewares)
+3. [Middleware](#middleware)
 4. [Register on shutdown](#register-on-shutdown)
     * [Example](#register-on-shutdown-example)
 5. [Options](#options)
@@ -135,7 +135,7 @@ import (
 )
 
 func handler(w http.ResponseWriter, _ *http.Request) {
-    res := struct {Message string `json:"message"`}{"world"}
+    res := struct {Message string `json:"message"`}{Message: "world"}
     render.NewJSON().Send(w, res)
 }
 
@@ -146,17 +146,27 @@ func main() {
 }
 ```
 
-## Middlewares
+## Middleware
 
-Bastion comes equipped with a set of commons middlewares, providing a suite of standard
-`net/http` middlewares.
+Bastion comes equipped with a set of commons middleware handlers, providing a suite of standard `net/http` middleware.
+They are just stdlib net/http middleware handlers. There is nothing special about them, which means the router and all the tooling is designed to be compatible and friendly with any middleware in the community.
+
+### Core middleware
 
 Name | Description
 ---- | -----------
 Logger | Logs the start and end of each request with the elapsed processing time.
 Recovery | Gracefully absorb panics and prints the stack trace.
 RequestID | Injects a request ID into the context of each request.
-APIErrHandler | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#API500ErrMessage). IT allows to response with the same error without disclosure internal information, also the real error is logged.
+APIErrHandler | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#api500errmessage). IT allows to response with the same error without disclosure internal information, also the real error is logged.
+
+### Auxiliary middleware
+
+Name | Description
+---- | -----------
+Listing | Parses the url from a request and stores a [listing.Listing](https://github.com/ifreddyrondon/bastion/blob/master/middleware/listing/listing.go#L11) on the context, it can be accessed through middleware.GetListing.
+
+For more references check [chi middleware](https://github.com/go-chi/chi/tree/master#middlewares)
 
 ## Register on shutdown
 
@@ -464,7 +474,7 @@ import (
 func handler(w http.ResponseWriter, _ *http.Request) {
 	res := struct {
 		Message string `json:"message"`
-	}{"world"}
+	}{Message: "world"}
 	render.NewJSON().Send(w, res)
 }
 
@@ -512,7 +522,7 @@ import (
 func handler(w http.ResponseWriter, r *http.Request) {
 	res := struct {
 		Message string `json:"message"`
-	}{"world"}
+	}{Message: "world"}
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
 

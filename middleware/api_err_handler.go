@@ -45,11 +45,11 @@ type writerCollector struct {
 	wroteHeader bool
 	// bytes is the number of bytes successfully written by the Write or
 	// ReadFrom function of the ResponseWriter. ResponseWriters may also write
-	// data to their underlaying connection directly (e.g. headers), but those
+	// data to their underlying connection directly (e.g. headers), but those
 	// are not tracked. Therefor the number of Written bytes will usually match
 	// the size of the response body.
 	bytes int64
-	// buf store all the []bytes internaly when ResponseWriter.Write is called.
+	// buf store all the []bytes internally when ResponseWriter.Write is called.
 	buf bytes.Buffer
 }
 
@@ -99,28 +99,28 @@ func getAPIErrCfg(opts ...func(*apiErrCfg)) *apiErrCfg {
 // APIError intercept responses to verify their status and handle the error.
 // It gets the response code and if it's >= 500 handlers the error with a
 // default error message and without disclosure internal information.
-// The real error keeds logged.
+// The real error keeps logged.
 func APIError(opts ...func(*apiErrCfg)) func(http.Handler) http.Handler {
-	confg := getAPIErrCfg(opts...)
+	config := getAPIErrCfg(opts...)
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			m := newWriterCollector()
 
-			snoopw := httpsnoop.Wrap(w, hooks(m))
+			snoop := httpsnoop.Wrap(w, hooks(m))
 			defer func() {
 				if m.code >= 500 {
-					confg.logger.Info().
+					config.logger.Info().
 						Str("component", "api_error_handler").
 						Bytes("response", m.buf.Bytes()).
 						Msg("APIError middleware catch a response error >= 500")
-					confg.render.InternalServerError(w, confg.defaultErr)
+					config.render.InternalServerError(w, config.defaultErr)
 					return
 				}
 				w.WriteHeader(m.code)
 				w.Write(m.buf.Bytes())
 			}()
-			next.ServeHTTP(snoopw, r)
+			next.ServeHTTP(snoop, r)
 		}
 		return http.HandlerFunc(fn)
 	}
