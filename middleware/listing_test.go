@@ -45,7 +45,7 @@ func setup(m func(http.Handler) http.Handler) (*httptest.Server, *listing.Listin
 	return server, &result, teardown
 }
 
-func TestParamsMiddlewareFailure(t *testing.T) {
+func TestListingMiddlewareFailure(t *testing.T) {
 	t.Parallel()
 
 	tt := []struct {
@@ -90,7 +90,7 @@ func TestParamsMiddlewareFailure(t *testing.T) {
 	}
 }
 
-func TestParamsMiddlewareOkWithOptions(t *testing.T) {
+func TestListingMiddlewareOkWithOptions(t *testing.T) {
 	t.Parallel()
 
 	createdDescSort := sorting.NewSort("created_at_desc", "Created date descending")
@@ -316,6 +316,54 @@ func TestParamsMiddlewareOkWithOptions(t *testing.T) {
 				}
 				assert.Equal(t, tc.result.Filtering.Available, resultContainer.Filtering.Available)
 			}
+		})
+	}
+}
+
+func TestListingMiddlewareMarshall(t *testing.T) {
+	t.Parallel()
+
+	updatedDESC := sorting.NewSort("updated_at_desc", "Updated date descending")
+	updatedASC := sorting.NewSort("updated_at_asc", "Updated date ascendant")
+	createdDESC := sorting.NewSort("created_at_desc", "Created date descending")
+	createdASC := sorting.NewSort("created_at_asc", "Created date ascendant")
+
+	tt := []struct {
+		name      string
+		urlParams string
+		m         func(http.Handler) http.Handler
+		expected  string
+	}{
+		{
+			"given non query params and sort criteria should get default sort",
+			"",
+			middleware.Listing(
+				middleware.Sort(updatedDESC, updatedASC, createdDESC, createdASC),
+			),
+			`"sorting":{"sort":{"id":"updated_at_desc","name":"Updated date descending"},"available":[{"id":"updated_at_desc","name":"Updated date descending"},{"id":"updated_at_asc","name":"Updated date ascendant"},{"id":"created_at_desc","name":"Created date descending"},{"id":"created_at_asc","name":"Created date ascendant"}]}`,
+		},
+		{
+			"given created_at_asc params and sort criteria should get created_at_asc as sort and all sort criteria",
+			"sort=created_at_asc",
+			middleware.Listing(
+				middleware.Sort(updatedDESC, updatedASC, createdDESC, createdASC),
+			),
+			`"sorting":{"sort":{"id":"created_at_asc","name":"Created date ascendant"},"available":[{"id":"updated_at_desc","name":"Updated date descending"},{"id":"updated_at_asc","name":"Updated date ascendant"},{"id":"created_at_desc","name":"Created date descending"},{"id":"created_at_asc","name":"Created date ascendant"}]}`,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			server, resultContainer, teardown := setup(tc.m)
+			defer teardown()
+			e := httpexpect.New(t, server.URL)
+			e.GET("/").WithQueryString(tc.urlParams).
+				Expect().
+				Status(http.StatusOK)
+
+			result, err := resultContainer.MarshalJSON()
+			assert.Nil(t, err)
+			assert.Contains(t, string(result), tc.expected)
 		})
 	}
 }

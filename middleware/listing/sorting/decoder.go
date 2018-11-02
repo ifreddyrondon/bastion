@@ -59,5 +59,9 @@ func paramsInAvailable(sortKey string, available []Sort) *Sort {
 
 func (dec *Decoder) fillDefaults(s *Sorting) {
 	s.Available = dec.criteria
-	s.Sort = dec.defaultCriteria
+	// fix: avoid override defaultCriteria values when change Sorting
+	if dec.defaultCriteria != nil {
+		sort := *dec.defaultCriteria
+		s.Sort = &sort
+	}
 }
