@@ -14,7 +14,7 @@ import (
 func TestDecodeOK(t *testing.T) {
 	t.Parallel()
 
-	createdDescSort := sorting.NewSort("created_at_desc", "Created date descending")
+	createdDESC := sorting.NewSort("created_at_desc", "created_at DESC", "Created date descending")
 	vNew := filtering.NewValue("new", "New")
 	vUsed := filtering.NewValue("used", "Used")
 	vTrue := filtering.NewValue("true", "shared")
@@ -74,7 +74,7 @@ func TestDecodeOK(t *testing.T) {
 			"given a sort params with sort criteria and filter criteria should decode sorting with available criteria also decode filtering with only available",
 			map[string][]string{"sort": {"created_at_desc"}},
 			[]func(*listing.Decoder){
-				listing.DecodeSort(createdDescSort),
+				listing.DecodeSort(createdDESC),
 				listing.DecodeFilter(text),
 			},
 			func() listing.Listing {
@@ -85,8 +85,8 @@ func TestDecodeOK(t *testing.T) {
 						MaxAllowedLimit: paging.DefaultMaxAllowedLimit,
 					},
 					Sorting: &sorting.Sorting{
-						Sort:      &createdDescSort,
-						Available: []sorting.Sort{createdDescSort},
+						Sort:      &createdDESC,
+						Available: []sorting.Sort{createdDESC},
 					},
 					Filtering: &filtering.Filtering{
 						Filters: []filtering.Filter{},
@@ -106,7 +106,7 @@ func TestDecodeOK(t *testing.T) {
 			"given a sort and filter params with sort criteria and filter criteria should decode sorting with available criteria also decode filtering with filter and available",
 			map[string][]string{"sort": {"created_at_desc"}, "condition": {"new"}},
 			[]func(*listing.Decoder){
-				listing.DecodeSort(createdDescSort),
+				listing.DecodeSort(createdDESC),
 				listing.DecodeFilter(text, boolean),
 			},
 			func() listing.Listing {
@@ -117,8 +117,8 @@ func TestDecodeOK(t *testing.T) {
 						MaxAllowedLimit: paging.DefaultMaxAllowedLimit,
 					},
 					Sorting: &sorting.Sorting{
-						Sort:      &createdDescSort,
-						Available: []sorting.Sort{createdDescSort},
+						Sort:      &createdDESC,
+						Available: []sorting.Sort{createdDESC},
 					},
 					Filtering: &filtering.Filtering{
 						Filters: []filtering.Filter{
@@ -150,7 +150,7 @@ func TestDecodeOK(t *testing.T) {
 		{
 			"given none params with one filter criteria should decode filtering with empty filters and available criteria",
 			map[string][]string{"sort": {"created_at_desc"}},
-			[]func(*listing.Decoder){listing.DecodeSort(createdDescSort)},
+			[]func(*listing.Decoder){listing.DecodeSort(createdDESC)},
 			func() listing.Listing {
 				return listing.Listing{
 					Paging: paging.Paging{
@@ -159,8 +159,8 @@ func TestDecodeOK(t *testing.T) {
 						MaxAllowedLimit: paging.DefaultMaxAllowedLimit,
 					},
 					Sorting: &sorting.Sorting{
-						Sort:      &createdDescSort,
-						Available: []sorting.Sort{createdDescSort},
+						Sort:      &createdDESC,
+						Available: []sorting.Sort{createdDESC},
 					},
 				}
 			}(),
@@ -196,7 +196,9 @@ func TestDecodeFails(t *testing.T) {
 		{
 			"given a sort query when non match sorting criteria",
 			map[string][]string{"sort": {"a"}},
-			[]func(*listing.Decoder){listing.DecodeSort(sorting.NewSort("created_at_desc", "Created date descending"))},
+			[]func(*listing.Decoder){listing.DecodeSort(
+				sorting.NewSort("created_at DESC", "created_at_desc", "Created date descending"),
+			)},
 			"there's no order criteria with the id a",
 		},
 	}

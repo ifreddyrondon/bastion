@@ -48,6 +48,8 @@ func setup(m func(http.Handler) http.Handler) (*httptest.Server, *listing.Listin
 func TestListingMiddlewareFailure(t *testing.T) {
 	t.Parallel()
 
+	createdDESC := sorting.NewSort("created_at_desc", "created_at DESC", "Created date descending")
+
 	tt := []struct {
 		name      string
 		urlParams string
@@ -67,7 +69,7 @@ func TestListingMiddlewareFailure(t *testing.T) {
 		{
 			"given a sort query when none match sorting criteria should return a 400",
 			"sort=foo_desc",
-			middleware.Listing(middleware.Sort(sorting.NewSort("created_at_desc", "Created date descending"))),
+			middleware.Listing(middleware.Sort(createdDESC)),
 			map[string]interface{}{
 				"status":  400.0,
 				"error":   "Bad Request",
@@ -93,8 +95,8 @@ func TestListingMiddlewareFailure(t *testing.T) {
 func TestListingMiddlewareOkWithOptions(t *testing.T) {
 	t.Parallel()
 
-	createdDescSort := sorting.NewSort("created_at_desc", "Created date descending")
-	createdAscSort := sorting.NewSort("created_at_asc", "Created date ascendant")
+	createdDESC := sorting.NewSort("created_at_desc", "created_at DESC", "Created date descending")
+	createdASC := sorting.NewSort("created_at_asc", "created_at ASC", "Created date ascendant")
 	vNew := filtering.NewValue("new", "New")
 	vUsed := filtering.NewValue("used", "Used")
 	text := filtering.NewText("condition", "test", vNew, vUsed)
@@ -167,7 +169,7 @@ func TestListingMiddlewareOkWithOptions(t *testing.T) {
 		{
 			"given non query params and one sort criteria should get sorting with default sort",
 			"",
-			middleware.Listing(middleware.Sort(createdDescSort)),
+			middleware.Listing(middleware.Sort(createdDESC)),
 			func() listing.Listing {
 				return listing.Listing{
 					Paging: paging.Paging{
@@ -176,8 +178,8 @@ func TestListingMiddlewareOkWithOptions(t *testing.T) {
 						MaxAllowedLimit: paging.DefaultMaxAllowedLimit,
 					},
 					Sorting: &sorting.Sorting{
-						Sort:      &createdDescSort,
-						Available: []sorting.Sort{createdDescSort},
+						Sort:      &createdDESC,
+						Available: []sorting.Sort{createdDESC},
 					},
 				}
 			}(),
@@ -185,7 +187,7 @@ func TestListingMiddlewareOkWithOptions(t *testing.T) {
 		{
 			"given sort query params and sort criteria should get sorting with selected sort",
 			"sort=created_at_desc",
-			middleware.Listing(middleware.Sort(createdDescSort, createdAscSort)),
+			middleware.Listing(middleware.Sort(createdDESC, createdASC)),
 			func() listing.Listing {
 				return listing.Listing{
 					Paging: paging.Paging{
@@ -194,8 +196,8 @@ func TestListingMiddlewareOkWithOptions(t *testing.T) {
 						MaxAllowedLimit: paging.DefaultMaxAllowedLimit,
 					},
 					Sorting: &sorting.Sorting{
-						Sort:      &createdDescSort,
-						Available: []sorting.Sort{createdDescSort, createdAscSort},
+						Sort:      &createdDESC,
+						Available: []sorting.Sort{createdDESC, createdASC},
 					},
 				}
 			}(),
@@ -323,10 +325,10 @@ func TestListingMiddlewareOkWithOptions(t *testing.T) {
 func TestListingMiddlewareMarshall(t *testing.T) {
 	t.Parallel()
 
-	updatedDESC := sorting.NewSort("updated_at_desc", "Updated date descending")
-	updatedASC := sorting.NewSort("updated_at_asc", "Updated date ascendant")
-	createdDESC := sorting.NewSort("created_at_desc", "Created date descending")
-	createdASC := sorting.NewSort("created_at_asc", "Created date ascendant")
+	updatedDESC := sorting.NewSort("updated_at_desc", "updated_at DESC", "Updated date descending")
+	updatedASC := sorting.NewSort("updated_at_asc", "updated_at ASC", "Updated date ascendant")
+	createdDESC := sorting.NewSort("created_at_desc", "created_at DESC", "Created date descending")
+	createdASC := sorting.NewSort("created_at_asc", "created_at ASC", "Created date ascendant")
 
 	tt := []struct {
 		name      string
@@ -340,7 +342,7 @@ func TestListingMiddlewareMarshall(t *testing.T) {
 			middleware.Listing(
 				middleware.Sort(updatedDESC, updatedASC, createdDESC, createdASC),
 			),
-			`"sorting":{"sort":{"id":"updated_at_desc","name":"Updated date descending"},"available":[{"id":"updated_at_desc","name":"Updated date descending"},{"id":"updated_at_asc","name":"Updated date ascendant"},{"id":"created_at_desc","name":"Created date descending"},{"id":"created_at_asc","name":"Created date ascendant"}]}`,
+			`"sorting":{"sort":{"id":"updated_at_desc","description":"Updated date descending"},"available":[{"id":"updated_at_desc","description":"Updated date descending"},{"id":"updated_at_asc","description":"Updated date ascendant"},{"id":"created_at_desc","description":"Created date descending"},{"id":"created_at_asc","description":"Created date ascendant"}]}`,
 		},
 		{
 			"given created_at_asc params and sort criteria should get created_at_asc as sort and all sort criteria",
@@ -348,7 +350,7 @@ func TestListingMiddlewareMarshall(t *testing.T) {
 			middleware.Listing(
 				middleware.Sort(updatedDESC, updatedASC, createdDESC, createdASC),
 			),
-			`"sorting":{"sort":{"id":"created_at_asc","name":"Created date ascendant"},"available":[{"id":"updated_at_desc","name":"Updated date descending"},{"id":"updated_at_asc","name":"Updated date ascendant"},{"id":"created_at_desc","name":"Created date descending"},{"id":"created_at_asc","name":"Created date ascendant"}]}`,
+			`"sorting":{"sort":{"id":"created_at_asc","description":"Created date ascendant"},"available":[{"id":"updated_at_desc","description":"Updated date descending"},{"id":"updated_at_asc","description":"Updated date ascendant"},{"id":"created_at_desc","description":"Created date descending"},{"id":"created_at_asc","description":"Created date ascendant"}]}`,
 		},
 	}
 
