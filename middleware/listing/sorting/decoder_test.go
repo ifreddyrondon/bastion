@@ -11,8 +11,8 @@ import (
 func TestDecodeOK(t *testing.T) {
 	t.Parallel()
 
-	createdDescSort := sorting.NewSort("created_at_desc", "Created date descending")
-	createdAscSort := sorting.NewSort("created_at_asc", "Created date ascendant")
+	createdDESC := sorting.NewSort("created_at_desc", "created_at DESC", "Created date descending")
+	createdASC := sorting.NewSort("created_at_asc", "created_at ASC", "Created date ascendant")
 
 	tt := []struct {
 		name      string
@@ -29,37 +29,37 @@ func TestDecodeOK(t *testing.T) {
 		{
 			"given non sort query params present and one sort criteria",
 			map[string][]string{},
-			[]sorting.Sort{createdDescSort},
+			[]sorting.Sort{createdDESC},
 			sorting.Sorting{
-				Sort:      &createdDescSort,
-				Available: []sorting.Sort{createdDescSort},
+				Sort:      &createdDESC,
+				Available: []sorting.Sort{createdDESC},
 			},
 		},
 		{
 			"given non sort query params present and one some sort criteria",
 			map[string][]string{},
-			[]sorting.Sort{createdDescSort, createdAscSort},
+			[]sorting.Sort{createdDESC, createdASC},
 			sorting.Sorting{
-				Sort:      &createdDescSort,
-				Available: []sorting.Sort{createdDescSort, createdAscSort},
+				Sort:      &createdDESC,
+				Available: []sorting.Sort{createdDESC, createdASC},
 			},
 		},
 		{
 			"given created_at_desc sort query params present and one some sort criteria",
 			map[string][]string{"sort": {"created_at_desc"}},
-			[]sorting.Sort{createdDescSort, createdAscSort},
+			[]sorting.Sort{createdDESC, createdASC},
 			sorting.Sorting{
-				Sort:      &createdDescSort,
-				Available: []sorting.Sort{createdDescSort, createdAscSort},
+				Sort:      &createdDESC,
+				Available: []sorting.Sort{createdDESC, createdASC},
 			},
 		},
 		{
 			"given created_at_desc sort query params present and one some sort criteria",
 			map[string][]string{"sort": {"created_at_asc"}},
-			[]sorting.Sort{createdDescSort, createdAscSort},
+			[]sorting.Sort{createdDESC, createdASC},
 			sorting.Sorting{
-				Sort:      &createdAscSort,
-				Available: []sorting.Sort{createdDescSort, createdAscSort},
+				Sort:      &createdASC,
+				Available: []sorting.Sort{createdDESC, createdASC},
 			},
 		},
 	}
@@ -94,7 +94,7 @@ func TestSortingDecodeBad(t *testing.T) {
 			"given a sort query when none match sorting criteria",
 			map[string][]string{"sort": {"foo_desc"}},
 			[]sorting.Sort{
-				sorting.NewSort("created_at_desc", "Created date descending"),
+				sorting.NewSort("created_at DESC", "created_at_desc", "Created date descending"),
 			},
 			"there's no order criteria with the id foo_desc",
 		},

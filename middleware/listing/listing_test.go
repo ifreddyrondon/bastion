@@ -14,8 +14,8 @@ import (
 func TestMarshalListing(t *testing.T) {
 	t.Parallel()
 	// sorting
-	createdDescSort := sorting.NewSort("created_at_desc", "Created date descending")
-	createdAscSort := sorting.NewSort("created_at_asc", "Created date ascendant")
+	createdDESC := sorting.NewSort("created_at_desc", "created_at DESC", "Created date descending")
+	createdASC := sorting.NewSort("created_at_asc", "created_at ASC", "Created date ascendant")
 	// filtering
 	vNew := filtering.NewValue("new", "New")
 	vNew.Result = 10
@@ -60,11 +60,11 @@ func TestMarshalListing(t *testing.T) {
 					MaxAllowedLimit: 50,
 				},
 				Sorting: &sorting.Sorting{
-					Sort:      &createdDescSort,
-					Available: []sorting.Sort{createdDescSort, createdAscSort},
+					Sort:      &createdDESC,
+					Available: []sorting.Sort{createdDESC, createdASC},
 				},
 			},
-			`{"paging":{"max_allowed_limit":50,"limit":20,"offset":10},"sorting":{"sort":{"id":"created_at_desc","name":"Created date descending"},"available":[{"id":"created_at_desc","name":"Created date descending"},{"id":"created_at_asc","name":"Created date ascendant"}]}}`,
+			`{"paging":{"max_allowed_limit":50,"limit":20,"offset":10},"sorting":{"sort":{"id":"created_at_desc","description":"Created date descending"},"available":[{"id":"created_at_desc","description":"Created date descending"},{"id":"created_at_asc","description":"Created date ascendant"}]}}`,
 		},
 		{
 			"given a listing with Paging, Sorting and Filtering should marshal all",
@@ -75,8 +75,8 @@ func TestMarshalListing(t *testing.T) {
 					MaxAllowedLimit: 50,
 				},
 				Sorting: &sorting.Sorting{
-					Sort:      &createdDescSort,
-					Available: []sorting.Sort{createdDescSort, createdAscSort},
+					Sort:      &createdDESC,
+					Available: []sorting.Sort{createdDESC, createdASC},
 				},
 				Filtering: &filtering.Filtering{
 					Filters: []filtering.Filter{
@@ -103,7 +103,7 @@ func TestMarshalListing(t *testing.T) {
 					},
 				},
 			},
-			`{"paging":{"max_allowed_limit":50,"limit":20,"offset":10},"sorting":{"sort":{"id":"created_at_desc","name":"Created date descending"},"available":[{"id":"created_at_desc","name":"Created date descending"},{"id":"created_at_asc","name":"Created date ascendant"}]},"filtering":{"filters":[{"id":"condition","name":"test","type":"text","values":[{"id":"new","name":"New","result":10}]}],"available":[{"id":"condition","name":"test","type":"text","values":[{"id":"new","name":"New","result":10},{"id":"used","name":"Used"}]},{"id":"shared","name":"test","type":"boolean","values":[{"id":"true","name":"shared"},{"id":"false","name":"private"}]}]}}`,
+			`{"paging":{"max_allowed_limit":50,"limit":20,"offset":10},"sorting":{"sort":{"id":"created_at_desc","description":"Created date descending"},"available":[{"id":"created_at_desc","description":"Created date descending"},{"id":"created_at_asc","description":"Created date ascendant"}]},"filtering":{"filters":[{"id":"condition","name":"test","type":"text","values":[{"id":"new","name":"New","result":10}]}],"available":[{"id":"condition","name":"test","type":"text","values":[{"id":"new","name":"New","result":10},{"id":"used","name":"Used"}]},{"id":"shared","name":"test","type":"boolean","values":[{"id":"true","name":"shared"},{"id":"false","name":"private"}]}]}}`,
 		},
 	}
 

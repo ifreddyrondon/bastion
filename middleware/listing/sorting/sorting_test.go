@@ -11,8 +11,8 @@ import (
 func TestMarshalSorting(t *testing.T) {
 	t.Parallel()
 
-	createdDescSort := sorting.NewSort("created_at_desc", "Created date descending")
-	createdAscSort := sorting.NewSort("created_at_asc", "Created date ascendant")
+	createdDESC := sorting.NewSort("created_at_desc", "created_at DESC", "Created date descending")
+	createdASC := sorting.NewSort("created_at_asc", "created_at ASC", "Created date ascendant")
 
 	tt := []struct {
 		name     string
@@ -27,18 +27,18 @@ func TestMarshalSorting(t *testing.T) {
 		{
 			"given a sorting with defaults should marshal defaults",
 			sorting.Sorting{
-				Sort:      &createdDescSort,
-				Available: []sorting.Sort{createdDescSort},
+				Sort:      &createdDESC,
+				Available: []sorting.Sort{createdDESC},
 			},
-			`{"sort":{"id":"created_at_desc","name":"Created date descending"},"available":[{"id":"created_at_desc","name":"Created date descending"}]}`,
+			`{"sort":{"id":"created_at_desc","description":"Created date descending"},"available":[{"id":"created_at_desc","description":"Created date descending"}]}`,
 		},
 		{
 			"given a sorting with several available should add all to marshal",
 			sorting.Sorting{
-				Sort:      &createdDescSort,
-				Available: []sorting.Sort{createdDescSort, createdAscSort},
+				Sort:      &createdDESC,
+				Available: []sorting.Sort{createdDESC, createdASC},
 			},
-			`{"sort":{"id":"created_at_desc","name":"Created date descending"},"available":[{"id":"created_at_desc","name":"Created date descending"},{"id":"created_at_asc","name":"Created date ascendant"}]}`,
+			`{"sort":{"id":"created_at_desc","description":"Created date descending"},"available":[{"id":"created_at_desc","description":"Created date descending"},{"id":"created_at_asc","description":"Created date ascendant"}]}`,
 		},
 	}
 

@@ -4,8 +4,9 @@ import "github.com/mailru/easyjson/jwriter"
 
 // Sort criteria.
 type Sort struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string `json:"id"`
+	Value       string `json:"-"`
+	Description string `json:"description"`
 }
 
 // MarshalJSON supports json.Marshaler interface
@@ -16,8 +17,8 @@ func (v Sorting) MarshalJSON() ([]byte, error) {
 }
 
 // NewSort returns a new instance of Sort
-func NewSort(id, name string) Sort {
-	return Sort{ID: id, Name: name}
+func NewSort(id, value, description string) Sort {
+	return Sort{ID: id, Value: value, Description: description}
 }
 
 // Sorting struct allows to sort a collection.

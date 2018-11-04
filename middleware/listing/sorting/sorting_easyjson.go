@@ -70,7 +70,7 @@ func easyjson1afec5d2EncodeGithubComIfreddyrondonCaptureAppListingSorting1(out *
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"name\":")
-	out.String(string(in.Name))
+	out.RawString("\"description\":")
+	out.String(string(in.Description))
 	out.RawByte('}')
 }
