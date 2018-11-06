@@ -92,10 +92,10 @@ func TestDecodeOK(t *testing.T) {
 						Filters: []filtering.Filter{},
 						Available: []filtering.Filter{
 							{
-								ID:     "condition",
-								Name:   "test",
-								Type:   "text",
-								Values: []filtering.Value{vNew, vUsed},
+								ID:          "condition",
+								Description: "test",
+								Type:        "text",
+								Values:      []filtering.Value{vNew, vUsed},
 							},
 						},
 					},
@@ -123,24 +123,24 @@ func TestDecodeOK(t *testing.T) {
 					Filtering: &filtering.Filtering{
 						Filters: []filtering.Filter{
 							{
-								ID:     "condition",
-								Name:   "test",
-								Type:   "text",
-								Values: []filtering.Value{vNew},
+								ID:          "condition",
+								Description: "test",
+								Type:        "text",
+								Values:      []filtering.Value{vNew},
 							},
 						},
 						Available: []filtering.Filter{
 							{
-								ID:     "condition",
-								Name:   "test",
-								Type:   "text",
-								Values: []filtering.Value{vNew, vUsed},
+								ID:          "condition",
+								Description: "test",
+								Type:        "text",
+								Values:      []filtering.Value{vNew, vUsed},
 							},
 							{
-								ID:     "shared",
-								Name:   "test",
-								Type:   "boolean",
-								Values: []filtering.Value{vTrue, vFalse},
+								ID:          "shared",
+								Description: "test",
+								Type:        "boolean",
+								Values:      []filtering.Value{vTrue, vFalse},
 							},
 						},
 					},

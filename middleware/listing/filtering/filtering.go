@@ -8,31 +8,31 @@ import (
 
 // Value is the struct where the posibles filter values should be stored.
 type Value struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Result int64  `json:"result,omitempty"`
+	ID          string `json:"id"`
+	Description string `json:"description"`
+	Result      int64  `json:"result,omitempty"`
 }
 
 // NewValue returns a new Value instance.
-func NewValue(id, name string) Value {
-	return Value{ID: id, Name: name}
+func NewValue(id, description string) Value {
+	return Value{ID: id, Description: description}
 }
 
 // Filter struct that represent a filter
 type Filter struct {
-	ID     string  `json:"id"`
-	Name   string  `json:"name"`
-	Type   string  `json:"type"`
-	Values []Value `json:"values"`
+	ID          string  `json:"id"`
+	Description string  `json:"description"`
+	Type        string  `json:"type"`
+	Values      []Value `json:"values"`
 }
 
 // NewFilter returns a new Filter instance.
-func NewFilter(id, name, typef string, values ...Value) *Filter {
+func NewFilter(id, description, typef string, values ...Value) *Filter {
 	return &Filter{
-		ID:     id,
-		Name:   name,
-		Type:   typef,
-		Values: values,
+		ID:          id,
+		Description: description,
+		Type:        typef,
+		Values:      values,
 	}
 }
 

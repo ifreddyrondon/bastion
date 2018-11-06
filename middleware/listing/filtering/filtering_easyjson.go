@@ -31,14 +31,14 @@ func easyjson8834d2f0EncodeGithubComIfreddyrondonCaptureAppListingFiltering(out 
 		out.String(string(in.ID))
 	}
 	{
-		const prefix string = ",\"name\":"
+		const prefix string = ",\"description\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Name))
+		out.String(string(in.Description))
 	}
 	if in.Result != 0 {
 		const prefix string = ",\"result\":"
@@ -120,14 +120,14 @@ func easyjson8834d2f0EncodeGithubComIfreddyrondonCaptureAppListingFiltering2(out
 		out.String(string(in.ID))
 	}
 	{
-		const prefix string = ",\"name\":"
+		const prefix string = ",\"description\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Name))
+		out.String(string(in.Description))
 	}
 	{
 		const prefix string = ",\"type\":"

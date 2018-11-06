@@ -22,10 +22,10 @@ func TestBooleanPresentOK(t *testing.T) {
 			filtering.NewBoolean("shared", "test", "shared", "private"),
 			map[string][]string{"shared": {"true"}},
 			&filtering.Filter{
-				ID:     "shared",
-				Name:   "test",
-				Type:   "boolean",
-				Values: []filtering.Value{filtering.NewValue("true", "shared")},
+				ID:          "shared",
+				Description: "test",
+				Type:        "boolean",
+				Values:      []filtering.Value{filtering.NewValue("true", "shared")},
 			},
 		},
 		{
@@ -33,10 +33,10 @@ func TestBooleanPresentOK(t *testing.T) {
 			filtering.NewBoolean("shared", "test", "shared", "private"),
 			map[string][]string{"shared": {"false"}},
 			&filtering.Filter{
-				ID:     "shared",
-				Name:   "test",
-				Type:   "boolean",
-				Values: []filtering.Value{filtering.NewValue("false", "private")},
+				ID:          "shared",
+				Description: "test",
+				Type:        "boolean",
+				Values:      []filtering.Value{filtering.NewValue("false", "private")},
 			},
 		},
 	}
@@ -45,11 +45,11 @@ func TestBooleanPresentOK(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			result := tc.boolean.Present(tc.params)
 			assert.Equal(t, tc.expected.ID, result.ID)
-			assert.Equal(t, tc.expected.Name, result.Name)
+			assert.Equal(t, tc.expected.Description, result.Description)
 			assert.Equal(t, tc.expected.Type, result.Type)
 			assert.Equal(t, len(tc.expected.Values), len(result.Values))
 			assert.Equal(t, tc.expected.Values[0].ID, result.Values[0].ID)
-			assert.Equal(t, tc.expected.Values[0].Name, result.Values[0].Name)
+			assert.Equal(t, tc.expected.Values[0].Description, result.Values[0].Description)
 		})
 	}
 }
@@ -87,9 +87,9 @@ func TestBooleanWithValues(t *testing.T) {
 
 	boolean := filtering.NewBoolean("shared", "test", "shared", "private")
 	expected := &filtering.Filter{
-		ID:   "shared",
-		Name: "test",
-		Type: "boolean",
+		ID:          "shared",
+		Description: "test",
+		Type:        "boolean",
 		Values: []filtering.Value{
 			filtering.NewValue("true", "shared"),
 			filtering.NewValue("false", "private"),
@@ -97,11 +97,11 @@ func TestBooleanWithValues(t *testing.T) {
 	}
 	result := boolean.WithValues()
 	assert.Equal(t, expected.ID, result.ID)
-	assert.Equal(t, expected.Name, result.Name)
+	assert.Equal(t, expected.Description, result.Description)
 	assert.Equal(t, expected.Type, result.Type)
 	assert.Equal(t, len(expected.Values), len(result.Values))
 	assert.Equal(t, expected.Values[0].ID, result.Values[0].ID)
-	assert.Equal(t, expected.Values[0].Name, result.Values[0].Name)
+	assert.Equal(t, expected.Values[0].Description, result.Values[0].Description)
 	assert.Equal(t, expected.Values[1].ID, result.Values[1].ID)
-	assert.Equal(t, expected.Values[1].Name, result.Values[1].Name)
+	assert.Equal(t, expected.Values[1].Description, result.Values[1].Description)
 }

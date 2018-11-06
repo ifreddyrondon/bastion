@@ -7,16 +7,16 @@ const textFilterType = "text"
 // Text validates text values and returns a Filter with the
 // value found. If not filters were found, it returns nil.
 type Text struct {
-	id, name string
-	values   []Value
+	id, description string
+	values          []Value
 }
 
 // NewText returns a new Text instance.
-func NewText(id, name string, values ...Value) *Text {
+func NewText(id, description string, values ...Value) *Text {
 	return &Text{
-		id:     id,
-		name:   name,
-		values: values,
+		id:          id,
+		description: description,
+		values:      values,
 	}
 }
 
@@ -28,7 +28,7 @@ func (b *Text) Present(keys url.Values) *Filter {
 		if key == b.id {
 			v := checkValues(b.values, values[0])
 			if v != nil {
-				return NewFilter(b.id, b.name, textFilterType, *v)
+				return NewFilter(b.id, b.description, textFilterType, *v)
 			}
 		}
 	}
@@ -46,5 +46,5 @@ func checkValues(available []Value, paramVal string) *Value {
 
 // WithValues returns the filter with all their values.
 func (b *Text) WithValues() *Filter {
-	return NewFilter(b.id, b.name, textFilterType, b.values...)
+	return NewFilter(b.id, b.description, textFilterType, b.values...)
 }

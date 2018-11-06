@@ -25,10 +25,10 @@ func TestTextPresentOK(t *testing.T) {
 			filtering.NewText("condition", "test", vNew),
 			map[string][]string{"condition": {"new"}},
 			&filtering.Filter{
-				ID:     "condition",
-				Name:   "test",
-				Type:   "text",
-				Values: []filtering.Value{filtering.NewValue("new", "New")},
+				ID:          "condition",
+				Description: "test",
+				Type:        "text",
+				Values:      []filtering.Value{filtering.NewValue("new", "New")},
 			},
 		},
 		{
@@ -36,10 +36,10 @@ func TestTextPresentOK(t *testing.T) {
 			filtering.NewText("condition", "test", vUsed),
 			map[string][]string{"condition": {"used"}},
 			&filtering.Filter{
-				ID:     "condition",
-				Name:   "test",
-				Type:   "text",
-				Values: []filtering.Value{filtering.NewValue("used", "Used")},
+				ID:          "condition",
+				Description: "test",
+				Type:        "text",
+				Values:      []filtering.Value{filtering.NewValue("used", "Used")},
 			},
 		},
 	}
@@ -48,11 +48,11 @@ func TestTextPresentOK(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			result := tc.text.Present(tc.params)
 			assert.Equal(t, tc.expected.ID, result.ID)
-			assert.Equal(t, tc.expected.Name, result.Name)
+			assert.Equal(t, tc.expected.Description, result.Description)
 			assert.Equal(t, tc.expected.Type, result.Type)
 			assert.Equal(t, len(tc.expected.Values), len(result.Values))
 			assert.Equal(t, tc.expected.Values[0].ID, result.Values[0].ID)
-			assert.Equal(t, tc.expected.Values[0].Name, result.Values[0].Name)
+			assert.Equal(t, tc.expected.Values[0].Description, result.Values[0].Description)
 		})
 	}
 }
@@ -95,18 +95,18 @@ func TestTextWithValues(t *testing.T) {
 	}
 	text := filtering.NewText("condition", "test", values...)
 	expected := &filtering.Filter{
-		ID:     "condition",
-		Name:   "test",
-		Type:   "text",
-		Values: values,
+		ID:          "condition",
+		Description: "test",
+		Type:        "text",
+		Values:      values,
 	}
 	result := text.WithValues()
 	assert.Equal(t, expected.ID, result.ID)
-	assert.Equal(t, expected.Name, result.Name)
+	assert.Equal(t, expected.Description, result.Description)
 	assert.Equal(t, expected.Type, result.Type)
 	assert.Equal(t, len(expected.Values), len(result.Values))
 	for i, v := range result.Values {
 		assert.Equal(t, expected.Values[i].ID, v.ID)
-		assert.Equal(t, expected.Values[i].Name, v.Name)
+		assert.Equal(t, expected.Values[i].Description, v.Description)
 	}
 }
