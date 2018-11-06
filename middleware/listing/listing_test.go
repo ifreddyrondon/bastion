@@ -81,29 +81,29 @@ func TestMarshalListing(t *testing.T) {
 				Filtering: &filtering.Filtering{
 					Filters: []filtering.Filter{
 						{
-							ID:     "condition",
-							Name:   "test",
-							Type:   "text",
-							Values: []filtering.Value{vNew},
+							ID:          "condition",
+							Description: "test",
+							Type:        "text",
+							Values:      []filtering.Value{vNew},
 						},
 					},
 					Available: []filtering.Filter{
 						{
-							ID:     "condition",
-							Name:   "test",
-							Type:   "text",
-							Values: []filtering.Value{vNew, vUsed},
+							ID:          "condition",
+							Description: "test",
+							Type:        "text",
+							Values:      []filtering.Value{vNew, vUsed},
 						},
 						{
-							ID:     "shared",
-							Name:   "test",
-							Type:   "boolean",
-							Values: []filtering.Value{vTrue, vFalse},
+							ID:          "shared",
+							Description: "test",
+							Type:        "boolean",
+							Values:      []filtering.Value{vTrue, vFalse},
 						},
 					},
 				},
 			},
-			`{"paging":{"max_allowed_limit":50,"limit":20,"offset":10},"sorting":{"sort":{"id":"created_at_desc","description":"Created date descending"},"available":[{"id":"created_at_desc","description":"Created date descending"},{"id":"created_at_asc","description":"Created date ascendant"}]},"filtering":{"filters":[{"id":"condition","name":"test","type":"text","values":[{"id":"new","name":"New","result":10}]}],"available":[{"id":"condition","name":"test","type":"text","values":[{"id":"new","name":"New","result":10},{"id":"used","name":"Used"}]},{"id":"shared","name":"test","type":"boolean","values":[{"id":"true","name":"shared"},{"id":"false","name":"private"}]}]}}`,
+			`{"paging":{"max_allowed_limit":50,"limit":20,"offset":10},"sorting":{"sort":{"id":"created_at_desc","description":"Created date descending"},"available":[{"id":"created_at_desc","description":"Created date descending"},{"id":"created_at_asc","description":"Created date ascendant"}]},"filtering":{"filters":[{"id":"condition","description":"test","type":"text","values":[{"id":"new","description":"New","result":10}]}],"available":[{"id":"condition","description":"test","type":"text","values":[{"id":"new","description":"New","result":10},{"id":"used","description":"Used"}]},{"id":"shared","description":"test","type":"boolean","values":[{"id":"true","description":"shared"},{"id":"false","description":"private"}]}]}}`,
 		},
 	}
 

@@ -11,18 +11,17 @@ const (
 // Boolean validates boolean values and returns a Filter.
 // The Filter returned will be true or false.
 type Boolean struct {
-	id, name   string
-	trueValue  Value
-	falseValue Value
+	id, description                   string
+	trueDescription, falseDescription Value
 }
 
 // NewBoolean returns a new Boolean instance.
-func NewBoolean(id, name string, trueValName, falseValName string) *Boolean {
+func NewBoolean(id, description string, trueDescription, falseDescription string) *Boolean {
 	return &Boolean{
-		id:         id,
-		name:       name,
-		trueValue:  NewValue(trueID, trueValName),
-		falseValue: NewValue(falseID, falseValName),
+		id:               id,
+		description:      description,
+		trueDescription:  NewValue(trueID, trueDescription),
+		falseDescription: NewValue(falseID, falseDescription),
 	}
 }
 
@@ -33,11 +32,11 @@ func (b *Boolean) Present(keys url.Values) *Filter {
 	for key, values := range keys {
 		if key == b.id {
 			v := values[0]
-			if v == b.trueValue.ID {
-				return NewFilter(b.id, b.name, booleanFilterType, b.trueValue)
+			if v == b.trueDescription.ID {
+				return NewFilter(b.id, b.description, booleanFilterType, b.trueDescription)
 			}
-			if v == b.falseValue.ID {
-				return NewFilter(b.id, b.name, booleanFilterType, b.falseValue)
+			if v == b.falseDescription.ID {
+				return NewFilter(b.id, b.description, booleanFilterType, b.falseDescription)
 			}
 		}
 	}
@@ -46,5 +45,5 @@ func (b *Boolean) Present(keys url.Values) *Filter {
 
 // WithValues returns the filter with true and false values.
 func (b *Boolean) WithValues() *Filter {
-	return NewFilter(b.id, b.name, booleanFilterType, b.trueValue, b.falseValue)
+	return NewFilter(b.id, b.description, booleanFilterType, b.trueDescription, b.falseDescription)
 }
