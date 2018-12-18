@@ -11,9 +11,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ctxKey string
-
-const paramsKey ctxKey = "listing_value"
+var (
+	// ListingCtxKey is the context.Context key to store the Listing for a request.
+	ListingCtxKey = &contextKey{"Listing"}
+)
 
 var (
 	errMissingListing    = errors.New("listing not found in context")
@@ -21,13 +22,13 @@ var (
 )
 
 func withParams(ctx context.Context, l *listing.Listing) context.Context {
-	return context.WithValue(ctx, paramsKey, l)
+	return context.WithValue(ctx, ListingCtxKey, l)
 }
 
 // GetListing will return the listing reference assigned to the context, or nil if there
 // is any error or there isn't a Listing instance.
 func GetListing(ctx context.Context) (*listing.Listing, error) {
-	tmp := ctx.Value(paramsKey)
+	tmp := ctx.Value(ListingCtxKey)
 	if tmp == nil {
 		return nil, errMissingListing
 	}
