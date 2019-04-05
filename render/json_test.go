@@ -7,8 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/render"
 	"gopkg.in/gavv/httpexpect.v1"
+
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 type address struct {

@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-
-	"github.com/gobuffalo/envy"
-	"github.com/markbates/going/defaults"
 )
 
 const (
 	developmentEnv = "development"
 	defaultPort    = "8080"
-	defaultAddrs   = "127.0.0.1"
+	defaultADDR    = "127.0.0.1"
 	// api defaults
 	defaultBasePath      = "/"
 	default500ErrMessage = "looks like something went wrong"
@@ -64,19 +61,26 @@ func (o *Options) isDEV() bool {
 }
 
 func setDefaultsOpts(opts *Options) {
-	port := envy.Get("PORT", defaultPort)
-	opts.Env = defaults.String(opts.Env, envy.Get("GO_ENV", developmentEnv))
+	port := defaultString(os.Getenv("PORT"), defaultPort)
+	opts.Env = defaultString(opts.Env, defaultString(os.Getenv("GO_ENV"), developmentEnv))
 	addr := "0.0.0.0"
 	if opts.Env == developmentEnv {
-		addr = defaultAddrs
+		addr = defaultADDR
 	}
-	envAddr := envy.Get("ADDR", addr)
-	opts.Addr = defaults.String(opts.Addr, fmt.Sprintf("%s:%s", envAddr, port))
-	opts.APIBasepath = defaults.String(opts.APIBasepath, defaultBasePath)
-	opts.API500ErrMessage = defaults.String(opts.API500ErrMessage, default500ErrMessage)
+	envAddr := defaultString(os.Getenv("ADDR"), addr)
+	opts.Addr = defaultString(opts.Addr, fmt.Sprintf("%s:%s", envAddr, port))
+	opts.APIBasepath = defaultString(opts.APIBasepath, defaultBasePath)
+	opts.API500ErrMessage = defaultString(opts.API500ErrMessage, default500ErrMessage)
 	if opts.LoggerOutput == nil {
 		opts.LoggerOutput = os.Stdout
 	}
+}
+
+func defaultString(s1, s2 string) string {
+	if s1 == "" {
+		return s2
+	}
+	return s1
 }
 
 // Opt helper type to create functional options

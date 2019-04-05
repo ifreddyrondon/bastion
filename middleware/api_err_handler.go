@@ -7,9 +7,10 @@ import (
 	"os"
 
 	"github.com/felixge/httpsnoop"
-	"github.com/ifreddyrondon/bastion/render"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 // hooks defines WriteHeader and Write methods interceptors for methods included in

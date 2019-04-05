@@ -8,12 +8,13 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi"
-	"github.com/ifreddyrondon/bastion/middleware"
 	"github.com/markbates/sigtx"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	"gopkg.in/yaml.v2"
+
+	"github.com/ifreddyrondon/bastion/middleware"
 )
 
 // onShutdown is a function to be implemented when is necessary

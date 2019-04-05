@@ -8,9 +8,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ifreddyrondon/bastion/render"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func logreq(r *http.Request) *zerolog.Event {
@@ -66,7 +67,7 @@ func getRecoveryCfg(opts ...func(*recoveryCfg)) *recoveryCfg {
 // backtrace), and returns a HTTP 500 (Internal Server Error) status if
 // possible. Recovery prints a request ID if one is provided.
 func Recovery(opts ...func(*recoveryCfg)) func(http.Handler) http.Handler {
-	confg := getRecoveryCfg(opts...)
+	cfg := getRecoveryCfg(opts...)
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, req *http.Request) {
@@ -81,11 +82,11 @@ func Recovery(opts ...func(*recoveryCfg)) func(http.Handler) http.Handler {
 					default:
 						err = errors.New(fmt.Sprint(t))
 					}
-					confg.logger.Error().
+					cfg.logger.Error().
 						Str("component", "recovery").
 						Err(err).Dict("req", logreq(req)).
 						Msg("Recovery middleware catch an error")
-					confg.render.InternalServerError(w, err)
+					cfg.render.InternalServerError(w, err)
 					return
 				}
 			}()

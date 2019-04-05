@@ -3,9 +3,10 @@ package sorting_test
 import (
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/middleware/listing/sorting"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ifreddyrondon/bastion/middleware/listing/sorting"
 )
 
 func TestMarshalSorting(t *testing.T) {

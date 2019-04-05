@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion"
-	"github.com/ifreddyrondon/bastion/render"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func TestLoggerForDevelopment(t *testing.T) {

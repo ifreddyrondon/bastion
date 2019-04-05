@@ -4,11 +4,12 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/ifreddyrondon/bastion/middleware/listing"
 	"github.com/ifreddyrondon/bastion/middleware/listing/filtering"
 	"github.com/ifreddyrondon/bastion/middleware/listing/sorting"
 	"github.com/ifreddyrondon/bastion/render"
-	"github.com/pkg/errors"
 )
 
 var (

@@ -8,50 +8,16 @@
 Defend your API from the sieges. Bastion offers an "augmented" Router instance.
 
 It has the minimal necessary to create an API with default handlers and middleware that help you raise your API easy and fast.
-Allows to have commons handlers and middleware between projects with the need for each one to do so.
-
-## Examples
-
-* [helloworld](https://github.com/ifreddyrondon/bastion/blob/master/_examples/helloworld/main.go) - Quick start, first Hello world with bastion.
-* [todo-rest](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/) - REST APIs made easy, productive and maintainable.
-* [Options with yaml](https://github.com/ifreddyrondon/bastion/blob/master/_examples/options-yaml/main.go) - Bastion with options file.
-* [Register on shutdown](https://github.com/ifreddyrondon/bastion/blob/master/_examples/register/main.go) - Registers functions to be call on Shutdown.
-
-## Table of contents
-
-1. [Installation](#installation)
-2. [Router](#router)
-    * [NewRouter](#newrouter)
-    * [Example](#router-example)
-3. [Middleware](#middleware)
-4. [Register on shutdown](#register-on-shutdown)
-    * [Example](#register-on-shutdown-example)
-5. [Options](#options)
-    1. [Structure](#structure)
-        * [APIBasepath](#apibasepath)
-        * [API500ErrMessage](#api500errmessage)
-        * [Addr](#addr)
-        * [Env](#env)
-        * [NoPrettyLogging](#noprettylogging)
-        * [LoggerLevel](#loggerlevel)
-        * [LoggerOutput](#loggeroutput)
-	2. [From optionals functions](#from-optionals-functions)
-    3. [From options file](#from-options-file)
-        * [YAML](#yaml)
-        * [JSON](#json)
-6. [Testing](#testing)
-    * [Quick start](#quick-start)
-7. [Render](#render)
-    * [StringRenderer](#stringrenderer)
-	* [ByteRenderer](#byterenderer)
-	* [Renderer](#renderer)
-8. [Logger](#logger)
-    * [Logging from bastion instance](#logging-from-bastion-instance)
-	* [Logging from handler](#logging-from-handler)
+Allows to have commons handlers and middleware between projects with the need for each one to do so. It's also included some 
+useful/optional subpackages: [middleware](https://github.com/ifreddyrondon/bastion/blob/master/middleware) and [render](https://github.com/ifreddyrondon/bastion/blob/master/render). We hope you enjoy it too!
 
 ## Installation
 
 `go get -u github.com/ifreddyrondon/bastion`
+
+## Examples
+
+See [_examples/](https://github.com/ifreddyrondon/bastion/blob/master/_examples/) for a variety of examples.
 
 ## Router
 

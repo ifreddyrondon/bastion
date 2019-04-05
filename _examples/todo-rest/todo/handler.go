@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
+
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/render"
 )

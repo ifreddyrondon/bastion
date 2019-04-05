@@ -6,8 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"gopkg.in/gavv/httpexpect.v1"
+
 	"github.com/ifreddyrondon/bastion/render"
-	httpexpect "gopkg.in/gavv/httpexpect.v1"
 )
 
 type addressXML struct {

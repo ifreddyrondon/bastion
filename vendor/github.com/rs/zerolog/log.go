@@ -148,6 +148,28 @@ func (l Level) String() string {
 	return ""
 }
 
+// ParseLevel converts a level string into a zerolog Level value.
+// returns an error if the input string does not match known values.
+func ParseLevel(levelStr string) (Level, error) {
+	switch levelStr {
+	case LevelFieldMarshalFunc(DebugLevel):
+		return DebugLevel, nil
+	case LevelFieldMarshalFunc(InfoLevel):
+		return InfoLevel, nil
+	case LevelFieldMarshalFunc(WarnLevel):
+		return WarnLevel, nil
+	case LevelFieldMarshalFunc(ErrorLevel):
+		return ErrorLevel, nil
+	case LevelFieldMarshalFunc(FatalLevel):
+		return FatalLevel, nil
+	case LevelFieldMarshalFunc(PanicLevel):
+		return PanicLevel, nil
+	case LevelFieldMarshalFunc(NoLevel):
+		return NoLevel, nil
+	}
+	return NoLevel, fmt.Errorf("Unknown Level String: '%s', defaulting to NoLevel", levelStr)
+}
+
 // A Logger represents an active logging object that generates lines
 // of JSON output to an io.Writer. Each logging operation makes a single
 // call to the Writer's Write method. There is no guaranty on access
@@ -270,22 +292,24 @@ func (l *Logger) Error() *Event {
 }
 
 // Fatal starts a new message with fatal level. The os.Exit(1) function
-// is called by the Msg method.
+// is called by the Msg method, which terminates the program immediately.
 //
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) Fatal() *Event {
 	return l.newEvent(FatalLevel, func(msg string) { os.Exit(1) })
 }
 
-// Panic starts a new message with panic level. The message is also sent
-// to the panic function.
+// Panic starts a new message with panic level. The panic() function
+// is called by the Msg method, which stops the ordinary flow of a goroutine.
 //
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) Panic() *Event {
 	return l.newEvent(PanicLevel, func(msg string) { panic(msg) })
 }
 
-// WithLevel starts a new message with level.
+// WithLevel starts a new message with level. Unlike Fatal and Panic
+// methods, WithLevel does not terminate the program or stop the ordinary
+// flow of a gourotine when used with their respective levels.
 //
 // You must call Msg on the returned event in order to send the event.
 func (l *Logger) WithLevel(level Level) *Event {
@@ -299,9 +323,9 @@ func (l *Logger) WithLevel(level Level) *Event {
 	case ErrorLevel:
 		return l.Error()
 	case FatalLevel:
-		return l.Fatal()
+		return l.newEvent(FatalLevel, nil)
 	case PanicLevel:
-		return l.Panic()
+		return l.newEvent(PanicLevel, nil)
 	case NoLevel:
 		return l.Log()
 	case Disabled:
@@ -352,21 +376,21 @@ func (l *Logger) newEvent(level Level, done func(string)) *Event {
 	if !enabled {
 		return nil
 	}
-	e := newEvent(l.w, level, true)
+	e := newEvent(l.w, level)
 	e.done = done
 	e.ch = l.hooks
 	if level != NoLevel {
-		e.Str(LevelFieldName, level.String())
+		e.Str(LevelFieldName, LevelFieldMarshalFunc(level))
 	}
 	if l.context != nil && len(l.context) > 0 {
-		e.buf = appendObjectData(e.buf, l.context)
+		e.buf = enc.AppendObjectData(e.buf, l.context)
 	}
 	return e
 }
 
 // should returns true if the log event should be logged.
 func (l *Logger) should(lvl Level) bool {
-	if lvl < l.level || lvl < globalLevel() {
+	if lvl < l.level || lvl < GlobalLevel() {
 		return false
 	}
 	if l.sampler != nil && !samplingDisabled() {
