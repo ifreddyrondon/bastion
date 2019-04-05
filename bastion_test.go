@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/render"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ifreddyrondon/bastion/render"
 
 	"github.com/ifreddyrondon/bastion"
 )

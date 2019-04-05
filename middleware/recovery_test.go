@@ -7,10 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/middleware"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/gavv/httpexpect.v1"
+
+	"github.com/ifreddyrondon/bastion/middleware"
 )
 
 func TestRecovery(t *testing.T) {

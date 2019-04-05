@@ -5,8 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/render"
 	httpexpect "gopkg.in/gavv/httpexpect.v1"
+
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 func TestDataResponse(t *testing.T) {

@@ -7,8 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/middleware"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ifreddyrondon/bastion/middleware"
 
 	"gopkg.in/gavv/httpexpect.v1"
 )

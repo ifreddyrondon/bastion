@@ -4,8 +4,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion/middleware/listing/sorting"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ifreddyrondon/bastion/middleware/listing/sorting"
 )
 
 func TestDecodeOK(t *testing.T) {

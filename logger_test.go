@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/render"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestLogWithBastionLogger(t *testing.T) {

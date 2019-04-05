@@ -6,14 +6,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/gavv/httpexpect.v1"
+
 	"github.com/ifreddyrondon/bastion/middleware"
 	"github.com/ifreddyrondon/bastion/middleware/listing"
 	"github.com/ifreddyrondon/bastion/middleware/listing/filtering"
 	"github.com/ifreddyrondon/bastion/middleware/listing/paging"
 	"github.com/ifreddyrondon/bastion/middleware/listing/sorting"
 	"github.com/ifreddyrondon/bastion/render"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/gavv/httpexpect.v1"
 )
 
 func TestGetListingMissingInstance(t *testing.T) {

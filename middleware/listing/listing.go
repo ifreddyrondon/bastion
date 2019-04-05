@@ -1,10 +1,11 @@
 package listing
 
 import (
+	"github.com/mailru/easyjson/jwriter"
+
 	"github.com/ifreddyrondon/bastion/middleware/listing/filtering"
 	"github.com/ifreddyrondon/bastion/middleware/listing/paging"
 	"github.com/ifreddyrondon/bastion/middleware/listing/sorting"
-	"github.com/mailru/easyjson/jwriter"
 )
 
 // Listing holds the info to perform filtering, sorting and paging over a collection.

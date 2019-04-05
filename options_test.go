@@ -4,8 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ifreddyrondon/bastion"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ifreddyrondon/bastion"
 )
 
 func TestNewOptions(t *testing.T) {
