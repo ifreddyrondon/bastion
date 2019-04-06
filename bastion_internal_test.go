@@ -37,7 +37,7 @@ func TestGracefulShutdown(t *testing.T) {
 	}
 	app.RegisterOnShutdown(f)
 	ctx, cancel := context.WithCancel(context.Background())
-	go graceful(ctx, app.server, app.Logger)
+	go graceful(ctx, app.server, app.logger)
 	cancel()
 	ch := make(chan bool, 1)
 	isServerClosed(app.server, ch)
@@ -61,7 +61,7 @@ func TestPrintRoutes(t *testing.T) {
 		r.Delete("/", handler) // DELETE /todos/{id} - delete a single todo by :id
 	})
 
-	printRoutes(app.Mux, app.Logger)
+	printRoutes(app.Mux, app.logger)
 	assert.Contains(t, out.String(), `"message":"GET /"`)
 	assert.Contains(t, out.String(), `"message":"POST /"`)
 	assert.Contains(t, out.String(), `"message":"GET /ping"`)
@@ -95,7 +95,7 @@ func TestResolveAddress(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			out := &bytes.Buffer{}
 			app := New(NoPrettyLogging(), LoggerOutput(out))
-			addr := resolveAddress(tc.givenAddr, app.Logger)
+			addr := resolveAddress(tc.givenAddr, app.logger)
 			assert.Equal(t, tc.expectedAddr, addr)
 			assert.Contains(t, out.String(), tc.outputLog)
 		})
@@ -109,7 +109,7 @@ func TestResolveAddressWithEnv(t *testing.T) {
 	out := &bytes.Buffer{}
 	app := New(NoPrettyLogging(), LoggerOutput(out))
 	os.Setenv("ADDR", ":3000")
-	addr := resolveAddress(nil, app.Logger)
+	addr := resolveAddress(nil, app.logger)
 	assert.Equal(t, ":3000", addr)
 	assert.Contains(t, out.String(), `Environment variable ADDR=\":3000\"`)
 	os.Setenv("ADDR", tempADDR)

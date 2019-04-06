@@ -7,9 +7,10 @@ import (
 )
 
 func getLogger(opts *Options) *zerolog.Logger {
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: opts.LoggerOutput}).With().
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: opts.LoggerOutput}).
+		With().
 		Timestamp().
-		Str("app", "bastion").
+		Str("module", "bastion").
 		Logger()
 
 	logger = logger.Level(zerolog.Level(opts.LoggerLevel))

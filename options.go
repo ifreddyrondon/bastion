@@ -35,15 +35,17 @@ const (
 // Options are used to define how the application should run.
 type Options struct {
 	// API500ErrMessage message returned to the user when catch a 500 status error.
-	API500ErrMessage string `yaml:"api500ErrMessage"`
+	API500ErrMessage string
 	// Env "environment" in which the App is running. Default is "development".
-	Env string `yaml:"env"`
+	Env string
 	// NoPrettyLogging don't output a colored human readable version on the out writer.
-	NoPrettyLogging bool `yaml:"prettyLogging"`
+	NoPrettyLogging bool
 	// LoggerLevel defines log levels. Default is DebugLevel defines an absent log level.
-	LoggerLevel Level `yaml:"loggerLevel"`
+	LoggerLevel Level
 	// LoggerOutput logger output writer. Default os.Stdout
 	LoggerOutput io.Writer
+	// DisablePingRouter
+
 }
 
 func (o *Options) isDEV() bool {

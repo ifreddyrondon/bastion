@@ -11,5 +11,5 @@ import (
 func main() {
 	app := bastion.New()
 	app.Mount("/todo/", todo.Routes())
-	fmt.Fprintln(os.Stderr, app.Serve())
+	fmt.Fprintln(os.Stderr, app.Serve(":8080"))
 }

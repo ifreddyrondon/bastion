@@ -374,27 +374,8 @@ func main() {
 
 ## Logger
 
-Bastion commes with a JSON structured logger powered by [github.com/rs/zerolog](github.com/rs/zerolog). It can be accessed through the bastion instance `bastion.Logger` or from the context of each request `l := bastion.LoggerFromCtx(ctx)`
-
-### Logging from bastion instance
-
-```go
-package main
-
-import (
-	"net/http"
-
-	"github.com/ifreddyrondon/bastion"
-)
-
-func main() {
-	app := bastion.New()
-	app.Logger.Info().Str("app", "demo").Msg("main")
-	app.Serve()
-}
-```
-
-### Logging from handler
+Bastion have an internal JSON structured logger powered by [github.com/rs/zerolog](github.com/rs/zerolog). 
+It can be accessed from the context of each request `l := bastion.LoggerFromCtx(ctx)`
 
 ```go
 package main
@@ -409,7 +390,7 @@ import (
 func handler(w http.ResponseWriter, r *http.Request) {
 	res := struct {
 		Message string `json:"message"`
-	}{Message: "world"}
+	}{Message: "hello world"}
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
 
