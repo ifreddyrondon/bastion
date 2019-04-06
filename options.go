@@ -1,15 +1,12 @@
 package bastion
 
 import (
-	"fmt"
 	"io"
 	"os"
 )
 
 const (
 	developmentEnv       = "development"
-	defaultPort          = "8080"
-	defaultADDR          = "127.0.0.1"
 	default500ErrMessage = "looks like something went wrong"
 )
 
@@ -39,9 +36,6 @@ const (
 type Options struct {
 	// API500ErrMessage message returned to the user when catch a 500 status error.
 	API500ErrMessage string `yaml:"api500ErrMessage"`
-	// Addr bind address provided to http.Server. Default is "127.0.0.1:8080"
-	// Can be set using ENV vars "ADDR" and "PORT".
-	Addr string `yaml:"addr"`
 	// Env "environment" in which the App is running. Default is "development".
 	Env string `yaml:"env"`
 	// NoPrettyLogging don't output a colored human readable version on the out writer.
@@ -57,14 +51,7 @@ func (o *Options) isDEV() bool {
 }
 
 func setDefaultsOpts(opts *Options) {
-	port := defaultString(os.Getenv("PORT"), defaultPort)
 	opts.Env = defaultString(opts.Env, defaultString(os.Getenv("GO_ENV"), developmentEnv))
-	addr := "0.0.0.0"
-	if opts.Env == developmentEnv {
-		addr = defaultADDR
-	}
-	envAddr := defaultString(os.Getenv("ADDR"), addr)
-	opts.Addr = defaultString(opts.Addr, fmt.Sprintf("%s:%s", envAddr, port))
 	opts.API500ErrMessage = defaultString(opts.API500ErrMessage, default500ErrMessage)
 	if opts.LoggerOutput == nil {
 		opts.LoggerOutput = os.Stdout
@@ -85,13 +72,6 @@ type Opt func(*Bastion)
 func API500ErrMessage(msg string) Opt {
 	return func(app *Bastion) {
 		app.API500ErrMessage = msg
-	}
-}
-
-// Addr bind address provided to http.Server
-func Addr(add string) Opt {
-	return func(app *Bastion) {
-		app.Addr = add
 	}
 }
 

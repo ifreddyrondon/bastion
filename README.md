@@ -63,6 +63,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/ifreddyrondon/bastion"
@@ -109,7 +110,7 @@ func delete(w http.ResponseWriter, r *http.Request) {
 func main() {
 	app := bastion.New()
 	app.Mount("/todo/", routes())
-	app.Serve()
+	fmt.Fprintln(os.Stderr, app.Serve())
 }
 ```
 
@@ -162,7 +163,7 @@ func onShutdown() {
 func main() {
     app := bastion.New()
     app.RegisterOnShutdown(onShutdown)
-    app.Serve()
+    app.Serve(":8080")
 }
 ```
 
@@ -189,12 +190,6 @@ Represent the message returned to the user when a http 500 error is caught by th
 Default `looks like something went wrong`.
 
 - `API500ErrMessage(msg string)` set the message returned to the user when catch a 500 status error.
-
-### `Addr`
-
-Bind address provided to http.Server. Default is `127.0.0.1:8080`. Can be set using **ENV** vars `ADDR` and `PORT`.
-
-- `Addr(add string)` bind address provided to http.Server.
 
 ### Env
 
