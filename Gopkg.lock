@@ -300,14 +300,6 @@
   pruneopts = "UT"
   revision = "d852bb8255b678d369ba96dc7647bac47e092c96"
 
-[[projects]]
-  branch = "v2"
-  digest = "1:73e6fda93622790d2371344759df06ff5ff2fac64a6b6e8832b792e7402956e7"
-  name = "gopkg.in/yaml.v2"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -324,7 +316,6 @@
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
     "gopkg.in/gavv/httpexpect.v1",
-    "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
