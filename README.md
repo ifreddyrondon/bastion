@@ -168,82 +168,7 @@ func main() {
 
 ## Options
 
-Options are used to define how the application should run.
-
-### Structure
-
-```go
-// Options are used to define how the application should run.
-type Options struct {
-	// API500ErrMessage message returned to the user when catch a 500 status error.
-	API500ErrMessage string `yaml:"api500ErrMessage"`
-	// Addr bind address provided to http.Server. Default is "127.0.0.1:8080"
-	// Can be set using ENV vars "ADDR" and "PORT".
-	Addr string `yaml:"addr"`
-	// Env "environment" in which the App is running. Default is "development".
-	Env string `yaml:"env"`
-	// NoPrettyLogging don't output a colored human readable version on the out writer.
-	NoPrettyLogging bool `yaml:"noPrettyLogging"`
-	// LoggerLevel defines log levels. Default is DebugLevel.
-	LoggerLevel Level `yaml:"loggerLevel"`
-	// LoggerOutput logger output writer. Default os.Stdout
-	LoggerOutput io.Writer
-}
-```
-
-#### `API500ErrMessage`
-
-Api 500 error message represent the message returned to the user when a http 500 error is caught by the APIErrHandler middleware. Default `looks like something went wrong`. It's JSON tagged as `api500ErrMessage`
-
-When:
-
-```json
-"api500ErrMessage": "looks like something went wrong",
-```
-
-Then: `http://localhost:8080/foo/test`
-
-#### `Addr`
-
-Addr is the bind address provided to http.Server. Default is `127.0.0.1:8080`. Can be set using **ENV** vars `ADDR` and `PORT`. It's JSON tagged as `addr`
-
-#### Env
-
-Env is the "environment" in which the App is running. Default is "development". Can be set using **ENV** vars `GO_ENV` It's JSON tagged as `env`
-
-#### NoPrettyLogging
-
-NoPrettyLogging boolean flag to don't output a colored human readable version on the out writer. Default `false`. It's JSON tagged as `noPrettyLogging`
-
-#### LoggerLevel
-
-LoggerLevel defines log levels. Allows for logging at the following levels (from highest to lowest):
-
-- panic (`bastion.PanicLevel`, 5)
-- fatal (`bastion.FatalLevel`, 4)
-- error (`bastion.ErrorLevel`, 3)
-- warn (`bastion.WarnLevel`, 2)
-- info (`bastion.InfoLevel`, 1)
-- debug (`bastion.DebugLevel`, 0)
-
-Default `bastion.DebugLevel`, to turn off logging entirely, pass the bastion.Disabled constant. It's JSON tagged as `loggerLevel`.
-
-#### LoggerOutput
-
-LoggerOutput is an `io.Writer` where the logger output write. Default os.Stdout.
-
-Each logging operation makes a single call to the Writer's Write method. There is no guaranty on access serialization to the Writer. If your Writer is not thread safe, you may consider using sync wrapper.
-
-### From optionals functions
-
-Bastion can be configured with optionals functions that are optional when using `bastion.New()`.
-
-- `API500ErrMessage(msg string)` set the message returned to the user when catch a 500 status error.
-- `Addr(add string)` bind address provided to http.Server.
-- `Env(env string)` set the "environment" in which the App is running.
-- `NoPrettyLogging()` turn off the pretty logging.
-- `LoggerLevel(lvl Level)` set the logger level.
-- `LoggerOutput(w io.Writer)` set the logger output writer.
+Options are used to define how the application should run, it can be set through optionals functions when using `bastion.New()`.
 
 ```go
 package main
@@ -253,38 +178,56 @@ import (
 )
 
 func main() {
-	bastion.New() // defaults options
-	bastion.New(bastion.NoPrettyLogging(), bastion.Addr("0.0.0.0:3000")) // turn off pretty print logger and sets address to 0.0.0.0:3000
+	// turn off pretty print logger and sets 500 errors message
+	bastion.New(bastion.NoPrettyLogging(), bastion.API500ErrMessage(`Just another "500 - internal error"`))
 }
 ```
 
-### From options file
+### `API500ErrMessage`
 
-Bastion comes with an util function to load a new instance of Bastion from a options file. The options file could it be in **YAML** or **JSON** format. Is some attributes are missing from the options file it'll be set with the default. [Example](https://github.com/ifreddyrondon/bastion/blob/master/_examples/options-yaml/main.go).
+Represent the message returned to the user when a http 500 error is caught by the APIErrHandler middleware. 
+Default `looks like something went wrong`.
 
-FromFile takes special consideration when there are **ENV** vars:
+- `API500ErrMessage(msg string)` set the message returned to the user when catch a 500 status error.
 
-* For `Addr`. When it's not provided it'll search the `ADDR` and `PORT` environment variables first before set the default.
+### `Addr`
 
-* For `Env`. When it's not provided it'll search the `GO_ENV` environment variables first before set the default.
+Bind address provided to http.Server. Default is `127.0.0.1:8080`. Can be set using **ENV** vars `ADDR` and `PORT`.
 
-#### YAML
+- `Addr(add string)` bind address provided to http.Server.
 
-```yaml
-addr: ":8080"
-debug: true
-env: "development"
-```
+### Env
 
-#### JSON
+Env is the "environment" in which the App is running. Default is "development". Can be set using **ENV** vars `GO_ENV`.
 
-```json
-{
-  "addr": ":8080",
-  "debug": true,
-  "env": "development"
-}
-```
+- `Env(env string)` set the "environment" in which the App is running.
+
+### NoPrettyLogging
+
+Boolean flag to don't output a colored human readable version on the out writer. Default `false`.
+
+- `NoPrettyLogging()` turn off the pretty logging.
+
+### LoggerLevel
+
+Defines log levels. Allows for logging at the following levels (from highest to lowest):
+
+- panic (`bastion.PanicLevel`, 5)
+- fatal (`bastion.FatalLevel`, 4)
+- error (`bastion.ErrorLevel`, 3)
+- warn (`bastion.WarnLevel`, 2)
+- info (`bastion.InfoLevel`, 1)
+- debug (`bastion.DebugLevel`, 0)
+
+Default `bastion.DebugLevel`, to turn off logging entirely, pass the bastion.Disabled constant.
+
+- `LoggerLevel(lvl Level)` set the logger level.
+
+### LoggerOutput
+
+`io.Writer` where the logger output write. Default os.Stdout.
+
+- `LoggerOutput(w io.Writer)` set the logger output writer.
 
 ## Testing
 

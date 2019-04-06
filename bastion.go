@@ -2,7 +2,6 @@ package bastion
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"syscall"
@@ -12,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
-	"gopkg.in/yaml.v2"
 
 	"github.com/ifreddyrondon/bastion/middleware"
 )
@@ -25,7 +23,7 @@ type onShutdown func()
 // It has the minimal necessary to create an API with default handlers and middleware.
 // Allows to have commons handlers and middleware between projects with the need for each one to do so.
 // Mounted Routers
-// It use go-chi router to modularize the applications. Each instance of GogApp, will have the possibility
+// It use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
 // of mounting an API router, it will define the routes and middleware of the application with the app logic.
 // Without a Bastion you can't do much!
 type Bastion struct {
@@ -49,28 +47,6 @@ func New(opts ...Opt) *Bastion {
 
 	initialize(app)
 	return app
-}
-
-// FromFile is an util function to load  a new instance of Bastion from a options file.
-// The options file could it be in YAML or JSON format. Is some attributes are missing
-// from the config file it'll be set with the defaults.
-// FromFile takes a special consideration for `server.address` default.
-// When it's not provided it'll search the ADDR and PORT environment variables
-// first before set the default.
-func FromFile(path string) (*Bastion, error) {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "missing configuration file at %v", path)
-	}
-
-	var opts Options
-	if err := yaml.Unmarshal(b, &opts); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal configuration file")
-	}
-	setDefaultsOpts(&opts)
-	app := &Bastion{Options: opts}
-	initialize(app)
-	return app, nil
 }
 
 // RegisterOnShutdown registers a function to call on Shutdown.
