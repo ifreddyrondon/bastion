@@ -26,7 +26,7 @@ func TestBastionHelloWorld(t *testing.T) {
 	t.Parallel()
 
 	app := bastion.New()
-	app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
+	app.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
 			Message string `json:"message"`
 		}{"world"}
@@ -57,10 +57,9 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			app, _ := bastion.FromFile(tc.path)
 
-			assert.Equal(t, "/api/", app.APIBasepath)
 			assert.Equal(t, ":3000", app.Addr)
 
-			app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
+			app.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 				res := struct {
 					Message string `json:"message"`
 				}{"world"}
@@ -69,7 +68,7 @@ func TestBastionHelloWorldFromFile(t *testing.T) {
 
 			expected := map[string]interface{}{"message": "world"}
 			e := bastion.Tester(t, app)
-			e.GET("/api/hello").
+			e.GET("/hello").
 				Expect().
 				Status(http.StatusOK).
 				JSON().Object().Equal(expected)
@@ -82,14 +81,6 @@ func TestNewRouter(t *testing.T) {
 
 	r := bastion.NewRouter()
 	assert.NotNil(t, r)
-}
-
-func TestBastionFromPartialYAMLFile(t *testing.T) {
-	t.Parallel()
-
-	app, _ := bastion.FromFile("./testdata/partial_options.yaml")
-	assert.Equal(t, "/api/", app.APIBasepath)
-	assert.Equal(t, "127.0.0.1:8080", app.Addr)
 }
 
 func TestLoadMissingFile(t *testing.T) {

@@ -19,7 +19,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	app := bastion.New()
-	app.APIRouter.Get("/hello", handler)
+	app.Get("/hello", handler)
 	app.Logger.Info().Str("app", "test").Msg("main")
 	app.Serve()
 }

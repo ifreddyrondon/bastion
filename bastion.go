@@ -29,11 +29,10 @@ type onShutdown func()
 // of mounting an API router, it will define the routes and middleware of the application with the app logic.
 // Without a Bastion you can't do much!
 type Bastion struct {
-	r      *chi.Mux
 	server *http.Server
 	Logger *zerolog.Logger
 	Options
-	APIRouter *chi.Mux
+	*chi.Mux
 }
 
 // New returns a new instance of Bastion and adds some sane, and useful, defaults.
@@ -41,8 +40,6 @@ type Bastion struct {
 //		Addr: "127.0.0.1:8080"
 //		Env: "development"
 //		Debug: false
-//		API:
-//			BasePath: "/"
 func New(opts ...Opt) *Bastion {
 	app := &Bastion{}
 	for _, opt := range opts {
@@ -110,31 +107,24 @@ func initialize(app *Bastion) {
 	app.Logger = getLogger(&app.Options)
 
 	/**
-	 * internal router
+	 * router
 	 */
-	app.r = chi.NewRouter()
-	app.r.Use(hlog.NewHandler(*app.Logger))
-
-	/**
-	 * Ping route
-	 */
-	app.r.Get("/ping", pingHandler)
-
-	/**
-	 * API Router
-	 */
-	app.APIRouter = chi.NewRouter()
+	app.Mux = chi.NewRouter()
+	app.Mux.Use(hlog.NewHandler(*app.Logger))
 	apiErr := middleware.APIError(
 		middleware.APIErrorDefault500(errors.New(app.Options.API500ErrMessage)),
 		middleware.APIErrorLoggerOutput(app.Options.LoggerOutput),
 	)
-	app.APIRouter.Use(apiErr)
+	app.Mux.Use(apiErr)
 	recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(app.Options.LoggerOutput))
-	app.APIRouter.Use(recovery)
-	app.APIRouter.Use(loggerRequest(!app.Options.isDEV())...)
-	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
+	app.Mux.Use(recovery)
+	app.Mux.Use(loggerRequest(!app.Options.isDEV())...)
 
-	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}
+	/**
+	 * Ping route
+	 */
+	app.Mux.Get("/ping", pingHandler)
+	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.Mux}
 }
 
 // NewRouter return a router as a subrouter along a routing path.

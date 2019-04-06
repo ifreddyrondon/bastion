@@ -22,7 +22,7 @@ func TestLoggerForDevelopment(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
-	app.APIRouter.Mount("/", handler)
+	app.Mount("/", handler)
 
 	e := bastion.Tester(t, app)
 	e.GET("/").Expect().Status(200).JSON().
@@ -54,8 +54,8 @@ func TestLoggerRequestLevelErrorForStatusGreaterThan500(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
-	app.APIRouter.Mount("/400", handler400)
-	app.APIRouter.Mount("/500", handler500)
+	app.Mount("/400", handler400)
+	app.Mount("/500", handler500)
 
 	e := bastion.Tester(t, app)
 	e.GET("/400").Expect().Status(400).JSON().
@@ -94,7 +94,7 @@ func TestLoggerRequestForProductionAppendMoreInfo(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out), bastion.Env("production"))
-	app.APIRouter.Mount("/500", handler500)
+	app.Mount("/500", handler500)
 
 	e := bastion.Tester(t, app)
 	e.GET("/500").WithHeader("User-Agent", "Mozilla").Expect().
@@ -137,9 +137,9 @@ func TestLoggerRequestErrorLvl(t *testing.T) {
 		bastion.LoggerOutput(out),
 		bastion.LoggerLevel(bastion.ErrorLevel),
 	)
-	app.APIRouter.Mount("/200", handler200)
-	app.APIRouter.Mount("/400", handler400)
-	app.APIRouter.Mount("/500", handler500)
+	app.Mount("/200", handler200)
+	app.Mount("/400", handler400)
+	app.Mount("/500", handler500)
 
 	e := bastion.Tester(t, app)
 	e.GET("/200").Expect().Status(200).JSON().
@@ -174,7 +174,7 @@ func TestLoggerRequestPrettyLogging(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	app := bastion.New()
-	app.APIRouter.Mount("/", handler)
+	app.Mount("/", handler)
 
 	e := bastion.Tester(t, app)
 	e.GET("/").Expect().Status(200)

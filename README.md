@@ -19,10 +19,37 @@ useful/optional subpackages: [middleware](https://github.com/ifreddyrondon/basti
 
 See [_examples/](https://github.com/ifreddyrondon/bastion/blob/master/_examples/) for a variety of examples.
 
+**As easy as:**
+
+```go
+package main
+
+import (
+    "net/http"
+
+    "github.com/ifreddyrondon/bastion"
+    "github.com/ifreddyrondon/bastion/render"
+)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    res := struct {Message string `json:"message"`}{Message: "world"}
+    render.NewJSON().Send(w, res)
+}
+
+func main() {
+    app := bastion.New()
+    app.Get("/hello", handler)
+    app.Serve()
+}
+```
+
 ## Router
 
-Bastion use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
-of mounting an api router, it will define the routes and middleware of the application with the app logic.
+Bastion use [go-chi](https://github.com/go-chi/chi) as a router making it easy to modularize the applications. 
+Each Bastion instance accepts a URL `pattern` and chain of `handlers`. The URL pattern supports 
+named params (ie. `/users/{userID}`) and wildcards (ie. `/admin/*`). URL parameters can be fetched 
+at runtime by calling `chi.URLParam(r, "userID")` for named parameters and `chi.URLParam(r, "*")` 
+for a wildcard parameter.
 
 ### NewRouter
 
@@ -41,81 +68,56 @@ import (
 	"github.com/ifreddyrondon/bastion"
 )
 
-type Handler struct{}
-
 // Routes creates a REST router for the todos resource
-func (h *Handler) Routes() http.Handler {
+func routes() http.Handler {
 	r := bastion.NewRouter()
 
-	r.Get("/", h.list)    // GET /todos - read a list of todos
-	r.Post("/", h.create) // POST /todos - create a new todo and persist it
+	r.Get("/", list)    // GET /todos - read a list of todos
+	r.Post("/", create) // POST /todos - create a new todo and persist it
 	r.Route("/{id}", func(r chi.Router) {
-		r.Get("/", h.get)       // GET /todos/{id} - read a single todo by :id
-		r.Put("/", h.update)    // PUT /todos/{id} - update a single todo by :id
-		r.Delete("/", h.delete) // DELETE /todos/{id} - delete a single todo by :id
+		r.Get("/", get)       // GET /todos/{id} - read a single todo by :id
+		r.Put("/", update)    // PUT /todos/{id} - update a single todo by :id
+		r.Delete("/", delete) // DELETE /todos/{id} - delete a single todo by :id
 	})
 
 	return r
 }
 
-func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
+func list(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("todos list of stuff.."))
 }
 
-func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
+func create(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("todos create"))
 }
 
-func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
+func get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	w.Write([]byte(fmt.Sprintf("get todo with id %v", id)))
 }
 
-func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
+func update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	w.Write([]byte(fmt.Sprintf("update todo with id %v", id)))
 }
 
-func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
+func delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	w.Write([]byte(fmt.Sprintf("delete todo with id %v", id)))
 }
 
 func main() {
 	app := bastion.New()
-	app.APIRouter.Mount("/todo/", new(Handler).Routes())
+	app.Mount("/todo/", routes())
 	app.Serve()
-}
-```
-
-### Router example
-
-```go
-package main
-
-import (
-    "net/http"
-
-    "github.com/ifreddyrondon/bastion"
-    "github.com/ifreddyrondon/bastion/render"
-)
-
-func handler(w http.ResponseWriter, _ *http.Request) {
-    res := struct {Message string `json:"message"`}{Message: "world"}
-    render.NewJSON().Send(w, res)
-}
-
-func main() {
-    app := bastion.New()
-    app.APIRouter.Get("/hello", handler)
-    app.Serve()
 }
 ```
 
 ## Middleware
 
 Bastion comes equipped with a set of commons middleware handlers, providing a suite of standard `net/http` middleware.
-They are just stdlib net/http middleware handlers. There is nothing special about them, which means the router and all the tooling is designed to be compatible and friendly with any middleware in the community.
+They are just stdlib net/http middleware handlers. There is nothing special about them, which means the router and all 
+the tooling is designed to be compatible and friendly with any middleware in the community.
 
 ### Core middleware
 
@@ -173,8 +175,6 @@ Options are used to define how the application should run.
 ```go
 // Options are used to define how the application should run.
 type Options struct {
-	// APIBasepath path where the bastion api router is going to be mounted. Default `/`.
-	APIBasepath string `yaml:"apiBasepath"`
 	// API500ErrMessage message returned to the user when catch a 500 status error.
 	API500ErrMessage string `yaml:"api500ErrMessage"`
 	// Addr bind address provided to http.Server. Default is "127.0.0.1:8080"
@@ -189,16 +189,6 @@ type Options struct {
 	// LoggerOutput logger output writer. Default os.Stdout
 	LoggerOutput io.Writer
 }
-```
-
-#### `APIBasepath`
-
-Api base path value is where the bastion api router is going to be mounted. Default `/`. It's JSON tagged as `apiBasepath`
-
-When:
-
-```json
-"apiBasepath": "/foo/test",
 ```
 
 #### `API500ErrMessage`
@@ -246,9 +236,8 @@ Each logging operation makes a single call to the Writer's Write method. There i
 
 ### From optionals functions
 
-Bastion can be configured with optionals funtions that are optional when using `bastion.New()`.
+Bastion can be configured with optionals functions that are optional when using `bastion.New()`.
 
-- `APIBasePath(path string)` set path where the bastion api router is going to be mounted.
 - `API500ErrMessage(msg string)` set the message returned to the user when catch a 500 status error.
 - `Addr(add string)` bind address provided to http.Server.
 - `Env(env string)` set the "environment" in which the App is running.
@@ -265,7 +254,6 @@ import (
 
 func main() {
 	bastion.New() // defaults options
-
 	bastion.New(bastion.NoPrettyLogging(), bastion.Addr("0.0.0.0:3000")) // turn off pretty print logger and sets address to 0.0.0.0:3000
 }
 ```
@@ -283,7 +271,6 @@ FromFile takes special consideration when there are **ENV** vars:
 #### YAML
 
 ```yaml
-apiBasepath: "/"
 addr: ":8080"
 debug: true
 env: "development"
@@ -293,7 +280,6 @@ env: "development"
 
 ```json
 {
-  "apiBasepath": "/",
   "addr": ":8080",
   "debug": true,
   "env": "development"
@@ -330,10 +316,7 @@ import (
 
 func setup() *bastion.Bastion {
 	app := bastion.New()
-	handler := todo.Handler{
-		Render: render.NewJSON(),
-	}
-	app.APIRouter.Mount("/todo/", handler.Routes())
+	app.Mount("/todo/", todo.Routes())
 	return app
 }
 
@@ -446,7 +429,7 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 
 func main() {
 	app := bastion.New()
-	app.APIRouter.Get("/hello", handler)
+	app.Get("/hello", handler)
 	app.Serve()
 }
 ```
@@ -497,7 +480,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	app := bastion.New()
-	app.APIRouter.Get("/hello", handler)
+	app.Get("/hello", handler)
 	app.Serve()
 }
 ```

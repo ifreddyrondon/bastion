@@ -7,11 +7,9 @@ import (
 )
 
 const (
-	developmentEnv = "development"
-	defaultPort    = "8080"
-	defaultADDR    = "127.0.0.1"
-	// api defaults
-	defaultBasePath      = "/"
+	developmentEnv       = "development"
+	defaultPort          = "8080"
+	defaultADDR          = "127.0.0.1"
 	default500ErrMessage = "looks like something went wrong"
 )
 
@@ -39,8 +37,6 @@ const (
 
 // Options are used to define how the application should run.
 type Options struct {
-	// APIBasepath path where the bastion api router is going to be mounted. Default `/`.
-	APIBasepath string `yaml:"apiBasepath"`
 	// API500ErrMessage message returned to the user when catch a 500 status error.
 	API500ErrMessage string `yaml:"api500ErrMessage"`
 	// Addr bind address provided to http.Server. Default is "127.0.0.1:8080"
@@ -69,7 +65,6 @@ func setDefaultsOpts(opts *Options) {
 	}
 	envAddr := defaultString(os.Getenv("ADDR"), addr)
 	opts.Addr = defaultString(opts.Addr, fmt.Sprintf("%s:%s", envAddr, port))
-	opts.APIBasepath = defaultString(opts.APIBasepath, defaultBasePath)
 	opts.API500ErrMessage = defaultString(opts.API500ErrMessage, default500ErrMessage)
 	if opts.LoggerOutput == nil {
 		opts.LoggerOutput = os.Stdout
@@ -85,13 +80,6 @@ func defaultString(s1, s2 string) string {
 
 // Opt helper type to create functional options
 type Opt func(*Bastion)
-
-// APIBasePath set path where the bastion api router is going to be mounted.
-func APIBasePath(path string) Opt {
-	return func(app *Bastion) {
-		app.APIBasepath = path
-	}
-}
 
 // API500ErrMessage set the message returned to the user when catch a 500 status error.
 func API500ErrMessage(msg string) Opt {
