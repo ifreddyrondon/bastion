@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
 )
@@ -8,5 +11,5 @@ import (
 func main() {
 	app := bastion.New()
 	app.Mount("/todo/", todo.Routes())
-	app.Serve()
+	fmt.Fprintln(os.Stderr, app.Serve())
 }

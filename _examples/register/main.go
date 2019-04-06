@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/render"
@@ -23,5 +25,5 @@ func main() {
 	app := bastion.New()
 	app.RegisterOnShutdown(onShutdown)
 	app.Get("/hello", helloHandler)
-	app.Serve()
+	fmt.Fprintln(os.Stderr, app.Serve())
 }

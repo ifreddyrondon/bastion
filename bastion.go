@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"strings"
 	"syscall"
 
 	"github.com/go-chi/chi"
@@ -14,6 +15,8 @@ import (
 
 	"github.com/ifreddyrondon/bastion/middleware"
 )
+
+const defaultAddr = ":8080"
 
 // onShutdown is a function to be implemented when is necessary
 // to run something before a shutdown of the server or in graceful shutdown.
@@ -34,10 +37,6 @@ type Bastion struct {
 }
 
 // New returns a new instance of Bastion and adds some sane, and useful, defaults.
-// 	Defaults:
-//		Addr: "127.0.0.1:8080"
-//		Env: "development"
-//		Debug: false
 func New(opts ...Opt) *Bastion {
 	app := &Bastion{}
 	for _, opt := range opts {
@@ -49,41 +48,19 @@ func New(opts ...Opt) *Bastion {
 	return app
 }
 
-// RegisterOnShutdown registers a function to call on Shutdown.
-// This can be used to gracefully shutdown connections that have
-// undergone NPN/ALPN protocol upgrade or that have been hijacked.
-// This function should start protocol-specific graceful shutdown,
-// but should not wait for shutdown to complete.
-func (app *Bastion) RegisterOnShutdown(fs ...onShutdown) {
-	for _, f := range fs {
-		app.server.RegisterOnShutdown(f)
-	}
-}
-
-// Serve accepts incoming incoming connections coming from the specified address/port.
-// It also prepare the graceful shutdown.
-func (app *Bastion) Serve() error {
-	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
-	defer cancel()
-
-	go graceful(ctx, app)
-
-	app.Logger.Info().Msgf("app starting at %v", app.Options.Addr)
-	if err := app.server.ListenAndServe(); err != nil {
-		app.Logger.Error().Err(err).Msg("listenAndServe err")
-		return err
-	}
-	return nil
-}
-
 func initialize(app *Bastion) {
+	/**
+	 * init server
+	 */
+	app.server = &http.Server{}
+
 	/**
 	 * init logger
 	 */
 	app.Logger = getLogger(&app.Options)
 
 	/**
-	 * router
+	 * Router
 	 */
 	app.Mux = chi.NewRouter()
 	app.Mux.Use(hlog.NewHandler(*app.Logger))
@@ -100,7 +77,82 @@ func initialize(app *Bastion) {
 	 * Ping route
 	 */
 	app.Mux.Get("/ping", pingHandler)
-	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.Mux}
+}
+
+// RegisterOnShutdown registers a function to call on Shutdown.
+// This can be used to gracefully shutdown connections that have
+// undergone NPN/ALPN protocol upgrade or that have been hijacked.
+// This function should start protocol-specific graceful shutdown,
+// but should not wait for shutdown to complete.
+func (app *Bastion) RegisterOnShutdown(fs ...onShutdown) {
+	for _, f := range fs {
+		app.server.RegisterOnShutdown(f)
+	}
+}
+
+// Serve accepts incoming connections coming from the specified address/port.
+// It is a shortcut for http.ListenAndServe(addr, router).
+// Note: this method will block the calling goroutine indefinitely unless an error happens.
+func (app *Bastion) Serve(addr ...string) error {
+	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
+	defer cancel()
+
+	go graceful(ctx, app.server, app.Logger)
+
+	address := resolveAddress(addr, app.Logger)
+	app.Logger.Info().Msgf("app starting at %v", address)
+	app.server.Addr = address
+	app.server.Handler = app.Mux
+
+	printRoutes(app.Mux, app.Logger)
+	if err := app.server.ListenAndServe(); err != nil {
+		if err == http.ErrServerClosed {
+			app.Logger.Info().Str("component", "Serve").Msg("http: Server closed")
+			return err
+		}
+		app.Logger.Error().Str("component", "Serve").Err(err).Msg("listenAndServe")
+		return err
+	}
+	return nil
+}
+
+func graceful(ctx context.Context, server *http.Server, l *zerolog.Logger) {
+	<-ctx.Done()
+	logger := l.With().Str("component", "graceful").Logger()
+	logger.Info().Msg("preparing for shutdown")
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Error().Err(err)
+		return
+	}
+	logger.Info().Msg("gracefully stopped")
+}
+
+func resolveAddress(addr []string, l *zerolog.Logger) string {
+	switch len(addr) {
+	case 0:
+		if envAddr := os.Getenv("ADDR"); envAddr != "" {
+			l.Debug().Msgf(`Environment variable ADDR="%s"`, envAddr)
+			return envAddr
+		}
+		l.Debug().Msg("Environment variable ADDR is undefined. Using addr :8080 by default")
+		return defaultAddr
+	case 1:
+		return addr[0]
+	default:
+		panic("too much parameters")
+	}
+}
+
+func printRoutes(mux *chi.Mux, l *zerolog.Logger) {
+	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		route = strings.Replace(route, "/*/", "/", -1)
+		l.Debug().Str("component", "route").Msgf("%s %s", method, route)
+		return nil
+	}
+
+	if err := chi.Walk(mux, walkFunc); err != nil {
+		l.Error().Err(err).Msgf("walking through the routes")
+	}
 }
 
 // NewRouter return a router as a subrouter along a routing path.
