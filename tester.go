@@ -12,7 +12,7 @@ import (
 func Tester(t *testing.T, bastion *Bastion) *httpexpect.Expect {
 	return httpexpect.WithConfig(httpexpect.Config{
 		Client: &http.Client{
-			Transport: httpexpect.NewBinder(bastion.r),
+			Transport: httpexpect.NewBinder(bastion.Mux),
 			Jar:       httpexpect.NewJar(),
 		},
 

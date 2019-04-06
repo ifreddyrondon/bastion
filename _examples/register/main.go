@@ -22,6 +22,6 @@ func onShutdown() {
 func main() {
 	app := bastion.New()
 	app.RegisterOnShutdown(onShutdown)
-	app.APIRouter.Get("/hello", helloHandler)
+	app.Get("/hello", helloHandler)
 	app.Serve()
 }
