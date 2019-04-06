@@ -83,7 +83,7 @@ func Recovery(opts ...func(*recoveryCfg)) func(http.Handler) http.Handler {
 						err = errors.New(fmt.Sprint(t))
 					}
 					cfg.logger.Error().
-						Str("component", "recovery").
+						Str("component", "recovery middleware").
 						Err(err).Dict("req", logreq(req)).
 						Msg("Recovery middleware catch an error")
 					cfg.render.InternalServerError(w, err)
