@@ -114,7 +114,7 @@ func main() {
 }
 ```
 
-## Middleware
+## Middlewares
 
 Bastion comes equipped with a set of commons middleware handlers, providing a suite of standard `net/http` middleware.
 They are just stdlib net/http middleware handlers. There is nothing special about them, which means the router and all 
@@ -125,9 +125,9 @@ the tooling is designed to be compatible and friendly with any middleware in the
 Name | Description
 ---- | -----------
 Logger | Logs the start and end of each request with the elapsed processing time.
-Recovery | Gracefully absorb panics and prints the stack trace.
 RequestID | Injects a request ID into the context of each request.
-APIErrHandler | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#api500errmessage). IT allows to response with the same error without disclosure internal information, also the real error is logged.
+Recovery | Gracefully absorb panics and prints the stack trace.
+InternalError | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#InternalErrMsg). IT allows to response with the same error without disclosure internal information, also the real error is logged.
 
 ### Auxiliary middleware
 
@@ -180,16 +180,16 @@ import (
 
 func main() {
 	// turn off pretty print logger and sets 500 errors message
-	bastion.New(bastion.NoPrettyLogging(), bastion.API500ErrMessage(`Just another "500 - internal error"`))
+	bastion.New(bastion.NoPrettyLogging(), bastion.InternalErrMsg(`Just another "500 - internal error"`))
 }
 ```
 
-### `API500ErrMessage`
+### `InternalErrMsg`
 
-Represent the message returned to the user when a http 500 error is caught by the APIErrHandler middleware. 
+Represent the message returned to the user when a http 500 error is caught by the InternalError middleware. 
 Default `looks like something went wrong`.
 
-- `API500ErrMessage(msg string)` set the message returned to the user when catch a 500 status error.
+- `InternalErrMsg(msg string)` set the message returned to the user when catch a 500 status error.
 
 ### Env
 
@@ -220,7 +220,7 @@ Default `bastion.DebugLevel`, to turn off logging entirely, pass the bastion.Dis
 
 ### LoggerOutput
 
-`io.Writer` where the logger output write. Default os.Stdout.
+Where the logger output write. Default `os.Stdout`.
 
 - `LoggerOutput(w io.Writer)` set the logger output writer.
 

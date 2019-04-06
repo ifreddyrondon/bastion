@@ -58,51 +58,50 @@ func newWriterCollector() *writerCollector {
 	return &writerCollector{code: http.StatusOK}
 }
 
-// ErrAPIDefault default error message response when something happens.
-var ErrAPIDefault = errors.New("looks like something went wrong")
+var internalErrDefaultMsg = errors.New("looks like something went wrong")
 
-type apiErrCfg struct {
+// InternalErrLoggerOutput set the output for the logger
+func InternalErrLoggerOutput(w io.Writer) func(*internalErr) {
+	return func(a *internalErr) {
+		a.loggerWriter = w
+	}
+}
+
+// InternalErrMsg set default error message to be sent
+func InternalErrMsg(err error) func(*internalErr) {
+	return func(a *internalErr) {
+		a.defaultErr = err
+	}
+}
+
+type internalErr struct {
 	defaultErr   error
 	render       render.ServerErrRenderer
 	loggerWriter io.Writer
 	logger       zerolog.Logger
 }
 
-// APIErrorLoggerOutput set the output for the logger
-func APIErrorLoggerOutput(w io.Writer) func(*apiErrCfg) {
-	return func(a *apiErrCfg) {
-		a.loggerWriter = w
-	}
-}
-
-// APIErrorDefault500 set default error message to be sent
-func APIErrorDefault500(err error) func(*apiErrCfg) {
-	return func(a *apiErrCfg) {
-		a.defaultErr = err
-	}
-}
-
-func getAPIErrCfg(opts ...func(*apiErrCfg)) *apiErrCfg {
-	a := &apiErrCfg{
-		defaultErr:   ErrAPIDefault,
+func internalErrCfg(opts ...func(*internalErr)) *internalErr {
+	cfg := &internalErr{
+		defaultErr:   internalErrDefaultMsg,
 		render:       render.NewJSON(),
 		loggerWriter: os.Stdout,
 	}
 
 	for _, opt := range opts {
-		opt(a)
+		opt(cfg)
 	}
 
-	a.logger = zerolog.New(a.loggerWriter).With().Timestamp().Logger()
-	return a
+	cfg.logger = zerolog.New(cfg.loggerWriter).With().Timestamp().Logger()
+	return cfg
 }
 
-// APIError intercept responses to verify their status and handle the error.
-// It gets the response code and if it's >= 500 handlers the error with a
-// default error message and without disclosure internal information.
+// InternalError intercept responses to verify their status and handle the error.
+// It gets the response code and if it's >= 500 handles the error with a
+// default error message without disclosure internal information.
 // The real error keeps logged.
-func APIError(opts ...func(*apiErrCfg)) func(http.Handler) http.Handler {
-	config := getAPIErrCfg(opts...)
+func InternalError(opts ...func(*internalErr)) func(http.Handler) http.Handler {
+	cfg := internalErrCfg(opts...)
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
@@ -111,11 +110,11 @@ func APIError(opts ...func(*apiErrCfg)) func(http.Handler) http.Handler {
 			snoop := httpsnoop.Wrap(w, hooks(m))
 			defer func() {
 				if m.code >= 500 {
-					config.logger.Info().
-						Str("component", "api_error_handler").
-						Bytes("response", m.buf.Bytes()).
-						Msg("APIError middleware catch a response error >= 500")
-					config.render.InternalServerError(w, config.defaultErr)
+					cfg.logger.Info().
+						Str("component", "internal error middleware").
+						Int("status", m.code).
+						Msg(m.buf.String())
+					cfg.render.InternalServerError(w, cfg.defaultErr)
 					return
 				}
 				w.WriteHeader(m.code)

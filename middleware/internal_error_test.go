@@ -14,7 +14,7 @@ import (
 	"gopkg.in/gavv/httpexpect.v1"
 )
 
-func TestAPIErrCatch500DefaultMsg(t *testing.T) {
+func TestInternalErrDefaultMsg(t *testing.T) {
 	t.Parallel()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +23,7 @@ func TestAPIErrCatch500DefaultMsg(t *testing.T) {
 	})
 
 	out := &bytes.Buffer{}
-	m := middleware.APIError(middleware.APIErrorLoggerOutput(out))
+	m := middleware.InternalError(middleware.InternalErrLoggerOutput(out))
 	server := httptest.NewServer(m(h))
 	defer server.Close()
 	expectedRes := map[string]interface{}{
@@ -38,12 +38,12 @@ func TestAPIErrCatch500DefaultMsg(t *testing.T) {
 		Object().ContainsMap(expectedRes)
 
 	output := out.String()
-	assert.Contains(t, output, `"component":"api_error_handler`)
-	assert.Contains(t, output, `"response":"this should be logged`)
-	assert.Contains(t, output, `"message":"APIError middleware catch a response error >= 500`)
+	assert.Contains(t, output, `"component":"internal error middleware`)
+	assert.Contains(t, output, `"status":500`)
+	assert.Contains(t, output, `"message":"this should be logged`)
 }
 
-func TestAPIErrCatch500CustomMsg(t *testing.T) {
+func TestInternalErrMsg(t *testing.T) {
 	t.Parallel()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +53,7 @@ func TestAPIErrCatch500CustomMsg(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	err := errors.New("test")
-	m := middleware.APIError(middleware.APIErrorLoggerOutput(out), middleware.APIErrorDefault500(err))
+	m := middleware.InternalError(middleware.InternalErrLoggerOutput(out), middleware.InternalErrMsg(err))
 	server := httptest.NewServer(m(h))
 	defer server.Close()
 	expectedRes := map[string]interface{}{
@@ -68,12 +68,12 @@ func TestAPIErrCatch500CustomMsg(t *testing.T) {
 		Object().ContainsMap(expectedRes)
 
 	output := out.String()
-	assert.Contains(t, output, `"component":"api_error_handler`)
-	assert.Contains(t, output, `"response":"this should be logged`)
-	assert.Contains(t, output, `"message":"APIError middleware catch a response error >= 500`)
+	assert.Contains(t, output, `"component":"internal error middleware`)
+	assert.Contains(t, output, `"status":500`)
+	assert.Contains(t, output, `"message":"this should be logged`)
 }
 
-func TestAPIErrNot500(t *testing.T) {
+func TestInternalErrNot500(t *testing.T) {
 	t.Parallel()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -81,12 +81,12 @@ func TestAPIErrNot500(t *testing.T) {
 	})
 
 	out := &bytes.Buffer{}
-	m := middleware.APIError(middleware.APIErrorLoggerOutput(out))
+	m := middleware.InternalError(middleware.InternalErrLoggerOutput(out))
 	server := httptest.NewServer(m(h))
 	defer server.Close()
 
 	e := httpexpect.New(t, server.URL)
 	e.GET("/").Expect().Status(200).Body().Equal("this should be flushed")
 
-	assert.NotContains(t, out.String(), `"component":"api_error_handler`)
+	assert.NotContains(t, out.String(), `"component":"internal error middleware`)
 }

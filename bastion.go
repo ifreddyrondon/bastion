@@ -63,11 +63,11 @@ func initialize(app *Bastion) {
 	 */
 	app.Mux = chi.NewRouter()
 	app.Mux.Use(hlog.NewHandler(*app.logger))
-	apiErr := middleware.APIError(
-		middleware.APIErrorDefault500(errors.New(app.Options.API500ErrMessage)),
-		middleware.APIErrorLoggerOutput(app.Options.LoggerOutput),
+	internalErr := middleware.InternalError(
+		middleware.InternalErrMsg(errors.New(app.Options.InternalErrMsg)),
+		middleware.InternalErrLoggerOutput(app.Options.LoggerOutput),
 	)
-	app.Mux.Use(apiErr)
+	app.Mux.Use(internalErr)
 	recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(app.Options.LoggerOutput))
 	app.Mux.Use(recovery)
 	app.Mux.Use(loggerRequest(!app.Options.isDEV())...)

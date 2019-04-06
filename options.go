@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	developmentEnv       = "development"
-	default500ErrMessage = "looks like something went wrong"
+	developmentEnv        = "development"
+	defaultInternalErrMsg = "looks like something went wrong"
 )
 
 // Level defines log levels.
@@ -34,8 +34,8 @@ const (
 
 // Options are used to define how the application should run.
 type Options struct {
-	// API500ErrMessage message returned to the user when catch a 500 status error.
-	API500ErrMessage string
+	// InternalErrMsg message returned to the user when catch a 500 status error.
+	InternalErrMsg string
 	// Env "environment" in which the App is running. Default is "development".
 	Env string
 	// NoPrettyLogging don't output a colored human readable version on the out writer.
@@ -45,7 +45,6 @@ type Options struct {
 	// LoggerOutput logger output writer. Default os.Stdout
 	LoggerOutput io.Writer
 	// DisablePingRouter
-
 }
 
 func (o *Options) isDEV() bool {
@@ -54,7 +53,7 @@ func (o *Options) isDEV() bool {
 
 func setDefaultsOpts(opts *Options) {
 	opts.Env = defaultString(opts.Env, defaultString(os.Getenv("GO_ENV"), developmentEnv))
-	opts.API500ErrMessage = defaultString(opts.API500ErrMessage, default500ErrMessage)
+	opts.InternalErrMsg = defaultString(opts.InternalErrMsg, defaultInternalErrMsg)
 	if opts.LoggerOutput == nil {
 		opts.LoggerOutput = os.Stdout
 	}
@@ -70,10 +69,10 @@ func defaultString(s1, s2 string) string {
 // Opt helper type to create functional options
 type Opt func(*Bastion)
 
-// API500ErrMessage set the message returned to the user when catch a 500 status error.
-func API500ErrMessage(msg string) Opt {
+// InternalErrMsg set the message returned to the user when catch a 500 status error.
+func InternalErrMsg(msg string) Opt {
 	return func(app *Bastion) {
-		app.API500ErrMessage = msg
+		app.InternalErrMsg = msg
 	}
 }
 

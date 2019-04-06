@@ -57,7 +57,7 @@ func TestRecovery(t *testing.T) {
 				Object().ContainsMap(expectedRes)
 
 			output := out.String()
-			assert.Contains(t, output, `"component":"recovery`)
+			assert.Contains(t, output, `"component":"recovery middleware`)
 			assert.Contains(t, output, `"message":"Recovery middleware catch an error`)
 		})
 	}
@@ -78,7 +78,7 @@ func TestRecoveryLogRequestGET(t *testing.T) {
 	e := httpexpect.New(t, server.URL)
 	e.GET("/").Expect().Status(500).JSON()
 	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"component":"recovery"`)
+	assert.Contains(t, out.String(), `"component":"recovery middleware"`)
 	assert.Contains(t, out.String(), `"error":"test"`)
 	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"`)
 	assert.Contains(t, out.String(), `"body":""`)
@@ -101,7 +101,7 @@ func TestRecoveryLogRequestWithHeaders(t *testing.T) {
 	e := httpexpect.New(t, server.URL)
 	e.GET("/").WithHeader("User-Agent", "Mozilla").Expect().Status(500).JSON()
 	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"component":"recovery"`)
+	assert.Contains(t, out.String(), `"component":"recovery middleware"`)
 	assert.Contains(t, out.String(), `"error":"test"`)
 	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"`)
 	assert.Contains(t, out.String(), `"user-agent":"Mozilla"`)
@@ -124,7 +124,7 @@ func TestRecoveryLogRequestPOST(t *testing.T) {
 	e.POST("/").WithJSON(payload).
 		Expect().Status(500).JSON()
 	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"component":"recovery"`)
+	assert.Contains(t, out.String(), `"component":"recovery middleware"`)
 	assert.Contains(t, out.String(), `"error":"test"`)
 	assert.Contains(t, out.String(), `"req":{"url":"/","method":"POST","proto":"HTTP/1.1","host":"`)
 	assert.Contains(t, out.String(), `"body":"{\"hello\":\"world\"}"`)
