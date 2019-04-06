@@ -27,7 +27,7 @@ func TestLoggerForDevelopment(t *testing.T) {
 	e := bastion.Tester(t, app)
 	e.GET("/").Expect().Status(200).JSON().
 		Object().ContainsMap(res)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
+	assert.Contains(t, out.String(), `"module":"bastion"`)
 	assert.Contains(t, out.String(), `"status":200`)
 	assert.Contains(t, out.String(), `"method":"GET"`)
 	assert.Contains(t, out.String(), `"url":"/"`)
@@ -60,7 +60,7 @@ func TestLoggerRequestLevelErrorForStatusGreaterThan500(t *testing.T) {
 	e := bastion.Tester(t, app)
 	e.GET("/400").Expect().Status(400).JSON().
 		Object().ContainsMap(response400)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
+	assert.Contains(t, out.String(), `"module":"bastion"`)
 	assert.Contains(t, out.String(), `"status":400`)
 	assert.Contains(t, out.String(), `"method":"GET"`)
 	assert.Contains(t, out.String(), `"url":"/400"`)
@@ -72,7 +72,7 @@ func TestLoggerRequestLevelErrorForStatusGreaterThan500(t *testing.T) {
 
 	e.GET("/500").Expect().Status(500).JSON().
 		Object().ContainsMap(response500)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
+	assert.Contains(t, out.String(), `"module":"bastion"`)
 	assert.Contains(t, out.String(), `"status":500`)
 	assert.Contains(t, out.String(), `"method":"GET"`)
 	assert.Contains(t, out.String(), `"url":"/500"`)
@@ -100,7 +100,7 @@ func TestLoggerRequestForProductionAppendMoreInfo(t *testing.T) {
 	e.GET("/500").WithHeader("User-Agent", "Mozilla").Expect().
 		Status(500).JSON().
 		Object().ContainsMap(response500)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
+	assert.Contains(t, out.String(), `"module":"bastion"`)
 	assert.Contains(t, out.String(), `"status":500`)
 	assert.Contains(t, out.String(), `"method":"GET"`)
 	assert.Contains(t, out.String(), `"url":"/500"`)
@@ -153,7 +153,7 @@ func TestLoggerRequestErrorLvl(t *testing.T) {
 	e.GET("/500").WithHeader("User-Agent", "Mozilla").Expect().
 		Status(500).JSON().
 		Object().ContainsMap(response500)
-	assert.Contains(t, out.String(), `"app":"bastion"`)
+	assert.Contains(t, out.String(), `"module":"bastion"`)
 	assert.Contains(t, out.String(), `"status":500`)
 	assert.Contains(t, out.String(), `"method":"GET"`)
 	assert.Contains(t, out.String(), `"url":"/500"`)

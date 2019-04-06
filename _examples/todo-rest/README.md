@@ -1,6 +1,6 @@
 # TODO REST 🤵
 
-*An example of a Bastion app*. Struct routers/handlers and code layout style.
+*An example of a Bastion app*. routers/handlers and code layout style.
 
 * How to init a bastion app ? [answer](https://github.com/ifreddyrondon/bastion/blob/master/_examples/todo-rest/main.go)
 

@@ -16,9 +16,7 @@ func setup() *bastion.Bastion {
 
 func TestHandlerCreate(t *testing.T) {
 	app := setup()
-	payload := map[string]interface{}{
-		"description": "new description",
-	}
+	payload := map[string]interface{}{"description": "new description"}
 
 	e := bastion.Tester(t, app)
 	e.POST("/todo/").WithJSON(payload).Expect().

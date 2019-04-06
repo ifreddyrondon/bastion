@@ -18,9 +18,9 @@ import (
 
 const defaultAddr = ":8080"
 
-// onShutdown is a function to be implemented when is necessary
+// OnShutdown is a function to be implemented when is necessary
 // to run something before a shutdown of the server or in graceful shutdown.
-type onShutdown func()
+type OnShutdown func()
 
 // Bastion offers an "augmented" Router instance.
 // It has the minimal necessary to create an API with default handlers and middleware.
@@ -31,7 +31,7 @@ type onShutdown func()
 // Without a Bastion you can't do much!
 type Bastion struct {
 	server *http.Server
-	Logger *zerolog.Logger
+	logger *zerolog.Logger
 	Options
 	*chi.Mux
 }
@@ -43,7 +43,6 @@ func New(opts ...Opt) *Bastion {
 		opt(app)
 	}
 	setDefaultsOpts(&app.Options)
-
 	initialize(app)
 	return app
 }
@@ -57,13 +56,13 @@ func initialize(app *Bastion) {
 	/**
 	 * init logger
 	 */
-	app.Logger = getLogger(&app.Options)
+	app.logger = getLogger(&app.Options)
 
 	/**
 	 * Router
 	 */
 	app.Mux = chi.NewRouter()
-	app.Mux.Use(hlog.NewHandler(*app.Logger))
+	app.Mux.Use(hlog.NewHandler(*app.logger))
 	apiErr := middleware.APIError(
 		middleware.APIErrorDefault500(errors.New(app.Options.API500ErrMessage)),
 		middleware.APIErrorLoggerOutput(app.Options.LoggerOutput),
@@ -84,7 +83,7 @@ func initialize(app *Bastion) {
 // undergone NPN/ALPN protocol upgrade or that have been hijacked.
 // This function should start protocol-specific graceful shutdown,
 // but should not wait for shutdown to complete.
-func (app *Bastion) RegisterOnShutdown(fs ...onShutdown) {
+func (app *Bastion) RegisterOnShutdown(fs ...OnShutdown) {
 	for _, f := range fs {
 		app.server.RegisterOnShutdown(f)
 	}
@@ -97,20 +96,20 @@ func (app *Bastion) Serve(addr ...string) error {
 	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
-	go graceful(ctx, app.server, app.Logger)
+	go graceful(ctx, app.server, app.logger)
 
-	address := resolveAddress(addr, app.Logger)
-	app.Logger.Info().Msgf("app starting at %v", address)
+	address := resolveAddress(addr, app.logger)
+	app.logger.Info().Msgf("app starting at %v", address)
 	app.server.Addr = address
 	app.server.Handler = app.Mux
 
-	printRoutes(app.Mux, app.Logger)
+	printRoutes(app.Mux, app.logger)
 	if err := app.server.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
-			app.Logger.Info().Str("component", "Serve").Msg("http: Server closed")
+			app.logger.Info().Str("component", "Serve").Msg("http: Server closed")
 			return err
 		}
-		app.Logger.Error().Str("component", "Serve").Err(err).Msg("listenAndServe")
+		app.logger.Error().Str("component", "Serve").Err(err).Msg("listenAndServe")
 		return err
 	}
 	return nil
