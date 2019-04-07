@@ -180,28 +180,40 @@ import (
 
 func main() {
 	// turn off pretty print logger and sets 500 errors message
-	bastion.New(bastion.NoPrettyLogging(), bastion.InternalErrMsg(`Just another "500 - internal error"`))
+	bastion.New(bastion.DisablePrettyLogging(), bastion.InternalErrMsg(`Just another "500 - internal error"`))
 }
 ```
 
-### `InternalErrMsg`
+### InternalErrMsg
 
 Represent the message returned to the user when a http 500 error is caught by the InternalError middleware. 
 Default `looks like something went wrong`.
 
 - `InternalErrMsg(msg string)` set the message returned to the user when catch a 500 status error.
 
-### Env
+### DisableInternalErrorMiddleware
 
-Env is the "environment" in which the App is running. Default is "development". Can be set using **ENV** vars `GO_ENV`.
+Boolean flag to disable the [internal error middleware](https://github.com/go-chi/chi/tree/master#middlewares). Default `false`.
 
-- `Env(env string)` set the "environment" in which the App is running.
+- `DisableInternalErrorMiddleware()` turn off internal error middleware.
 
-### NoPrettyLogging
+### DisableRecoveryMiddleware
+
+Boolean flag to disable [recovery middleware](https://github.com/go-chi/chi/tree/master#middlewares). Default `false`.
+
+- `DisableRecoveryMiddleware()` turn off recovery middleware.
+
+### DisablePingRouter
+
+Boolean flag to disable the ping route. Default `false`.
+
+- `DisablePingRouter()` turn off ping route.
+
+### DisablePrettyLogging
 
 Boolean flag to don't output a colored human readable version on the out writer. Default `false`.
 
-- `NoPrettyLogging()` turn off the pretty logging.
+- `DisablePrettyLogging()` turn off the pretty logging.
 
 ### LoggerLevel
 
@@ -223,6 +235,12 @@ Default `bastion.DebugLevel`, to turn off logging entirely, pass the bastion.Dis
 Where the logger output write. Default `os.Stdout`.
 
 - `LoggerOutput(w io.Writer)` set the logger output writer.
+
+### Env
+
+Env is the "environment" in which the App is running. Default is "development". Can be set using **ENV** vars `GO_ENV`.
+
+- `Env(env string)` set the "environment" in which the App is running.
 
 ## Testing
 

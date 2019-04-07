@@ -22,7 +22,7 @@ func TestLogFromHandlerWithContext(t *testing.T) {
 	})
 
 	out := &bytes.Buffer{}
-	app := bastion.New(bastion.NoPrettyLogging(), bastion.LoggerOutput(out))
+	app := bastion.New(bastion.DisablePrettyLogging(), bastion.LoggerOutput(out))
 	app.Mount("/", handler)
 
 	e := bastion.Tester(t, app)

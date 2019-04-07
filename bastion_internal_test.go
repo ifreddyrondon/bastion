@@ -52,7 +52,7 @@ func TestPrintRoutes(t *testing.T) {
 	t.Parallel()
 
 	out := &bytes.Buffer{}
-	app := New(NoPrettyLogging(), LoggerOutput(out))
+	app := New(DisablePrettyLogging(), LoggerOutput(out))
 	app.Get("/", handler)  // GET /todos - read a list of todos
 	app.Post("/", handler) // POST /todos - create a new todo and persist it
 	app.Route("/{id}", func(r chi.Router) {
@@ -94,7 +94,7 @@ func TestResolveAddress(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			out := &bytes.Buffer{}
-			app := New(NoPrettyLogging(), LoggerOutput(out))
+			app := New(DisablePrettyLogging(), LoggerOutput(out))
 			addr := resolveAddress(tc.givenAddr, app.logger)
 			assert.Equal(t, tc.expectedAddr, addr)
 			assert.Contains(t, out.String(), tc.outputLog)
@@ -107,7 +107,7 @@ func TestResolveAddressWithEnv(t *testing.T) {
 
 	tempADDR := os.Getenv("ADDR")
 	out := &bytes.Buffer{}
-	app := New(NoPrettyLogging(), LoggerOutput(out))
+	app := New(DisablePrettyLogging(), LoggerOutput(out))
 	os.Setenv("ADDR", ":3000")
 	addr := resolveAddress(nil, app.logger)
 	assert.Equal(t, ":3000", addr)

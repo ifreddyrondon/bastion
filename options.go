@@ -36,15 +36,20 @@ const (
 type Options struct {
 	// InternalErrMsg message returned to the user when catch a 500 status error.
 	InternalErrMsg string
-	// Env "environment" in which the App is running. Default is "development".
-	Env string
-	// NoPrettyLogging don't output a colored human readable version on the out writer.
-	NoPrettyLogging bool
+	// DisableInternalErrorMiddleware
+	DisableInternalErrorMiddleware bool
+	// DisableRecoveryMiddleware
+	DisableRecoveryMiddleware bool
+	// DisablePingRouter
+	DisablePingRouter bool
+	// DisablePrettyLogging don't output a colored human readable version on the out writer.
+	DisablePrettyLogging bool
 	// LoggerLevel defines log levels. Default is DebugLevel defines an absent log level.
 	LoggerLevel Level
 	// LoggerOutput logger output writer. Default os.Stdout
 	LoggerOutput io.Writer
-	// DisablePingRouter
+	// Env "environment" in which the App is running. Default is "development".
+	Env string
 }
 
 func (o *Options) isDEV() bool {
@@ -76,17 +81,31 @@ func InternalErrMsg(msg string) Opt {
 	}
 }
 
-// Env set the "environment" in which the App is running.
-func Env(env string) Opt {
+// DisableInternalErrorMiddleware
+func DisableInternalErrorMiddleware() Opt {
 	return func(app *Bastion) {
-		app.Env = env
+		app.DisableInternalErrorMiddleware = true
 	}
 }
 
-// NoPrettyLogging turn off the pretty logging.
-func NoPrettyLogging() Opt {
+// DisableRecoveryMiddleware
+func DisableRecoveryMiddleware() Opt {
 	return func(app *Bastion) {
-		app.NoPrettyLogging = true
+		app.DisableRecoveryMiddleware = true
+	}
+}
+
+// DisablePingRouter
+func DisablePingRouter() Opt {
+	return func(app *Bastion) {
+		app.DisablePingRouter = true
+	}
+}
+
+// DisablePrettyLogging turn off the pretty logging.
+func DisablePrettyLogging() Opt {
+	return func(app *Bastion) {
+		app.DisablePrettyLogging = true
 	}
 }
 
@@ -101,5 +120,12 @@ func LoggerLevel(lvl Level) Opt {
 func LoggerOutput(w io.Writer) Opt {
 	return func(app *Bastion) {
 		app.LoggerOutput = w
+	}
+}
+
+// Env set the "environment" in which the App is running.
+func Env(env string) Opt {
+	return func(app *Bastion) {
+		app.Env = env
 	}
 }

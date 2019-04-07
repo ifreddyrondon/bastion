@@ -2,6 +2,7 @@ package bastion
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/markbates/sigtx"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 
@@ -38,44 +38,43 @@ type Bastion struct {
 
 // New returns a new instance of Bastion and adds some sane, and useful, defaults.
 func New(opts ...Opt) *Bastion {
-	app := &Bastion{}
+	app := &Bastion{
+		server: &http.Server{},
+	}
 	for _, opt := range opts {
 		opt(app)
 	}
 	setDefaultsOpts(&app.Options)
-	initialize(app)
+	app.logger = getLogger(&app.Options)
+	app.Mux = router(app.Options, app.logger)
 	return app
 }
 
-func initialize(app *Bastion) {
-	/**
-	 * init server
-	 */
-	app.server = &http.Server{}
+func router(opts Options, l *zerolog.Logger) *chi.Mux {
+	r := chi.NewRouter()
+	r.Use(hlog.NewHandler(*l))
 
-	/**
-	 * init logger
-	 */
-	app.logger = getLogger(&app.Options)
+	// internal error middleware
+	if !opts.DisableInternalErrorMiddleware {
+		internalErr := middleware.InternalError(
+			middleware.InternalErrMsg(errors.New(opts.InternalErrMsg)),
+			middleware.InternalErrLoggerOutput(opts.LoggerOutput),
+		)
+		r.Use(internalErr)
+	}
 
-	/**
-	 * Router
-	 */
-	app.Mux = chi.NewRouter()
-	app.Mux.Use(hlog.NewHandler(*app.logger))
-	internalErr := middleware.InternalError(
-		middleware.InternalErrMsg(errors.New(app.Options.InternalErrMsg)),
-		middleware.InternalErrLoggerOutput(app.Options.LoggerOutput),
-	)
-	app.Mux.Use(internalErr)
-	recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(app.Options.LoggerOutput))
-	app.Mux.Use(recovery)
-	app.Mux.Use(loggerRequest(!app.Options.isDEV())...)
+	// recovery middleware
+	if !opts.DisableRecoveryMiddleware {
+		recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(opts.LoggerOutput))
+		r.Use(recovery)
+		r.Use(loggerRequest(!opts.isDEV())...)
+	}
 
-	/**
-	 * Ping route
-	 */
-	app.Mux.Get("/ping", pingHandler)
+	// ping route
+	if !opts.DisablePingRouter {
+		r.Get("/ping", pingHandler)
+	}
+	return r
 }
 
 // RegisterOnShutdown registers a function to call on Shutdown.
