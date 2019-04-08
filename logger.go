@@ -14,7 +14,7 @@ func getLogger(opts *Options) *zerolog.Logger {
 		Logger()
 
 	logger = logger.Level(zerolog.Level(opts.LoggerLevel))
-	if opts.NoPrettyLogging {
+	if opts.DisablePrettyLogging {
 		logger = logger.Output(opts.LoggerOutput)
 	}
 
