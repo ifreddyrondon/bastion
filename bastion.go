@@ -53,6 +53,7 @@ func New(opts ...Opt) *Bastion {
 func router(opts Options, l *zerolog.Logger) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(hlog.NewHandler(*l))
+	r.Use(loggerRequest(!opts.isDEV())...)
 
 	// internal error middleware
 	if !opts.DisableInternalErrorMiddleware {
@@ -67,7 +68,6 @@ func router(opts Options, l *zerolog.Logger) *chi.Mux {
 	if !opts.DisableRecoveryMiddleware {
 		recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(opts.LoggerOutput))
 		r.Use(recovery)
-		r.Use(loggerRequest(!opts.isDEV())...)
 	}
 
 	// ping route

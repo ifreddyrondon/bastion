@@ -36,11 +36,11 @@ const (
 type Options struct {
 	// InternalErrMsg message returned to the user when catch a 500 status error.
 	InternalErrMsg string
-	// DisableInternalErrorMiddleware
+	// DisableInternalErrorMiddleware boolean flag to disable the internal error middleware.
 	DisableInternalErrorMiddleware bool
-	// DisableRecoveryMiddleware
+	// DisableRecoveryMiddleware boolean flag to disable the recovery middleware.
 	DisableRecoveryMiddleware bool
-	// DisablePingRouter
+	// DisablePingRouter boolean flag to disable the ping router.
 	DisablePingRouter bool
 	// DisablePrettyLogging don't output a colored human readable version on the out writer.
 	DisablePrettyLogging bool
@@ -81,21 +81,21 @@ func InternalErrMsg(msg string) Opt {
 	}
 }
 
-// DisableInternalErrorMiddleware
+// DisableInternalErrorMiddleware turn off internal error middleware.
 func DisableInternalErrorMiddleware() Opt {
 	return func(app *Bastion) {
 		app.DisableInternalErrorMiddleware = true
 	}
 }
 
-// DisableRecoveryMiddleware
+// DisableRecoveryMiddleware turn off recovery middleware.
 func DisableRecoveryMiddleware() Opt {
 	return func(app *Bastion) {
 		app.DisableRecoveryMiddleware = true
 	}
 }
 
-// DisablePingRouter
+// DisablePingRouter turn off ping route.
 func DisablePingRouter() Opt {
 	return func(app *Bastion) {
 		app.DisablePingRouter = true
