@@ -42,6 +42,8 @@ type Options struct {
 	DisableRecoveryMiddleware bool
 	// DisablePingRouter boolean flag to disable the ping router.
 	DisablePingRouter bool
+	// DisableLoggerMiddleware boolean flag to disable the logger middleware.
+	DisableLoggerMiddleware bool
 	// DisablePrettyLogging don't output a colored human readable version on the out writer.
 	DisablePrettyLogging bool
 	// LoggerLevel defines log levels. Default is DebugLevel defines an absent log level.
@@ -99,6 +101,12 @@ func DisableRecoveryMiddleware() Opt {
 func DisablePingRouter() Opt {
 	return func(app *Bastion) {
 		app.DisablePingRouter = true
+	}
+}
+
+func DisableLoggerMiddleware() Opt {
+	return func(app *Bastion) {
+		app.DisableLoggerMiddleware = true
 	}
 }
 

@@ -209,6 +209,12 @@ Boolean flag to disable the ping route. Default `false`.
 
 - `DisablePingRouter()` turn off ping route.
 
+### DisableLoggerMiddleware
+
+Boolean flag to disable the logger middleware. Default `false`.
+
+- `DisableLoggerMiddleware()` turn off logger middleware.
+
 ### DisablePrettyLogging
 
 Boolean flag to don't output a colored human readable version on the out writer. Default `false`.
