@@ -33,6 +33,12 @@ func TestOptionsEnvProduction(t *testing.T) {
 	assert.Equal(t, os.Stdout, opts.LoggerOutput)
 }
 
+func TestOptionsLoggerLevel(t *testing.T) {
+	t.Parallel()
+	opts := bastion.New(bastion.LoggerLevel(bastion.ErrorLevel)).Options
+	assert.Equal(t, opts.LoggerLevel, bastion.ErrorLevel)
+}
+
 func TestOptionsInternalErrMsg(t *testing.T) {
 	t.Parallel()
 	opts := bastion.New(bastion.InternalErrMsg("test")).Options
@@ -45,5 +51,6 @@ func TestBooleanFunctionalOptions(t *testing.T) {
 	assert.True(t, bastion.New(bastion.DisableInternalErrorMiddleware()).Options.DisableInternalErrorMiddleware)
 	assert.True(t, bastion.New(bastion.DisableRecoveryMiddleware()).Options.DisableRecoveryMiddleware)
 	assert.True(t, bastion.New(bastion.DisablePingRouter()).Options.DisablePingRouter)
+	assert.True(t, bastion.New(bastion.DisableLoggerMiddleware()).Options.DisableLoggerMiddleware)
 	assert.True(t, bastion.New(bastion.DisablePrettyLogging()).Options.DisablePrettyLogging)
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/markbates/sigtx"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/hlog"
 
 	"github.com/ifreddyrondon/bastion/middleware"
 )
@@ -52,8 +51,12 @@ func New(opts ...Opt) *Bastion {
 
 func router(opts Options, l *zerolog.Logger) *chi.Mux {
 	r := chi.NewRouter()
-	r.Use(hlog.NewHandler(*l))
-	r.Use(loggerRequest(!opts.isDEV())...)
+
+	// logger middleware
+	if !opts.DisableLoggerMiddleware {
+		logger := middleware.Logger(middleware.AttachLogger(*l))
+		r.Use(logger)
+	}
 
 	// internal error middleware
 	if !opts.DisableInternalErrorMiddleware {
