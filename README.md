@@ -223,18 +223,30 @@ Boolean flag to don't output a colored human readable version on the out writer.
 
 ### LoggerLevel
 
-Defines log levels. Allows for logging at the following levels (from highest to lowest):
+Defines log level. Default `debug`. Allows for logging at the following levels (from highest to lowest):
 
-- panic (`bastion.PanicLevel`, 5)
-- fatal (`bastion.FatalLevel`, 4)
-- error (`bastion.ErrorLevel`, 3)
-- warn (`bastion.WarnLevel`, 2)
-- info (`bastion.InfoLevel`, 1)
-- debug (`bastion.DebugLevel`, 0)
+- panic, 5
+- fatal, 4
+- error, 3
+- warn, 2
+- info, 1
+- debug, 0
 
-Default `bastion.DebugLevel`, to turn off logging entirely, pass the bastion.Disabled constant.
+- `LoggerLevel(lvl string)` set the logger level.
 
-- `LoggerLevel(lvl Level)` set the logger level.
+```go
+package main
+
+import (
+    "github.com/ifreddyrondon/bastion"
+)
+
+func main() {
+	bastion.New(bastion.LoggerLevel(bastion.ErrorLevel))
+	// or
+	bastion.New(bastion.LoggerLevel("error"))
+}
+```
 
 ### LoggerOutput
 
@@ -242,11 +254,30 @@ Where the logger output write. Default `os.Stdout`.
 
 - `LoggerOutput(w io.Writer)` set the logger output writer.
 
-### Env
+### Mode
 
-Env is the "environment" in which the App is running. Default is "development". Can be set using **ENV** vars `GO_ENV`.
+Mode in which the App is running. Default is "debug". 
+Can be set using `Mode(string)` option or with **ENV** vars `GO_ENV` or `GO_ENVIRONMENT`. `Mode(mode string)` has more priority 
+than the ENV variables. 
 
-- `Env(env string)` set the "environment" in which the App is running.
+When **production** mode is on, the request logger IP, UserAgent and Referer are enable, the logger level is set 
+to `error` (is not set with LoggerLevel option) and the logging pretty print is disabled.
+
+- `Mode(mode string)` set the mode in which the App is running.
+
+```go
+package main
+
+import (
+    "github.com/ifreddyrondon/bastion"
+)
+
+func main() {
+	bastion.New(bastion.Mode(bastion.DebugMode))
+	// or
+	bastion.New(bastion.Mode("production"))
+}
+```
 
 ## Testing
 

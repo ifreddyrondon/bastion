@@ -3,34 +3,38 @@ package bastion
 import (
 	"io"
 	"os"
+
+	"github.com/rs/zerolog"
 )
 
 const (
-	developmentEnv        = "development"
 	defaultInternalErrMsg = "looks like something went wrong"
 )
 
-// Level defines log levels.
-type Level uint8
+const (
+	DebugLevel = "debug"
+	InfoLevel  = "info"
+	WarnLevel  = "warn"
+	ErrorLevel = "error"
+	FatalLevel = "fatal"
+	PanicLevel = "panic"
+)
 
 const (
-	// DebugLevel defines debug log level.
-	DebugLevel Level = iota
-	// InfoLevel defines info log level.
-	InfoLevel
-	// WarnLevel defines warn log level.
-	WarnLevel
-	// ErrorLevel defines error log level.
-	ErrorLevel
-	// FatalLevel defines fatal log level.
-	FatalLevel
-	// PanicLevel defines panic log level.
-	PanicLevel
-	// NoLevel defines an absent log level.
-	NoLevel
-	// Disabled disables the logger.
-	Disabled
+	DebugMode      = "debug"
+	ProductionMode = "production"
 )
+
+type codeMode uint8
+
+const (
+	debugCode codeMode = iota
+	productionCode
+)
+
+func (mode codeMode) String() string {
+	return [...]string{DebugMode, ProductionMode}[mode]
+}
 
 // Options are used to define how the application should run.
 type Options struct {
@@ -46,20 +50,74 @@ type Options struct {
 	DisableLoggerMiddleware bool
 	// DisablePrettyLogging don't output a colored human readable version on the out writer.
 	DisablePrettyLogging bool
-	// LoggerLevel defines log levels. Default is DebugLevel defines an absent log level.
-	LoggerLevel Level
 	// LoggerOutput logger output writer. Default os.Stdout
 	LoggerOutput io.Writer
-	// Env "environment" in which the App is running. Default is "development".
-	Env string
+	// LoggerLevel defines log levels. Default "debug".
+	LoggerLevel string
+	level       zerolog.Level
+	// Mode in which the App is running. Default is "debug".
+	Mode string
+	codeMode
 }
 
-func (o *Options) isDEV() bool {
-	return o.Env == "development"
+// IsDebug check if app is running in debug mode
+func (opts Options) IsDebug() bool {
+	return opts.codeMode == debugCode
+}
+
+func resolveMode(opts *Options) codeMode {
+	modeEnv := defaultString(os.Getenv("GO_ENV"), "")
+	if modeEnv == "" {
+		modeEnv = defaultString(os.Getenv("GO_ENVIRONMENT"), "")
+	}
+	mode := defaultString(opts.Mode, modeEnv)
+	return findMode(mode)
+}
+
+func findMode(value string) codeMode {
+	var codeMode = debugCode
+	switch value {
+	case DebugMode, "":
+		codeMode = debugCode
+	case ProductionMode:
+		codeMode = productionCode
+	default:
+		panic("bastion mode unknown: " + value)
+	}
+	return codeMode
+}
+
+func resolveLoggerLvl(opts *Options) zerolog.Level {
+	lvl := defaultString(opts.LoggerLevel, "")
+	if lvl == "" && !opts.IsDebug() {
+		lvl = ErrorLevel
+	} else if lvl == "" {
+		lvl = DebugLevel
+	}
+	return findLvl(lvl)
+}
+
+func findLvl(value string) zerolog.Level {
+	lvl, err := zerolog.ParseLevel(value)
+	if err != nil {
+		panic("bastion logger level unknown: " + value)
+	}
+	return lvl
+}
+
+func resolveDisablePrettyLogging(opts *Options) bool {
+	if !opts.IsDebug() {
+		return true
+	}
+	return opts.DisablePrettyLogging
 }
 
 func setDefaultsOpts(opts *Options) {
-	opts.Env = defaultString(opts.Env, defaultString(os.Getenv("GO_ENV"), developmentEnv))
+	opts.codeMode = resolveMode(opts)
+	opts.Mode = opts.codeMode.String()
+	opts.level = resolveLoggerLvl(opts)
+	opts.DisablePrettyLogging = resolveDisablePrettyLogging(opts)
+	opts.LoggerLevel = opts.level.String()
 	opts.InternalErrMsg = defaultString(opts.InternalErrMsg, defaultInternalErrMsg)
 	if opts.LoggerOutput == nil {
 		opts.LoggerOutput = os.Stdout
@@ -118,7 +176,7 @@ func DisablePrettyLogging() Opt {
 }
 
 // LoggerLevel set the logger level.
-func LoggerLevel(lvl Level) Opt {
+func LoggerLevel(lvl string) Opt {
 	return func(app *Bastion) {
 		app.LoggerLevel = lvl
 	}
@@ -131,9 +189,9 @@ func LoggerOutput(w io.Writer) Opt {
 	}
 }
 
-// Env set the "environment" in which the App is running.
-func Env(env string) Opt {
+// Mode set the mode in which the App is running.
+func Mode(mode string) Opt {
 	return func(app *Bastion) {
-		app.Env = env
+		app.Mode = mode
 	}
 }

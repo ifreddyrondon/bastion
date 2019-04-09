@@ -13,7 +13,7 @@ func getLogger(opts *Options) *zerolog.Logger {
 		Str("module", "bastion").
 		Logger()
 
-	logger = logger.Level(zerolog.Level(opts.LoggerLevel))
+	logger = logger.Level(zerolog.Level(opts.level))
 	if opts.DisablePrettyLogging {
 		logger = logger.Output(opts.LoggerOutput)
 	}

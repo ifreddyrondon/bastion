@@ -103,8 +103,6 @@ func TestResolveAddress(t *testing.T) {
 }
 
 func TestResolveAddressWithEnv(t *testing.T) {
-	t.Parallel()
-
 	tempADDR := os.Getenv("ADDR")
 	out := &bytes.Buffer{}
 	app := New(DisablePrettyLogging(), LoggerOutput(out))
