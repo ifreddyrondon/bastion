@@ -10,74 +10,76 @@ import (
 )
 
 // AttachLogger chain the logger with the middleware.
-func AttachLogger(log zerolog.Logger) func(*loggerCfg) {
+func AttachLogger(log zerolog.Logger) LoggerOpt {
 	return func(r *loggerCfg) {
 		r.logger = log
 	}
 }
 
 // EnableLogReqIP show the request ip.
-func EnableLogReqIP() func(*loggerCfg) {
+func EnableLogReqIP() LoggerOpt {
 	return func(r *loggerCfg) {
 		r.enableLogReqIP = true
 	}
 }
 
 // EnableLogUserAgent show the user agent of the request.
-func EnableLogUserAgent() func(*loggerCfg) {
+func EnableLogUserAgent() LoggerOpt {
 	return func(r *loggerCfg) {
 		r.enableLogUserAgent = true
 	}
 }
 
 // EnableLogReferer show referer of the request.
-func EnableLogReferer() func(*loggerCfg) {
+func EnableLogReferer() LoggerOpt {
 	return func(r *loggerCfg) {
 		r.enableLogReferer = true
 	}
 }
 
 // DisableLogMethod hide the request method.
-func DisableLogMethod() func(*loggerCfg) {
+func DisableLogMethod() LoggerOpt {
 	return func(r *loggerCfg) {
 		r.disableLogMethod = true
 	}
 }
 
 // DisableLogURL hide the request url.
-func DisableLogURL() func(*loggerCfg) {
+func DisableLogURL() LoggerOpt {
 	return func(r *loggerCfg) {
 		r.disableLogURL = true
 	}
 }
 
 // DisableLogStatus hide the request status.
-func DisableLogStatus() func(*loggerCfg) {
+func DisableLogStatus() LoggerOpt {
 	return func(r *loggerCfg) {
 		r.disableLogStatus = true
 	}
 }
 
 // DisableLogStatus hide the request size.
-func DisableLogSize() func(*loggerCfg) {
+func DisableLogSize() LoggerOpt {
 	return func(r *loggerCfg) {
 		r.disableLogSize = true
 	}
 }
 
 // DisableLogStatus hide the request duration.
-func DisableLogDuration() func(*loggerCfg) {
+func DisableLogDuration() LoggerOpt {
 	return func(r *loggerCfg) {
 		r.disableLogDuration = true
 	}
 }
 
 // DisableLogStatus hide the request id.
-func DisableLogRequestID() func(*loggerCfg) {
+func DisableLogRequestID() LoggerOpt {
 	return func(r *loggerCfg) {
 		r.disableLogRequestID = true
 	}
 }
+
+type LoggerOpt func(*loggerCfg)
 
 type loggerCfg struct {
 	logger              zerolog.Logger
@@ -92,7 +94,7 @@ type loggerCfg struct {
 	enableLogReferer    bool
 }
 
-func getLoggerCfg(opts ...func(*loggerCfg)) *loggerCfg {
+func getLoggerCfg(opts ...LoggerOpt) *loggerCfg {
 	r := &loggerCfg{
 		logger: zerolog.New(os.Stdout).With().Timestamp().Logger(),
 	}
@@ -114,7 +116,7 @@ func getLoggerWithLevel(r *http.Request, status int) *zerolog.Event {
 // and how long it took to return.
 //
 // Alternatively, look at https://github.com/rs/zerolog#integration-with-nethttp.
-func Logger(opts ...func(*loggerCfg)) func(http.Handler) http.Handler {
+func Logger(opts ...LoggerOpt) func(http.Handler) http.Handler {
 	cfg := getLoggerCfg(opts...)
 	loggers := []func(http.Handler) http.Handler{
 		hlog.NewHandler(cfg.logger),

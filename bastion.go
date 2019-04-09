@@ -46,6 +46,16 @@ func New(opts ...Opt) *Bastion {
 	setDefaultsOpts(&app.Options)
 	app.logger = getLogger(&app.Options)
 	app.Mux = router(app.Options, app.logger)
+
+	if app.IsDebug() {
+		app.logger.Debug().Msg(`Running in "debug" mode. Switch to "production" mode in production.
+ - using code:  bastion.New(bastion.Mode("production"))
+ - using env: export GO_ENV=production
+ - using env: export GO_ENVIRONMENT=production
+
+`)
+	}
+
 	return app
 }
 
@@ -54,7 +64,18 @@ func router(opts Options, l *zerolog.Logger) *chi.Mux {
 
 	// logger middleware
 	if !opts.DisableLoggerMiddleware {
-		logger := middleware.Logger(middleware.AttachLogger(*l))
+		logMiddleware := []middleware.LoggerOpt{
+			middleware.AttachLogger(*l),
+		}
+		if !opts.IsDebug() {
+			logMiddleware = append(
+				logMiddleware,
+				middleware.EnableLogReferer(),
+				middleware.EnableLogUserAgent(),
+				middleware.EnableLogReqIP(),
+			)
+		}
+		logger := middleware.Logger(logMiddleware...)
 		r.Use(logger)
 	}
 

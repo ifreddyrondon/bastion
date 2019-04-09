@@ -20,23 +20,27 @@ func TestNewOptions(t *testing.T) {
 	assert.False(t, opts.DisablePrettyLogging)
 	assert.Equal(t, opts.LoggerLevel, bastion.DebugLevel)
 	assert.Equal(t, os.Stdout, opts.LoggerOutput)
-	assert.Equal(t, "development", opts.Env)
-}
-
-func TestOptionsEnvProduction(t *testing.T) {
-	t.Parallel()
-
-	opts := bastion.New(bastion.Env("production")).Options
-	assert.Equal(t, "production", opts.Env)
-	assert.Equal(t, "looks like something went wrong", opts.InternalErrMsg)
-	assert.Equal(t, opts.LoggerLevel, bastion.DebugLevel)
-	assert.Equal(t, os.Stdout, opts.LoggerOutput)
+	assert.Equal(t, "debug", opts.Mode)
 }
 
 func TestOptionsLoggerLevel(t *testing.T) {
 	t.Parallel()
 	opts := bastion.New(bastion.LoggerLevel(bastion.ErrorLevel)).Options
 	assert.Equal(t, opts.LoggerLevel, bastion.ErrorLevel)
+}
+
+func TestOptionsDefaultLoggerLevelWhenProd(t *testing.T) {
+	t.Parallel()
+	opts := bastion.New(bastion.Mode(bastion.ProductionMode)).Options
+	assert.Equal(t, opts.LoggerLevel, bastion.ErrorLevel)
+}
+
+func TestOptionsLoggerLevelBadArg(t *testing.T) {
+	t.Parallel()
+	f := func() {
+		bastion.New(bastion.LoggerLevel("bad"))
+	}
+	assert.PanicsWithValue(t, "bastion logger level unknown: bad", f)
 }
 
 func TestOptionsInternalErrMsg(t *testing.T) {
@@ -53,4 +57,52 @@ func TestBooleanFunctionalOptions(t *testing.T) {
 	assert.True(t, bastion.New(bastion.DisablePingRouter()).Options.DisablePingRouter)
 	assert.True(t, bastion.New(bastion.DisableLoggerMiddleware()).Options.DisableLoggerMiddleware)
 	assert.True(t, bastion.New(bastion.DisablePrettyLogging()).Options.DisablePrettyLogging)
+}
+
+func TestOptionsDisablePrettyLoggingWhenProd(t *testing.T) {
+	t.Parallel()
+	opts := bastion.New(bastion.Mode(bastion.ProductionMode)).Options
+	assert.True(t, opts.DisablePrettyLogging)
+}
+
+func TestModeWithOption(t *testing.T) {
+	t.Parallel()
+	app := bastion.New(bastion.Mode("production"))
+	assert.Equal(t, "production", app.Options.Mode)
+	assert.False(t, app.IsDebug())
+}
+
+func TestModeWithGO_ENV(t *testing.T) {
+	tempADDR := os.Getenv("GO_ENV")
+	os.Setenv("GO_ENV", "production")
+	app := bastion.New()
+	assert.Equal(t, "production", app.Options.Mode)
+	assert.False(t, app.IsDebug())
+	os.Setenv("GO_ENV", tempADDR)
+}
+
+func TestModeWithGO_ENVIRONMENT(t *testing.T) {
+	tempADDR := os.Getenv("GO_ENVIRONMENT")
+	os.Setenv("GO_ENVIRONMENT", "production")
+	app := bastion.New()
+	assert.Equal(t, "production", app.Options.Mode)
+	assert.False(t, app.IsDebug())
+	os.Setenv("GO_ENVIRONMENT", tempADDR)
+}
+
+func TestModeOptionPreferenceOverEnv(t *testing.T) {
+	tempADDR := os.Getenv("GO_ENVIRONMENT")
+	os.Setenv("GO_ENVIRONMENT", "production")
+	app := bastion.New(bastion.Mode("debug"))
+	assert.Equal(t, "debug", app.Options.Mode)
+	assert.True(t, app.IsDebug())
+	os.Setenv("GO_ENVIRONMENT", tempADDR)
+}
+
+func TestModeWithOptionBadArg(t *testing.T) {
+	t.Parallel()
+	f := func() {
+		bastion.New(bastion.Mode("bad"))
+	}
+	assert.PanicsWithValue(t, "bastion mode unknown: bad", f)
 }
