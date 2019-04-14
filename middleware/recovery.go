@@ -51,7 +51,7 @@ func RecoveryLoggerOutput(w io.Writer) func(*recoveryCfg) {
 
 func getRecoveryCfg(opts ...func(*recoveryCfg)) *recoveryCfg {
 	r := &recoveryCfg{
-		render:       render.NewJSON(),
+		render:       render.JSON,
 		loggerWriter: os.Stdout,
 	}
 

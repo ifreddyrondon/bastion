@@ -27,13 +27,10 @@ func TestBastionHelloWorld(t *testing.T) {
 
 	app := bastion.New()
 	app.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
-		res := struct {
-			Message string `json:"message"`
-		}{"world"}
-		render.NewJSON().Send(w, res)
+		render.JSON.Send(w, map[string]string{"message": "hello bastion"})
 	})
 
-	expected := map[string]interface{}{"message": "world"}
+	expected := map[string]interface{}{"message": "hello bastion"}
 
 	e := bastion.Tester(t, app)
 	e.GET("/hello").

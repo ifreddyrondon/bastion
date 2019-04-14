@@ -11,10 +11,7 @@ import (
 )
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
-	res := struct {
-		Message string `json:"message"`
-	}{"world"}
-	render.NewJSON().Send(w, res)
+	render.JSON.Send(w, map[string]string{"message": "hello bastion"})
 }
 
 func onShutdown() {

@@ -84,7 +84,7 @@ type internalErr struct {
 func internalErrCfg(opts ...func(*internalErr)) *internalErr {
 	cfg := &internalErr{
 		defaultErr:   internalErrDefaultMsg,
-		render:       render.NewJSON(),
+		render:       render.JSON,
 		loggerWriter: os.Stdout,
 	}
 

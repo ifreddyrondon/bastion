@@ -32,14 +32,16 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    res := struct {Message string `json:"message"`}{Message: "world"}
-    render.NewJSON().Send(w, res)
+	render.JSON.Send(w, map[string]string{"message": "hello bastion"})
 }
 
 func main() {
-    app := bastion.New()
-    app.Get("/hello", handler)
-    app.Serve()
+	app := bastion.New()
+	app.Get("/hello", handler)
+	// By default it serves on :8080 unless a
+	// ADDR environment variable was defined.
+	app.Serve()
+	// app.Serve(":3000") for a hard coded port
 }
 ```
 
@@ -67,6 +69,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 // Routes creates a REST router for the todos resource
@@ -85,26 +88,26 @@ func routes() http.Handler {
 }
 
 func list(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("todos list of stuff.."))
+	render.Text.Response(w, http.StatusOK, "todos list of stuff..")
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("todos create"))
+	render.Text.Response(w, http.StatusOK, "todos create")
 }
 
 func get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	w.Write([]byte(fmt.Sprintf("get todo with id %v", id)))
+	render.Text.Response(w, http.StatusOK, fmt.Sprintf("get todo with id %v", id))
 }
 
 func update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	w.Write([]byte(fmt.Sprintf("update todo with id %v", id)))
+	render.Text.Response(w, http.StatusOK, fmt.Sprintf("update todo with id %v", id))
 }
 
 func delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	w.Write([]byte(fmt.Sprintf("delete todo with id %v", id)))
+	render.Text.Response(w, http.StatusOK, fmt.Sprintf("delete todo with id %v", id))
 }
 
 func main() {
@@ -135,7 +138,7 @@ Name | Description
 ---- | -----------
 Listing | Parses the url from a request and stores a [listing.Listing](https://github.com/ifreddyrondon/bastion/blob/master/middleware/listing/listing.go#L11) on the context, it can be accessed through middleware.GetListing.
 
-For more references check [chi middleware](https://github.com/go-chi/chi/tree/master#middlewares)
+Checkout for references, examples, options and docu in [middleware](https://github.com/ifreddyrondon/bastion/blob/master/middleware) or [chi](https://github.com/go-chi/chi/tree/master#middlewares) for more middlewares. 
 
 ## Register on shutdown
 
@@ -332,100 +335,67 @@ Go and check the [full test](https://github.com/ifreddyrondon/bastion/blob/maste
 
 ## Render
 
-Render a HTTP status code and content type to the associated Response.
+Easily rendering JSON, XML, binary data, and HTML templates responses 
 
-### StringRenderer
-- **render.Text** response strings with text/plain Content-Type.
-```go
-render.Text.Response(rr, http.StatusOK, "test")
-```
-- **render.HTML** response strings with text/html Content-Type.
-```go
-render.HTML.Response(rr, http.StatusOK, "<h1>Hello World</h1>")
-```
-
-### ByteRenderer
-- **render.Data** response []byte with application/octet-stream Content-Type.
-```go
-render.Data.Response(rr, http.StatusOK, []byte("test"))
-```
-
-### Renderer
-
-Handle the marshaler of structs responses to the client.
-
-```go
-// Renderer interface for managing response payloads.
-type Renderer interface {
-	// Response encoded responses in the ResponseWriter with the HTTP status code.
-	Response(w http.ResponseWriter, code int, response interface{})
-}
-```
-
-APIRenderer are convenient methods for api responses.
-
-```go
-
-// APIRenderer interface for managing API response payloads.
-type APIRenderer interface {
-	Renderer
-	OKRenderer
-	ClientErrRenderer
-	ServerErrRenderer
-}
-
-// OKRenderer interface for managing success API response payloads.
-type OKRenderer interface {
-	Send(w http.ResponseWriter, response interface{})
-	Created(w http.ResponseWriter, response interface{})
-	NoContent(w http.ResponseWriter)
-}
-
-// ClientErrRenderer interface for managing API responses when client error.
-type ClientErrRenderer interface {
-	BadRequest(w http.ResponseWriter, err error)
-	NotFound(w http.ResponseWriter, err error)
-	MethodNotAllowed(w http.ResponseWriter, err error)
-}
-
-// ServerErrRenderer interface for managing API responses when server error.
-type ServerErrRenderer interface {
-	InternalServerError(w http.ResponseWriter, err error)
-}
-```
-
-[JSON](https://github.com/ifreddyrondon/bastion/blob/master/render/json.go) and [XML](https://github.com/ifreddyrondon/bastion/blob/master/render/xml.go) implements APIRenderer and they can be configured with optional functions.
-
-#### E.g.
-
-- [JSON](https://github.com/ifreddyrondon/bastion/blob/master/render/json_test.go)
-- [XML](https://github.com/ifreddyrondon/bastion/blob/master/render/xml_test.go)
-
-Response a JSON with a 200 HTTP status code.
+### Usage
+It can be used with pretty much any web framework providing you can access the `http.ResponseWriter` from your handler.
+The rendering functions simply wraps Go's existing functionality for marshaling and rendering data.
 
 ```go
 package main
 
 import (
+	"encoding/xml"
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/render"
 )
 
-func handler(w http.ResponseWriter, _ *http.Request) {
-	res := struct {
-		Message string `json:"message"`
-	}{Message: "world"}
-	render.NewJSON().Send(w, res)
+type ExampleXML struct {
+	XMLName xml.Name `xml:"example"`
+	One     string   `xml:"one,attr"`
+	Two     string   `xml:"two,attr"`
 }
 
 func main() {
 	app := bastion.New()
-	app.Get("/hello", handler)
+
+	app.Get("/data", func(w http.ResponseWriter, req *http.Request) {
+		render.Data.Response(w, http.StatusOK, []byte("Some binary data here."))
+	})
+
+	app.Get("/text", func(w http.ResponseWriter, req *http.Request) {
+		render.Text.Response(w, http.StatusOK, "Plain text here")
+	})
+
+	app.Get("/html", func(w http.ResponseWriter, req *http.Request) {
+		render.HTML.Response(w, http.StatusOK, "<h1>Hello World</h1>")
+	})
+
+	app.Get("/json", func(w http.ResponseWriter, req *http.Request) {
+		render.JSON.Response(w, http.StatusOK, map[string]string{"hello": "json"})
+	})
+
+	app.Get("/json-ok", func(w http.ResponseWriter, req *http.Request) {
+		// with implicit status 200
+		render.JSON.Send(w, map[string]string{"hello": "json"})
+	})
+
+	app.Get("/xml", func(w http.ResponseWriter, req *http.Request) {
+		render.XML.Response(w, http.StatusOK, ExampleXML{One: "hello", Two: "xml"})
+	})
+
+	app.Get("/xml-ok", func(w http.ResponseWriter, req *http.Request) {
+		// with implicit status 200
+		render.XML.Send(w, ExampleXML{One: "hello", Two: "xml"})
+	})
+
 	app.Serve()
 }
 ```
+
+Checkout more references, examples, options and implementations in [render](https://github.com/ifreddyrondon/bastion/blob/master/render).
 
 ## Logger
 
@@ -449,7 +419,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
 
-	render.NewJSON().Send(w, res)
+	render.JSON.Send(w, res)
 }
 
 func main() {

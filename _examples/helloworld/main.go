@@ -12,11 +12,7 @@ import (
 func handler(w http.ResponseWriter, r *http.Request) {
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
-
-	res := struct {
-		Message string `json:"message"`
-	}{"hello world"}
-	render.NewJSON().Send(w, res)
+	render.JSON.Send(w, map[string]string{"message": "hello bastion"})
 }
 
 func main() {
