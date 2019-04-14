@@ -39,6 +39,39 @@ func TestBastionHelloWorld(t *testing.T) {
 		JSON().Object().Equal(expected)
 }
 
+func TestNotFound(t *testing.T) {
+	t.Parallel()
+	expected := map[string]interface{}{
+		"error":   "Not Found",
+		"message": "resource /abc not found",
+		"status":  404,
+	}
+	app := bastion.New()
+	e := bastion.Tester(t, app)
+	e.GET("/abc").
+		Expect().
+		Status(http.StatusNotFound).
+		JSON().Object().Equal(expected)
+}
+
+func TestMethodNotAllowed(t *testing.T) {
+	t.Parallel()
+	app := bastion.New()
+	app.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
+		render.JSON.Send(w, map[string]string{"message": "hello bastion"})
+	})
+	expected := map[string]interface{}{
+		"error":   "Method Not Allowed",
+		"message": "method POST not allowed for resource /hello",
+		"status":  405,
+	}
+	e := bastion.Tester(t, app)
+	e.POST("/hello").
+		Expect().
+		Status(http.StatusMethodNotAllowed).
+		JSON().Object().Equal(expected)
+}
+
 func TestNewRouter(t *testing.T) {
 	t.Parallel()
 

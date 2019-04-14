@@ -10,7 +10,6 @@ func getLogger(opts *Options) *zerolog.Logger {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: opts.LoggerOutput}).
 		With().
 		Timestamp().
-		Str("module", "bastion").
 		Logger()
 
 	logger = logger.Level(zerolog.Level(opts.level))

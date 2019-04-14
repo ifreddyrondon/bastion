@@ -3,6 +3,7 @@ package bastion
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/ifreddyrondon/bastion/middleware"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
 const defaultAddr = ":8080"
@@ -30,7 +32,7 @@ type OnShutdown func()
 // Without a Bastion you can't do much!
 type Bastion struct {
 	server *http.Server
-	logger *zerolog.Logger
+	logger zerolog.Logger
 	Options
 	*chi.Mux
 }
@@ -44,8 +46,9 @@ func New(opts ...Opt) *Bastion {
 		opt(app)
 	}
 	setDefaultsOpts(&app.Options)
-	app.logger = getLogger(&app.Options)
-	app.Mux = router(app.Options, app.logger)
+	l := getLogger(&app.Options)
+	app.Mux = router(app.Options, *l)
+	app.logger = l.With().Str("module", "bastion").Logger()
 
 	if app.IsDebug() {
 		app.logger.Debug().Msg(`Running in "debug" mode. Switch to "production" mode in production.
@@ -59,13 +62,13 @@ func New(opts ...Opt) *Bastion {
 	return app
 }
 
-func router(opts Options, l *zerolog.Logger) *chi.Mux {
+func router(opts Options, l zerolog.Logger) *chi.Mux {
 	r := chi.NewRouter()
 
 	// logger middleware
 	if !opts.DisableLoggerMiddleware {
 		logMiddleware := []middleware.LoggerOpt{
-			middleware.AttachLogger(*l),
+			middleware.AttachLogger(l),
 		}
 		if !opts.IsDebug() {
 			logMiddleware = append(
@@ -98,7 +101,19 @@ func router(opts Options, l *zerolog.Logger) *chi.Mux {
 	if !opts.DisablePingRouter {
 		r.Get("/ping", pingHandler)
 	}
+
+	r.NotFound(notFound)
+	r.MethodNotAllowed(notAllowed)
 	return r
+}
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	render.JSON.NotFound(w, fmt.Errorf("resource %s not found", r.URL.Path))
+}
+
+func notAllowed(w http.ResponseWriter, r *http.Request) {
+	err := fmt.Errorf("method %s not allowed for resource %s", r.Method, r.URL.Path)
+	render.JSON.MethodNotAllowed(w, err)
 }
 
 // RegisterOnShutdown registers a function to call on Shutdown.
@@ -119,14 +134,14 @@ func (app *Bastion) Serve(addr ...string) error {
 	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
-	go graceful(ctx, app.server, app.logger)
+	go graceful(ctx, app.server, &app.logger)
 
-	address := resolveAddress(addr, app.logger)
+	address := resolveAddress(addr, &app.logger)
 	app.logger.Info().Msgf("app starting at %v", address)
 	app.server.Addr = address
 	app.server.Handler = app.Mux
 
-	printRoutes(app.Mux, app.logger)
+	printRoutes(app.Mux, &app.logger)
 	if err := app.server.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
 			app.logger.Info().Str("component", "Serve").Msg("http: Server closed")
