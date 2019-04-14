@@ -18,7 +18,7 @@ func TestLogFromHandlerWithContext(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		l := bastion.LoggerFromCtx(r.Context())
 		l.Info().Msg("handler")
-		render.NewJSON().Send(w, res)
+		render.JSON.Send(w, res)
 	})
 
 	out := &bytes.Buffer{}

@@ -47,7 +47,7 @@ type listingConfig struct {
 
 func getListingCfg(opts ...func(*listingConfig)) *listingConfig {
 	r := &listingConfig{
-		render: render.NewJSON(),
+		render: render.JSON,
 	}
 
 	for _, opt := range opts {

@@ -33,7 +33,7 @@ func Routes() http.Handler {
 func list(w http.ResponseWriter, r *http.Request) {
 	todo1 := todo{Description: "do something 1"}
 	todo2 := todo{Description: "do something 2"}
-	render.NewJSON().Send(w, []todo{todo1, todo2})
+	render.JSON.Send(w, []todo{todo1, todo2})
 }
 
 func create(w http.ResponseWriter, r *http.Request) {
@@ -41,14 +41,14 @@ func create(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&todo1); err != nil {
 		panic(err) // the error should be handle
 	}
-	render.NewJSON().Created(w, todo1)
+	render.JSON.Created(w, todo1)
 }
 
 func get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	i, _ := strconv.Atoi(id) // the error should be handle
 	todo1 := todo{ID: i, Description: fmt.Sprintf("do something %v", id)}
-	render.NewJSON().Send(w, todo1)
+	render.JSON.Send(w, todo1)
 }
 
 func update(w http.ResponseWriter, r *http.Request) {
@@ -59,15 +59,15 @@ func update(w http.ResponseWriter, r *http.Request) {
 		panic(err) // the error should be handle
 	}
 	todo1.ID = i
-	render.NewJSON().Send(w, todo1)
+	render.JSON.Send(w, todo1)
 }
 
 func delete(w http.ResponseWriter, r *http.Request) {
 	// handle delete logic
-	render.NewJSON().NoContent(w)
+	render.JSON.NoContent(w)
 }
 
 func error500(w http.ResponseWriter, r *http.Request) {
 	err := errors.New("test")
-	render.NewJSON().InternalServerError(w, err)
+	render.JSON.InternalServerError(w, err)
 }

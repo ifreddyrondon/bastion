@@ -16,6 +16,6 @@ const (
 
 // Response encoded responses in the ResponseWriter with the HTTP status code.
 func (s StringResponder) Response(w http.ResponseWriter, code int, response string) {
-	w.Header().Set("Content-Type", string(s))
+	writeContentType(w, string(s))
 	write(w, code, []byte(response))
 }

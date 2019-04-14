@@ -13,6 +13,6 @@ const (
 
 // Response encoded []byte into ResponseWriter with the HTTP status code.
 func (s ByteResponder) Response(w http.ResponseWriter, code int, response []byte) {
-	w.Header().Set("Content-Type", string(s))
+	writeContentType(w, string(s))
 	write(w, code, response)
 }
