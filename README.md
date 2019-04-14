@@ -400,7 +400,8 @@ Checkout more references, examples, options and implementations in [render](http
 ## Logger
 
 Bastion have an internal JSON structured logger powered by [github.com/rs/zerolog](github.com/rs/zerolog). 
-It can be accessed from the context of each request `l := bastion.LoggerFromCtx(ctx)`
+It can be accessed from the context of each request `l := bastion.LoggerFromCtx(ctx)`. The request id is logged for 
+every call to the logger.
 
 ```go
 package main
@@ -413,13 +414,10 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	res := struct {
-		Message string `json:"message"`
-	}{Message: "hello world"}
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
 
-	render.JSON.Send(w, res)
+	render.JSON.Send(w, map[string]string{"message": "hello bastion"})
 }
 
 func main() {
