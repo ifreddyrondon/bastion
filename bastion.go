@@ -64,8 +64,9 @@ func New(opts ...Opt) *Bastion {
 }
 
 func router(opts Options, l zerolog.Logger) *chi.Mux {
-	r := chi.NewRouter()
-
+	mux := chi.NewRouter()
+	mux.NotFound(notFound)
+	mux.MethodNotAllowed(notAllowed)
 	// logger middleware
 	if !opts.DisableLoggerMiddleware {
 		logMiddleware := []middleware.LoggerOpt{
@@ -80,7 +81,7 @@ func router(opts Options, l zerolog.Logger) *chi.Mux {
 			)
 		}
 		logger := middleware.Logger(logMiddleware...)
-		r.Use(logger)
+		mux.Use(logger)
 	}
 
 	// internal error middleware
@@ -89,27 +90,16 @@ func router(opts Options, l zerolog.Logger) *chi.Mux {
 			middleware.InternalErrMsg(errors.New(opts.InternalErrMsg)),
 			middleware.InternalErrLoggerOutput(opts.LoggerOutput),
 		)
-		r.Use(internalErr)
+		mux.Use(internalErr)
 	}
 
 	// recovery middleware
 	if !opts.DisableRecoveryMiddleware {
 		recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(opts.LoggerOutput))
-		r.Use(recovery)
+		mux.Use(recovery)
 	}
 
-	// ping route
-	if !opts.DisablePingRouter {
-		r.Get("/ping", pingHandler)
-	}
-
-	if opts.EnableProfiler {
-		r.Mount(opts.ProfilerRoutePrefix, chiMiddleware.Profiler())
-	}
-
-	r.NotFound(notFound)
-	r.MethodNotAllowed(notAllowed)
-	return r
+	return mux
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
@@ -119,6 +109,28 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 func notAllowed(w http.ResponseWriter, r *http.Request) {
 	err := fmt.Errorf("method %s not allowed for resource %s", r.Method, r.URL.Path)
 	render.JSON.MethodNotAllowed(w, err)
+}
+
+func mountRoutes(mux *chi.Mux, opts Options, l *zerolog.Logger) {
+	if !opts.DisablePingRouter {
+		mux.Get("/ping", pingHandler)
+	}
+	if opts.EnableProfiler {
+		mux.Mount(opts.ProfilerRoutePrefix, chiMiddleware.Profiler())
+	}
+
+	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		if strings.HasPrefix(route, opts.ProfilerRoutePrefix) {
+			return nil
+		}
+		route = strings.Replace(route, "/*/", "/", -1)
+		l.Debug().Str("component", "route").Msgf("%s %s", method, route)
+		return nil
+	}
+
+	if err := chi.Walk(mux, walkFunc); err != nil {
+		l.Error().Err(err).Msgf("walking through the routes")
+	}
 }
 
 // RegisterOnShutdown registers a function to call on Shutdown.
@@ -146,7 +158,7 @@ func (app *Bastion) Serve(addr ...string) error {
 	app.server.Addr = address
 	app.server.Handler = app.Mux
 
-	printRoutes(app.Mux, app.Options.ProfilerRoutePrefix, &app.logger)
+	mountRoutes(app.Mux, app.Options, &app.logger)
 	if err := app.server.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
 			app.logger.Info().Str("component", "Serve").Msg("http: Server closed")
@@ -182,21 +194,6 @@ func resolveAddress(addr []string, l *zerolog.Logger) string {
 		return addr[0]
 	default:
 		panic("too much parameters")
-	}
-}
-
-func printRoutes(mux *chi.Mux, profilerRoutePrefix string, l *zerolog.Logger) {
-	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-		if strings.HasPrefix(route, profilerRoutePrefix) {
-			return nil
-		}
-		route = strings.Replace(route, "/*/", "/", -1)
-		l.Debug().Str("component", "route").Msgf("%s %s", method, route)
-		return nil
-	}
-
-	if err := chi.Walk(mux, walkFunc); err != nil {
-		l.Error().Err(err).Msgf("walking through the routes")
 	}
 }
 
