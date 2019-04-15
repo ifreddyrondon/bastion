@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.0.1 (2019-04-15)
+
+fix: mount middleware in main router after init.
+
+After `bastion.New` and init mux with middlewares, ping and debug handlers if you try to use a middleware the app panic.
+
 ## v3.0.0 (2019-04-15)
 
 ### Features
