@@ -26,13 +26,20 @@ func TestGetListingMissingInstance(t *testing.T) {
 	assert.EqualError(t, err, "listing not found in context")
 }
 
+func TestGetListingInvalidReference(t *testing.T) {
+	t.Parallel()
+	ctx := context.WithValue(context.Background(), middleware.ListingCtxKey, 1)
+	_, err := middleware.GetListing(ctx)
+	assert.EqualError(t, err, "listing value set incorrectly in context")
+}
+
 func setup(m func(http.Handler) http.Handler) (*httptest.Server, *listing.Listing, func()) {
 	var result listing.Listing
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		l, err := middleware.GetListing(r.Context())
 		if err != nil {
-			render.NewJSON().InternalServerError(w, err)
+			render.JSON.InternalServerError(w, err)
 			return
 		}
 		result = *l

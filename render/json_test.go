@@ -18,7 +18,7 @@ type address struct {
 	Lng     float64 `json:"lng"`
 }
 
-func TestJSONResponse(t *testing.T) {
+func TestNewJSONRenderer(t *testing.T) {
 	t.Parallel()
 
 	a := address{"test address", 1, 1}
@@ -31,26 +31,39 @@ func TestJSONResponse(t *testing.T) {
 		JSON().Object().Equal(expected)
 }
 
-func TestJSONOptions(t *testing.T) {
+func TestJSONResponse(t *testing.T) {
+	t.Parallel()
+
+	a := address{"test address", 1, 1}
+	expected := map[string]interface{}{"address": "test address", "lat": 1, "lng": 1}
+
+	rr := httptest.NewRecorder()
+	render.JSON.Response(rr, http.StatusOK, &a)
+	httpexpect.NewResponse(t, rr.Result()).
+		Status(http.StatusOK).
+		JSON().Object().Equal(expected)
+}
+
+func TestJSONRendererOptions(t *testing.T) {
 	t.Parallel()
 
 	a := &address{"test address", 1, 1}
 
 	tt := []struct {
 		name     string
-		opts     []func(*render.JSON)
+		opts     []func(*render.JSONRender)
 		a        *address
 		expected string
 	}{
 		{
 			"marshal without indent",
-			[]func(*render.JSON){},
+			[]func(*render.JSONRender){},
 			a,
 			"{\"address\":\"test address\",\"lat\":1,\"lng\":1}\n",
 		},
 		{
 			"marshal with indent (pretty print)",
-			[]func(*render.JSON){render.PrettyPrintJSON()},
+			[]func(*render.JSONRender){render.PrettyPrintJSON()},
 			a,
 			"{\n  \"address\": \"test address\",\n  \"lat\": 1,\n  \"lng\": 1\n}\n",
 		},
@@ -72,7 +85,7 @@ func TestJSONResponseError(t *testing.T) {
 	t.Parallel()
 
 	rr := httptest.NewRecorder()
-	render.NewJSON().Response(rr, http.StatusOK, math.Inf(1))
+	render.JSON.Response(rr, http.StatusOK, math.Inf(1))
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusInternalServerError).
 		Text().
@@ -86,7 +99,7 @@ func TestJSONSend(t *testing.T) {
 	expected := map[string]interface{}{"address": "test address", "lat": 1, "lng": 1}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON().Send(rr, &a)
+	render.JSON.Send(rr, &a)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusOK).
 		JSON().Object().Equal(expected)
@@ -99,7 +112,7 @@ func TestJSONCreated(t *testing.T) {
 	expected := map[string]interface{}{"address": "test address", "lat": 1, "lng": 1}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON().Created(rr, &a)
+	render.JSON.Created(rr, &a)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusCreated).
 		JSON().Object().Equal(expected)
@@ -109,7 +122,7 @@ func TestJSONNoContent(t *testing.T) {
 	t.Parallel()
 
 	rr := httptest.NewRecorder()
-	render.NewJSON().NoContent(rr)
+	render.JSON.NoContent(rr)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNoContent).NoContent()
 }
@@ -121,7 +134,7 @@ func TestJSONBadRequest(t *testing.T) {
 	expected := map[string]interface{}{"message": "test", "error": "Bad Request", "status": 400}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON().BadRequest(rr, e)
+	render.JSON.BadRequest(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusBadRequest).
 		JSON().Object().Equal(expected)
@@ -134,7 +147,7 @@ func TestJSONNotFound(t *testing.T) {
 	expected := map[string]interface{}{"message": "test", "error": "Not Found", "status": 404}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON().NotFound(rr, e)
+	render.JSON.NotFound(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusNotFound).
 		JSON().Object().Equal(expected)
@@ -147,7 +160,7 @@ func TestJSONMethodNotAllowed(t *testing.T) {
 	expected := map[string]interface{}{"message": "test", "error": "Method Not Allowed", "status": 405}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON().MethodNotAllowed(rr, e)
+	render.JSON.MethodNotAllowed(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusMethodNotAllowed).
 		JSON().Object().Equal(expected)
@@ -160,7 +173,7 @@ func TestJSONInternalServerError(t *testing.T) {
 	expected := map[string]interface{}{"message": "test", "error": "Internal Server Error", "status": 500}
 
 	rr := httptest.NewRecorder()
-	render.NewJSON().InternalServerError(rr, e)
+	render.JSON.InternalServerError(rr, e)
 	httpexpect.NewResponse(t, rr.Result()).
 		Status(http.StatusInternalServerError).
 		JSON().Object().Equal(expected)

@@ -19,10 +19,39 @@ useful/optional subpackages: [middleware](https://github.com/ifreddyrondon/basti
 
 See [_examples/](https://github.com/ifreddyrondon/bastion/blob/master/_examples/) for a variety of examples.
 
+**As easy as:**
+
+```go
+package main
+
+import (
+    "net/http"
+
+    "github.com/ifreddyrondon/bastion"
+    "github.com/ifreddyrondon/bastion/render"
+)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	render.JSON.Send(w, map[string]string{"message": "hello bastion"})
+}
+
+func main() {
+	app := bastion.New()
+	app.Get("/hello", handler)
+	// By default it serves on :8080 unless a
+	// ADDR environment variable was defined.
+	app.Serve()
+	// app.Serve(":3000") for a hard coded port
+}
+```
+
 ## Router
 
-Bastion use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
-of mounting an api router, it will define the routes and middleware of the application with the app logic.
+Bastion use [go-chi](https://github.com/go-chi/chi) as a router making it easy to modularize the applications. 
+Each Bastion instance accepts a URL `pattern` and chain of `handlers`. The URL pattern supports 
+named params (ie. `/users/{userID}`) and wildcards (ie. `/admin/*`). URL parameters can be fetched 
+at runtime by calling `chi.URLParam(r, "userID")` for named parameters and `chi.URLParam(r, "*")` 
+for a wildcard parameter.
 
 ### NewRouter
 
@@ -36,95 +65,72 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
-type Handler struct{}
-
 // Routes creates a REST router for the todos resource
-func (h *Handler) Routes() http.Handler {
+func routes() http.Handler {
 	r := bastion.NewRouter()
 
-	r.Get("/", h.list)    // GET /todos - read a list of todos
-	r.Post("/", h.create) // POST /todos - create a new todo and persist it
+	r.Get("/", list)    // GET /todos - read a list of todos
+	r.Post("/", create) // POST /todos - create a new todo and persist it
 	r.Route("/{id}", func(r chi.Router) {
-		r.Get("/", h.get)       // GET /todos/{id} - read a single todo by :id
-		r.Put("/", h.update)    // PUT /todos/{id} - update a single todo by :id
-		r.Delete("/", h.delete) // DELETE /todos/{id} - delete a single todo by :id
+		r.Get("/", get)       // GET /todos/{id} - read a single todo by :id
+		r.Put("/", update)    // PUT /todos/{id} - update a single todo by :id
+		r.Delete("/", delete) // DELETE /todos/{id} - delete a single todo by :id
 	})
 
 	return r
 }
 
-func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("todos list of stuff.."))
+func list(w http.ResponseWriter, r *http.Request) {
+	render.Text.Response(w, http.StatusOK, "todos list of stuff..")
 }
 
-func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("todos create"))
+func create(w http.ResponseWriter, r *http.Request) {
+	render.Text.Response(w, http.StatusOK, "todos create")
 }
 
-func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
+func get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	w.Write([]byte(fmt.Sprintf("get todo with id %v", id)))
+	render.Text.Response(w, http.StatusOK, fmt.Sprintf("get todo with id %v", id))
 }
 
-func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
+func update(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	w.Write([]byte(fmt.Sprintf("update todo with id %v", id)))
+	render.Text.Response(w, http.StatusOK, fmt.Sprintf("update todo with id %v", id))
 }
 
-func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
+func delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	w.Write([]byte(fmt.Sprintf("delete todo with id %v", id)))
+	render.Text.Response(w, http.StatusOK, fmt.Sprintf("delete todo with id %v", id))
 }
 
 func main() {
 	app := bastion.New()
-	app.APIRouter.Mount("/todo/", new(Handler).Routes())
-	app.Serve()
+	app.Mount("/todo/", routes())
+	fmt.Fprintln(os.Stderr, app.Serve())
 }
 ```
 
-### Router example
-
-```go
-package main
-
-import (
-    "net/http"
-
-    "github.com/ifreddyrondon/bastion"
-    "github.com/ifreddyrondon/bastion/render"
-)
-
-func handler(w http.ResponseWriter, _ *http.Request) {
-    res := struct {Message string `json:"message"`}{Message: "world"}
-    render.NewJSON().Send(w, res)
-}
-
-func main() {
-    app := bastion.New()
-    app.APIRouter.Get("/hello", handler)
-    app.Serve()
-}
-```
-
-## Middleware
+## Middlewares
 
 Bastion comes equipped with a set of commons middleware handlers, providing a suite of standard `net/http` middleware.
-They are just stdlib net/http middleware handlers. There is nothing special about them, which means the router and all the tooling is designed to be compatible and friendly with any middleware in the community.
+They are just stdlib net/http middleware handlers. There is nothing special about them, which means the router and all 
+the tooling is designed to be compatible and friendly with any middleware in the community.
 
 ### Core middleware
 
 Name | Description
 ---- | -----------
 Logger | Logs the start and end of each request with the elapsed processing time.
-Recovery | Gracefully absorb panics and prints the stack trace.
 RequestID | Injects a request ID into the context of each request.
-APIErrHandler | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#api500errmessage). IT allows to response with the same error without disclosure internal information, also the real error is logged.
+Recovery | Gracefully absorb panics and prints the stack trace.
+InternalError | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#InternalErrMsg). IT allows to response with the same error without disclosure internal information, also the real error is logged.
 
 ### Auxiliary middleware
 
@@ -132,7 +138,7 @@ Name | Description
 ---- | -----------
 Listing | Parses the url from a request and stores a [listing.Listing](https://github.com/ifreddyrondon/bastion/blob/master/middleware/listing/listing.go#L11) on the context, it can be accessed through middleware.GetListing.
 
-For more references check [chi middleware](https://github.com/go-chi/chi/tree/master#middlewares)
+Checkout for references, examples, options and docu in [middleware](https://github.com/ifreddyrondon/bastion/blob/master/middleware) or [chi](https://github.com/go-chi/chi/tree/master#middlewares) for more middlewares. 
 
 ## Register on shutdown
 
@@ -160,101 +166,13 @@ func onShutdown() {
 func main() {
     app := bastion.New()
     app.RegisterOnShutdown(onShutdown)
-    app.Serve()
+    app.Serve(":8080")
 }
 ```
 
 ## Options
 
-Options are used to define how the application should run.
-
-### Structure
-
-```go
-// Options are used to define how the application should run.
-type Options struct {
-	// APIBasepath path where the bastion api router is going to be mounted. Default `/`.
-	APIBasepath string `yaml:"apiBasepath"`
-	// API500ErrMessage message returned to the user when catch a 500 status error.
-	API500ErrMessage string `yaml:"api500ErrMessage"`
-	// Addr bind address provided to http.Server. Default is "127.0.0.1:8080"
-	// Can be set using ENV vars "ADDR" and "PORT".
-	Addr string `yaml:"addr"`
-	// Env "environment" in which the App is running. Default is "development".
-	Env string `yaml:"env"`
-	// NoPrettyLogging don't output a colored human readable version on the out writer.
-	NoPrettyLogging bool `yaml:"noPrettyLogging"`
-	// LoggerLevel defines log levels. Default is DebugLevel.
-	LoggerLevel Level `yaml:"loggerLevel"`
-	// LoggerOutput logger output writer. Default os.Stdout
-	LoggerOutput io.Writer
-}
-```
-
-#### `APIBasepath`
-
-Api base path value is where the bastion api router is going to be mounted. Default `/`. It's JSON tagged as `apiBasepath`
-
-When:
-
-```json
-"apiBasepath": "/foo/test",
-```
-
-#### `API500ErrMessage`
-
-Api 500 error message represent the message returned to the user when a http 500 error is caught by the APIErrHandler middleware. Default `looks like something went wrong`. It's JSON tagged as `api500ErrMessage`
-
-When:
-
-```json
-"api500ErrMessage": "looks like something went wrong",
-```
-
-Then: `http://localhost:8080/foo/test`
-
-#### `Addr`
-
-Addr is the bind address provided to http.Server. Default is `127.0.0.1:8080`. Can be set using **ENV** vars `ADDR` and `PORT`. It's JSON tagged as `addr`
-
-#### Env
-
-Env is the "environment" in which the App is running. Default is "development". Can be set using **ENV** vars `GO_ENV` It's JSON tagged as `env`
-
-#### NoPrettyLogging
-
-NoPrettyLogging boolean flag to don't output a colored human readable version on the out writer. Default `false`. It's JSON tagged as `noPrettyLogging`
-
-#### LoggerLevel
-
-LoggerLevel defines log levels. Allows for logging at the following levels (from highest to lowest):
-
-- panic (`bastion.PanicLevel`, 5)
-- fatal (`bastion.FatalLevel`, 4)
-- error (`bastion.ErrorLevel`, 3)
-- warn (`bastion.WarnLevel`, 2)
-- info (`bastion.InfoLevel`, 1)
-- debug (`bastion.DebugLevel`, 0)
-
-Default `bastion.DebugLevel`, to turn off logging entirely, pass the bastion.Disabled constant. It's JSON tagged as `loggerLevel`.
-
-#### LoggerOutput
-
-LoggerOutput is an `io.Writer` where the logger output write. Default os.Stdout.
-
-Each logging operation makes a single call to the Writer's Write method. There is no guaranty on access serialization to the Writer. If your Writer is not thread safe, you may consider using sync wrapper.
-
-### From optionals functions
-
-Bastion can be configured with optionals funtions that are optional when using `bastion.New()`.
-
-- `APIBasePath(path string)` set path where the bastion api router is going to be mounted.
-- `API500ErrMessage(msg string)` set the message returned to the user when catch a 500 status error.
-- `Addr(add string)` bind address provided to http.Server.
-- `Env(env string)` set the "environment" in which the App is running.
-- `NoPrettyLogging()` turn off the pretty logging.
-- `LoggerLevel(lvl Level)` set the logger level.
-- `LoggerOutput(w io.Writer)` set the logger output writer.
+Options are used to define how the application should run, it can be set through optionals functions when using `bastion.New()`.
 
 ```go
 package main
@@ -264,39 +182,116 @@ import (
 )
 
 func main() {
-	bastion.New() // defaults options
-
-	bastion.New(bastion.NoPrettyLogging(), bastion.Addr("0.0.0.0:3000")) // turn off pretty print logger and sets address to 0.0.0.0:3000
+	// turn off pretty print logger and sets 500 errors message
+	bastion.New(bastion.DisablePrettyLogging(), bastion.InternalErrMsg(`Just another "500 - internal error"`))
 }
 ```
 
-### From options file
+### InternalErrMsg
 
-Bastion comes with an util function to load a new instance of Bastion from a options file. The options file could it be in **YAML** or **JSON** format. Is some attributes are missing from the options file it'll be set with the default. [Example](https://github.com/ifreddyrondon/bastion/blob/master/_examples/options-yaml/main.go).
+Represent the message returned to the user when a http 500 error is caught by the InternalError middleware. 
+Default `looks like something went wrong`.
 
-FromFile takes special consideration when there are **ENV** vars:
+- `InternalErrMsg(msg string)` set the message returned to the user when catch a 500 status error.
 
-* For `Addr`. When it's not provided it'll search the `ADDR` and `PORT` environment variables first before set the default.
+### DisableInternalErrorMiddleware
 
-* For `Env`. When it's not provided it'll search the `GO_ENV` environment variables first before set the default.
+Boolean flag to disable the [internal error middleware](https://github.com/go-chi/chi/tree/master#middlewares). Default `false`.
 
-#### YAML
+- `DisableInternalErrorMiddleware()` turn off internal error middleware.
 
-```yaml
-apiBasepath: "/"
-addr: ":8080"
-debug: true
-env: "development"
+### DisableRecoveryMiddleware
+
+Boolean flag to disable [recovery middleware](https://github.com/go-chi/chi/tree/master#middlewares). Default `false`.
+
+- `DisableRecoveryMiddleware()` turn off recovery middleware.
+
+### DisablePingRouter
+
+Boolean flag to disable the ping route. Default `false`.
+
+- `DisablePingRouter()` turn off ping route.
+
+### DisableLoggerMiddleware
+
+Boolean flag to disable the logger middleware. Default `false`.
+
+- `DisableLoggerMiddleware()` turn off logger middleware.
+
+### DisablePrettyLogging
+
+Boolean flag to don't output a colored human readable version on the out writer. Default `false`.
+
+- `DisablePrettyLogging()` turn off the pretty logging.
+
+### LoggerLevel
+
+Defines log level. Default `debug`. Allows for logging at the following levels (from highest to lowest):
+
+- panic, 5
+- fatal, 4
+- error, 3
+- warn, 2
+- info, 1
+- debug, 0
+
+- `LoggerLevel(lvl string)` set the logger level.
+
+```go
+package main
+
+import (
+    "github.com/ifreddyrondon/bastion"
+)
+
+func main() {
+	bastion.New(bastion.LoggerLevel(bastion.ErrorLevel))
+	// or
+	bastion.New(bastion.LoggerLevel("error"))
+}
 ```
 
-#### JSON
+### LoggerOutput
 
-```json
-{
-  "apiBasepath": "/",
-  "addr": ":8080",
-  "debug": true,
-  "env": "development"
+Where the logger output write. Default `os.Stdout`.
+
+- `LoggerOutput(w io.Writer)` set the logger output writer.
+
+### ProfilerRoutePrefix 
+
+Optional path prefix for profiler subrouter. If left unspecified, `/debug/` is used as the default path prefix.
+
+- `ProfilerRoutePrefix(prefix string)` set the prefix path for the profile router.
+
+### EnableProfiler 
+
+Boolean flag to enable the profiler subrouter in production mode.
+
+- `EnableProfiler()` turn on profiler subrouter.
+
+### Mode
+
+Mode in which the App is running. Default is "debug". 
+Can be set using `Mode(string)` option or with **ENV** vars `GO_ENV` or `GO_ENVIRONMENT`. `Mode(mode string)` has more priority 
+than the ENV variables. 
+
+When **production** mode is on, the request logger IP, UserAgent and Referer are enable, the logger level is set 
+to `error` (is not set with LoggerLevel option), the profiler routes are disable (is not set with EnableProfiler option) 
+and the logging pretty print is disabled.
+
+- `Mode(mode string)` set the mode in which the App is running.
+
+```go
+package main
+
+import (
+    "github.com/ifreddyrondon/bastion"
+)
+
+func main() {
+	bastion.New(bastion.Mode(bastion.DebugMode))
+	// or
+	bastion.New(bastion.Mode("production"))
 }
 ```
 
@@ -330,10 +325,7 @@ import (
 
 func setup() *bastion.Bastion {
 	app := bastion.New()
-	handler := todo.Handler{
-		Render: render.NewJSON(),
-	}
-	app.APIRouter.Mount("/todo/", handler.Routes())
+	app.Mount("/todo/", todo.Routes())
 	return app
 }
 
@@ -356,124 +348,73 @@ Go and check the [full test](https://github.com/ifreddyrondon/bastion/blob/maste
 
 ## Render
 
-Render a HTTP status code and content type to the associated Response.
+Easily rendering JSON, XML, binary data, and HTML templates responses 
 
-### StringRenderer
-- **render.Text** response strings with text/plain Content-Type.
-```go
-render.Text.Response(rr, http.StatusOK, "test")
-```
-- **render.HTML** response strings with text/html Content-Type.
-```go
-render.HTML.Response(rr, http.StatusOK, "<h1>Hello World</h1>")
-```
-
-### ByteRenderer
-- **render.Data** response []byte with application/octet-stream Content-Type.
-```go
-render.Data.Response(rr, http.StatusOK, []byte("test"))
-```
-
-### Renderer
-
-Handle the marshaler of structs responses to the client.
-
-```go
-// Renderer interface for managing response payloads.
-type Renderer interface {
-	// Response encoded responses in the ResponseWriter with the HTTP status code.
-	Response(w http.ResponseWriter, code int, response interface{})
-}
-```
-
-APIRenderer are convenient methods for api responses.
-
-```go
-
-// APIRenderer interface for managing API response payloads.
-type APIRenderer interface {
-	Renderer
-	OKRenderer
-	ClientErrRenderer
-	ServerErrRenderer
-}
-
-// OKRenderer interface for managing success API response payloads.
-type OKRenderer interface {
-	Send(w http.ResponseWriter, response interface{})
-	Created(w http.ResponseWriter, response interface{})
-	NoContent(w http.ResponseWriter)
-}
-
-// ClientErrRenderer interface for managing API responses when client error.
-type ClientErrRenderer interface {
-	BadRequest(w http.ResponseWriter, err error)
-	NotFound(w http.ResponseWriter, err error)
-	MethodNotAllowed(w http.ResponseWriter, err error)
-}
-
-// ServerErrRenderer interface for managing API responses when server error.
-type ServerErrRenderer interface {
-	InternalServerError(w http.ResponseWriter, err error)
-}
-```
-
-[JSON](https://github.com/ifreddyrondon/bastion/blob/master/render/json.go) and [XML](https://github.com/ifreddyrondon/bastion/blob/master/render/xml.go) implements APIRenderer and they can be configured with optional functions.
-
-#### E.g.
-
-- [JSON](https://github.com/ifreddyrondon/bastion/blob/master/render/json_test.go)
-- [XML](https://github.com/ifreddyrondon/bastion/blob/master/render/xml_test.go)
-
-Response a JSON with a 200 HTTP status code.
+### Usage
+It can be used with pretty much any web framework providing you can access the `http.ResponseWriter` from your handler.
+The rendering functions simply wraps Go's existing functionality for marshaling and rendering data.
 
 ```go
 package main
 
 import (
+	"encoding/xml"
 	"net/http"
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/render"
 )
 
-func handler(w http.ResponseWriter, _ *http.Request) {
-	res := struct {
-		Message string `json:"message"`
-	}{Message: "world"}
-	render.NewJSON().Send(w, res)
+type ExampleXML struct {
+	XMLName xml.Name `xml:"example"`
+	One     string   `xml:"one,attr"`
+	Two     string   `xml:"two,attr"`
 }
 
 func main() {
 	app := bastion.New()
-	app.APIRouter.Get("/hello", handler)
+
+	app.Get("/data", func(w http.ResponseWriter, req *http.Request) {
+		render.Data.Response(w, http.StatusOK, []byte("Some binary data here."))
+	})
+
+	app.Get("/text", func(w http.ResponseWriter, req *http.Request) {
+		render.Text.Response(w, http.StatusOK, "Plain text here")
+	})
+
+	app.Get("/html", func(w http.ResponseWriter, req *http.Request) {
+		render.HTML.Response(w, http.StatusOK, "<h1>Hello World</h1>")
+	})
+
+	app.Get("/json", func(w http.ResponseWriter, req *http.Request) {
+		render.JSON.Response(w, http.StatusOK, map[string]string{"hello": "json"})
+	})
+
+	app.Get("/json-ok", func(w http.ResponseWriter, req *http.Request) {
+		// with implicit status 200
+		render.JSON.Send(w, map[string]string{"hello": "json"})
+	})
+
+	app.Get("/xml", func(w http.ResponseWriter, req *http.Request) {
+		render.XML.Response(w, http.StatusOK, ExampleXML{One: "hello", Two: "xml"})
+	})
+
+	app.Get("/xml-ok", func(w http.ResponseWriter, req *http.Request) {
+		// with implicit status 200
+		render.XML.Send(w, ExampleXML{One: "hello", Two: "xml"})
+	})
+
 	app.Serve()
 }
 ```
+
+Checkout more references, examples, options and implementations in [render](https://github.com/ifreddyrondon/bastion/blob/master/render).
 
 ## Logger
 
-Bastion commes with a JSON structured logger powered by [github.com/rs/zerolog](github.com/rs/zerolog). It can be accessed through the bastion instance `bastion.Logger` or from the context of each request `l := bastion.LoggerFromCtx(ctx)`
-
-### Logging from bastion instance
-
-```go
-package main
-
-import (
-	"net/http"
-
-	"github.com/ifreddyrondon/bastion"
-)
-
-func main() {
-	app := bastion.New()
-	app.Logger.Info().Str("app", "demo").Msg("main")
-	app.Serve()
-}
-```
-
-### Logging from handler
+Bastion have an internal JSON structured logger powered by [github.com/rs/zerolog](github.com/rs/zerolog). 
+It can be accessed from the context of each request `l := bastion.LoggerFromCtx(ctx)`. The request id is logged for 
+every call to the logger.
 
 ```go
 package main
@@ -486,18 +427,15 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	res := struct {
-		Message string `json:"message"`
-	}{Message: "world"}
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
 
-	render.NewJSON().Send(w, res)
+	render.JSON.Send(w, map[string]string{"message": "hello bastion"})
 }
 
 func main() {
 	app := bastion.New()
-	app.APIRouter.Get("/hello", handler)
+	app.Get("/hello", handler)
 	app.Serve()
 }
 ```

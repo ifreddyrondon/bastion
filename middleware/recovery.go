@@ -51,7 +51,7 @@ func RecoveryLoggerOutput(w io.Writer) func(*recoveryCfg) {
 
 func getRecoveryCfg(opts ...func(*recoveryCfg)) *recoveryCfg {
 	r := &recoveryCfg{
-		render:       render.NewJSON(),
+		render:       render.JSON,
 		loggerWriter: os.Stdout,
 	}
 
@@ -83,7 +83,7 @@ func Recovery(opts ...func(*recoveryCfg)) func(http.Handler) http.Handler {
 						err = errors.New(fmt.Sprint(t))
 					}
 					cfg.logger.Error().
-						Str("component", "recovery").
+						Str("component", "recovery middleware").
 						Err(err).Dict("req", logreq(req)).
 						Msg("Recovery middleware catch an error")
 					cfg.render.InternalServerError(w, err)

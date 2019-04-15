@@ -1,18 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/render"
 )
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
-	res := struct {
-		Message string `json:"message"`
-	}{"world"}
-	render.NewJSON().Send(w, res)
+	render.JSON.Send(w, map[string]string{"message": "hello bastion"})
 }
 
 func onShutdown() {
@@ -22,6 +21,6 @@ func onShutdown() {
 func main() {
 	app := bastion.New()
 	app.RegisterOnShutdown(onShutdown)
-	app.APIRouter.Get("/hello", helloHandler)
-	app.Serve()
+	app.Get("/hello", helloHandler)
+	fmt.Fprintln(os.Stderr, app.Serve())
 }

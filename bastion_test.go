@@ -26,14 +26,11 @@ func TestBastionHelloWorld(t *testing.T) {
 	t.Parallel()
 
 	app := bastion.New()
-	app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
-		res := struct {
-			Message string `json:"message"`
-		}{"world"}
-		render.NewJSON().Send(w, res)
+	app.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
+		render.JSON.Send(w, map[string]string{"message": "hello bastion"})
 	})
 
-	expected := map[string]interface{}{"message": "world"}
+	expected := map[string]interface{}{"message": "hello bastion"}
 
 	e := bastion.Tester(t, app)
 	e.GET("/hello").
@@ -42,39 +39,37 @@ func TestBastionHelloWorld(t *testing.T) {
 		JSON().Object().Equal(expected)
 }
 
-func TestBastionHelloWorldFromFile(t *testing.T) {
+func TestNotFound(t *testing.T) {
 	t.Parallel()
-
-	tt := []struct {
-		name string
-		path string
-	}{
-		{"from json", "./testdata/options.json"},
-		{"from yaml", "./testdata/options.yaml"},
+	expected := map[string]interface{}{
+		"error":   "Not Found",
+		"message": "resource /abc not found",
+		"status":  404,
 	}
+	app := bastion.New()
+	e := bastion.Tester(t, app)
+	e.GET("/abc").
+		Expect().
+		Status(http.StatusNotFound).
+		JSON().Object().Equal(expected)
+}
 
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			app, _ := bastion.FromFile(tc.path)
-
-			assert.Equal(t, "/api/", app.APIBasepath)
-			assert.Equal(t, ":3000", app.Addr)
-
-			app.APIRouter.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
-				res := struct {
-					Message string `json:"message"`
-				}{"world"}
-				render.NewJSON().Send(w, res)
-			})
-
-			expected := map[string]interface{}{"message": "world"}
-			e := bastion.Tester(t, app)
-			e.GET("/api/hello").
-				Expect().
-				Status(http.StatusOK).
-				JSON().Object().Equal(expected)
-		})
+func TestMethodNotAllowed(t *testing.T) {
+	t.Parallel()
+	app := bastion.New()
+	app.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
+		render.JSON.Send(w, map[string]string{"message": "hello bastion"})
+	})
+	expected := map[string]interface{}{
+		"error":   "Method Not Allowed",
+		"message": "method POST not allowed for resource /hello",
+		"status":  405,
 	}
+	e := bastion.Tester(t, app)
+	e.POST("/hello").
+		Expect().
+		Status(http.StatusMethodNotAllowed).
+		JSON().Object().Equal(expected)
 }
 
 func TestNewRouter(t *testing.T) {
@@ -82,28 +77,4 @@ func TestNewRouter(t *testing.T) {
 
 	r := bastion.NewRouter()
 	assert.NotNil(t, r)
-}
-
-func TestBastionFromPartialYAMLFile(t *testing.T) {
-	t.Parallel()
-
-	app, _ := bastion.FromFile("./testdata/partial_options.yaml")
-	assert.Equal(t, "/api/", app.APIBasepath)
-	assert.Equal(t, "127.0.0.1:8080", app.Addr)
-}
-
-func TestLoadMissingFile(t *testing.T) {
-	t.Parallel()
-
-	app, err := bastion.FromFile("./foo.json")
-	assert.Nil(t, app)
-	assert.Error(t, err, "missing configuration file at ./foo.json")
-}
-
-func TestFailUnmarshalFile(t *testing.T) {
-	t.Parallel()
-
-	app, err := bastion.FromFile("./testdata/bad_options.json")
-	assert.Nil(t, app)
-	assert.Error(t, err, "cannot unmarshal configuration file")
 }

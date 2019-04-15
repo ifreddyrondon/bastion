@@ -7,13 +7,13 @@ import (
 )
 
 func getLogger(opts *Options) *zerolog.Logger {
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: opts.LoggerOutput}).With().
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: opts.LoggerOutput}).
+		With().
 		Timestamp().
-		Str("app", "bastion").
 		Logger()
 
-	logger = logger.Level(zerolog.Level(opts.LoggerLevel))
-	if opts.NoPrettyLogging {
+	logger = logger.Level(zerolog.Level(opts.level))
+	if opts.DisablePrettyLogging {
 		logger = logger.Output(opts.LoggerOutput)
 	}
 

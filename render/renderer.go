@@ -67,3 +67,10 @@ func write(w http.ResponseWriter, code int, v []byte) {
 	w.WriteHeader(code)
 	w.Write(v)
 }
+
+func writeContentType(w http.ResponseWriter, values ...string) {
+	header := w.Header()
+	if val := header["Content-Type"]; len(val) == 0 {
+		header["Content-Type"] = values
+	}
+}

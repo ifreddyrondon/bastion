@@ -1,25 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/render"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	res := struct {
-		Message string `json:"message"`
-	}{"world"}
 	l := bastion.LoggerFromCtx(r.Context())
 	l.Info().Msg("handler")
-
-	render.NewJSON().Send(w, res)
+	render.JSON.Send(w, map[string]string{"message": "hello bastion"})
 }
 
 func main() {
 	app := bastion.New()
-	app.APIRouter.Get("/hello", handler)
-	app.Logger.Info().Str("app", "test").Msg("main")
-	app.Serve()
+	app.Get("/hello", handler)
+	fmt.Fprintln(os.Stderr, app.Serve())
 }

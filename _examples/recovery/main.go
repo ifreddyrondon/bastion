@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/ifreddyrondon/bastion"
 )
@@ -12,6 +14,6 @@ func handler(w http.ResponseWriter, _ *http.Request) {
 
 func main() {
 	app := bastion.New()
-	app.APIRouter.Get("/recovery", handler)
-	app.Serve()
+	app.Get("/recovery", handler)
+	fmt.Fprintln(os.Stderr, app.Serve())
 }

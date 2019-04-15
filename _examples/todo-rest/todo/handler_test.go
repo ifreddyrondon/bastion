@@ -6,23 +6,17 @@ import (
 
 	"github.com/ifreddyrondon/bastion"
 	"github.com/ifreddyrondon/bastion/_examples/todo-rest/todo"
-	"github.com/ifreddyrondon/bastion/render"
 )
 
 func setup() *bastion.Bastion {
 	app := bastion.New()
-	handler := todo.Handler{
-		Render: render.NewJSON(),
-	}
-	app.APIRouter.Mount("/todo/", handler.Routes())
+	app.Mount("/todo/", todo.Routes())
 	return app
 }
 
 func TestHandlerCreate(t *testing.T) {
 	app := setup()
-	payload := map[string]interface{}{
-		"description": "new description",
-	}
+	payload := map[string]interface{}{"description": "new description"}
 
 	e := bastion.Tester(t, app)
 	e.POST("/todo/").WithJSON(payload).Expect().

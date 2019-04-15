@@ -2,78 +2,123 @@ package bastion
 
 import (
 	"context"
-	"io/ioutil"
+	"errors"
+	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"syscall"
 
 	"github.com/go-chi/chi"
+	chiMiddleware "github.com/go-chi/chi/middleware"
 	"github.com/markbates/sigtx"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/hlog"
-	"gopkg.in/yaml.v2"
 
 	"github.com/ifreddyrondon/bastion/middleware"
+	"github.com/ifreddyrondon/bastion/render"
 )
 
-// onShutdown is a function to be implemented when is necessary
+const defaultAddr = ":8080"
+
+// OnShutdown is a function to be implemented when is necessary
 // to run something before a shutdown of the server or in graceful shutdown.
-type onShutdown func()
+type OnShutdown func()
 
 // Bastion offers an "augmented" Router instance.
 // It has the minimal necessary to create an API with default handlers and middleware.
 // Allows to have commons handlers and middleware between projects with the need for each one to do so.
 // Mounted Routers
-// It use go-chi router to modularize the applications. Each instance of GogApp, will have the possibility
+// It use go-chi router to modularize the applications. Each instance of Bastion, will have the possibility
 // of mounting an API router, it will define the routes and middleware of the application with the app logic.
 // Without a Bastion you can't do much!
 type Bastion struct {
-	r      *chi.Mux
 	server *http.Server
-	Logger *zerolog.Logger
+	logger zerolog.Logger
 	Options
-	APIRouter *chi.Mux
+	*chi.Mux
 }
 
 // New returns a new instance of Bastion and adds some sane, and useful, defaults.
-// 	Defaults:
-//		Addr: "127.0.0.1:8080"
-//		Env: "development"
-//		Debug: false
-//		API:
-//			BasePath: "/"
 func New(opts ...Opt) *Bastion {
-	app := &Bastion{}
+	app := &Bastion{
+		server: &http.Server{},
+	}
 	for _, opt := range opts {
 		opt(app)
 	}
 	setDefaultsOpts(&app.Options)
+	l := getLogger(&app.Options)
+	app.Mux = router(app.Options, *l)
+	app.logger = l.With().Str("module", "bastion").Logger()
 
-	initialize(app)
+	if app.IsDebug() {
+		app.logger.Debug().Msg(`Running in "debug" mode. Switch to "production" mode in production.
+ - using code:  bastion.New(bastion.Mode("production"))
+ - using env: export GO_ENV=production
+ - using env: export GO_ENVIRONMENT=production
+
+`)
+	}
+
 	return app
 }
 
-// FromFile is an util function to load  a new instance of Bastion from a options file.
-// The options file could it be in YAML or JSON format. Is some attributes are missing
-// from the config file it'll be set with the defaults.
-// FromFile takes a special consideration for `server.address` default.
-// When it's not provided it'll search the ADDR and PORT environment variables
-// first before set the default.
-func FromFile(path string) (*Bastion, error) {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "missing configuration file at %v", path)
+func router(opts Options, l zerolog.Logger) *chi.Mux {
+	r := chi.NewRouter()
+
+	// logger middleware
+	if !opts.DisableLoggerMiddleware {
+		logMiddleware := []middleware.LoggerOpt{
+			middleware.AttachLogger(l),
+		}
+		if !opts.IsDebug() {
+			logMiddleware = append(
+				logMiddleware,
+				middleware.EnableLogReferer(),
+				middleware.EnableLogUserAgent(),
+				middleware.EnableLogReqIP(),
+			)
+		}
+		logger := middleware.Logger(logMiddleware...)
+		r.Use(logger)
 	}
 
-	var opts Options
-	if err := yaml.Unmarshal(b, &opts); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal configuration file")
+	// internal error middleware
+	if !opts.DisableInternalErrorMiddleware {
+		internalErr := middleware.InternalError(
+			middleware.InternalErrMsg(errors.New(opts.InternalErrMsg)),
+			middleware.InternalErrLoggerOutput(opts.LoggerOutput),
+		)
+		r.Use(internalErr)
 	}
-	setDefaultsOpts(&opts)
-	app := &Bastion{Options: opts}
-	initialize(app)
-	return app, nil
+
+	// recovery middleware
+	if !opts.DisableRecoveryMiddleware {
+		recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(opts.LoggerOutput))
+		r.Use(recovery)
+	}
+
+	// ping route
+	if !opts.DisablePingRouter {
+		r.Get("/ping", pingHandler)
+	}
+
+	if opts.EnableProfiler {
+		r.Mount(opts.ProfilerRoutePrefix, chiMiddleware.Profiler())
+	}
+
+	r.NotFound(notFound)
+	r.MethodNotAllowed(notAllowed)
+	return r
+}
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	render.JSON.NotFound(w, fmt.Errorf("resource %s not found", r.URL.Path))
+}
+
+func notAllowed(w http.ResponseWriter, r *http.Request) {
+	err := fmt.Errorf("method %s not allowed for resource %s", r.Method, r.URL.Path)
+	render.JSON.MethodNotAllowed(w, err)
 }
 
 // RegisterOnShutdown registers a function to call on Shutdown.
@@ -81,60 +126,78 @@ func FromFile(path string) (*Bastion, error) {
 // undergone NPN/ALPN protocol upgrade or that have been hijacked.
 // This function should start protocol-specific graceful shutdown,
 // but should not wait for shutdown to complete.
-func (app *Bastion) RegisterOnShutdown(fs ...onShutdown) {
+func (app *Bastion) RegisterOnShutdown(fs ...OnShutdown) {
 	for _, f := range fs {
 		app.server.RegisterOnShutdown(f)
 	}
 }
 
-// Serve accepts incoming incoming connections coming from the specified address/port.
-// It also prepare the graceful shutdown.
-func (app *Bastion) Serve() error {
+// Serve accepts incoming connections coming from the specified address/port.
+// It is a shortcut for http.ListenAndServe(addr, router).
+// Note: this method will block the calling goroutine indefinitely unless an error happens.
+func (app *Bastion) Serve(addr ...string) error {
 	ctx, cancel := sigtx.WithCancel(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
-	go graceful(ctx, app)
+	go graceful(ctx, app.server, &app.logger)
 
-	app.Logger.Info().Msgf("app starting at %v", app.Options.Addr)
+	address := resolveAddress(addr, &app.logger)
+	app.logger.Info().Msgf("app starting at %v", address)
+	app.server.Addr = address
+	app.server.Handler = app.Mux
+
+	printRoutes(app.Mux, app.Options.ProfilerRoutePrefix, &app.logger)
 	if err := app.server.ListenAndServe(); err != nil {
-		app.Logger.Error().Err(err).Msg("listenAndServe err")
+		if err == http.ErrServerClosed {
+			app.logger.Info().Str("component", "Serve").Msg("http: Server closed")
+			return err
+		}
+		app.logger.Error().Str("component", "Serve").Err(err).Msg("listenAndServe")
 		return err
 	}
 	return nil
 }
 
-func initialize(app *Bastion) {
-	/**
-	 * init logger
-	 */
-	app.Logger = getLogger(&app.Options)
+func graceful(ctx context.Context, server *http.Server, l *zerolog.Logger) {
+	<-ctx.Done()
+	logger := l.With().Str("component", "graceful").Logger()
+	logger.Info().Msg("preparing for shutdown")
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Error().Err(err)
+		return
+	}
+	logger.Info().Msg("gracefully stopped")
+}
 
-	/**
-	 * internal router
-	 */
-	app.r = chi.NewRouter()
-	app.r.Use(hlog.NewHandler(*app.Logger))
+func resolveAddress(addr []string, l *zerolog.Logger) string {
+	switch len(addr) {
+	case 0:
+		if envAddr := os.Getenv("ADDR"); envAddr != "" {
+			l.Debug().Msgf(`Environment variable ADDR="%s"`, envAddr)
+			return envAddr
+		}
+		l.Debug().Msg("Environment variable ADDR is undefined. Using addr :8080 by default")
+		return defaultAddr
+	case 1:
+		return addr[0]
+	default:
+		panic("too much parameters")
+	}
+}
 
-	/**
-	 * Ping route
-	 */
-	app.r.Get("/ping", pingHandler)
+func printRoutes(mux *chi.Mux, profilerRoutePrefix string, l *zerolog.Logger) {
+	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		if strings.HasPrefix(route, profilerRoutePrefix) {
+			return nil
+		}
+		route = strings.Replace(route, "/*/", "/", -1)
+		l.Debug().Str("component", "route").Msgf("%s %s", method, route)
+		return nil
+	}
 
-	/**
-	 * API Router
-	 */
-	app.APIRouter = chi.NewRouter()
-	apiErr := middleware.APIError(
-		middleware.APIErrorDefault500(errors.New(app.Options.API500ErrMessage)),
-		middleware.APIErrorLoggerOutput(app.Options.LoggerOutput),
-	)
-	app.APIRouter.Use(apiErr)
-	recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(app.Options.LoggerOutput))
-	app.APIRouter.Use(recovery)
-	app.APIRouter.Use(loggerRequest(!app.Options.isDEV())...)
-	app.r.Mount(app.Options.APIBasepath, app.APIRouter)
-
-	app.server = &http.Server{Addr: app.Options.Addr, Handler: app.r}
+	if err := chi.Walk(mux, walkFunc); err != nil {
+		l.Error().Err(err).Msgf("walking through the routes")
+	}
 }
 
 // NewRouter return a router as a subrouter along a routing path.
