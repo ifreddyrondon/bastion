@@ -61,7 +61,8 @@ func TestPrintRoutes(t *testing.T) {
 		r.Delete("/", handler) // DELETE /todos/{id} - delete a single todo by :id
 	})
 
-	printRoutes(app.Mux, &app.logger)
+	printRoutes(app.Mux, app.ProfilerRoutePrefix, &app.logger)
+	assert.NotContains(t, out.String(), `"/debug"`)
 	assert.Contains(t, out.String(), `"message":"GET /"`)
 	assert.Contains(t, out.String(), `"message":"POST /"`)
 	assert.Contains(t, out.String(), `"message":"GET /ping"`)

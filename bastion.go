@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi"
+	chiMiddleware "github.com/go-chi/chi/middleware"
 	"github.com/markbates/sigtx"
 	"github.com/rs/zerolog"
 
@@ -102,6 +103,10 @@ func router(opts Options, l zerolog.Logger) *chi.Mux {
 		r.Get("/ping", pingHandler)
 	}
 
+	if opts.EnableProfiler {
+		r.Mount(opts.ProfilerRoutePrefix, chiMiddleware.Profiler())
+	}
+
 	r.NotFound(notFound)
 	r.MethodNotAllowed(notAllowed)
 	return r
@@ -141,7 +146,7 @@ func (app *Bastion) Serve(addr ...string) error {
 	app.server.Addr = address
 	app.server.Handler = app.Mux
 
-	printRoutes(app.Mux, &app.logger)
+	printRoutes(app.Mux, app.Options.ProfilerRoutePrefix, &app.logger)
 	if err := app.server.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
 			app.logger.Info().Str("component", "Serve").Msg("http: Server closed")
@@ -180,8 +185,11 @@ func resolveAddress(addr []string, l *zerolog.Logger) string {
 	}
 }
 
-func printRoutes(mux *chi.Mux, l *zerolog.Logger) {
+func printRoutes(mux *chi.Mux, profilerRoutePrefix string, l *zerolog.Logger) {
 	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		if strings.HasPrefix(route, profilerRoutePrefix) {
+			return nil
+		}
 		route = strings.Replace(route, "/*/", "/", -1)
 		l.Debug().Str("component", "route").Msgf("%s %s", method, route)
 		return nil
