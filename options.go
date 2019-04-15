@@ -3,6 +3,7 @@ package bastion
 import (
 	"io"
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog"
 )
@@ -36,6 +37,8 @@ func (mode codeMode) String() string {
 	return [...]string{DebugMode, ProductionMode}[mode]
 }
 
+const defaultProfilerRoutePrefix = "/debug"
+
 // Options are used to define how the application should run.
 type Options struct {
 	// InternalErrMsg message returned to the user when catch a 500 status error.
@@ -58,6 +61,11 @@ type Options struct {
 	// Mode in which the App is running. Default is "debug".
 	Mode string
 	codeMode
+	// ProfilerRoutePrefix is an optional path prefix for profiler subrouter. If left unspecified, `/debug/`
+	// is used as the default path prefix.
+	ProfilerRoutePrefix string
+	// EnableProfiler boolean flag to enable the profiler router in production mode.
+	EnableProfiler bool
 }
 
 // IsDebug check if app is running in debug mode
@@ -112,6 +120,16 @@ func resolveDisablePrettyLogging(opts *Options) bool {
 	return opts.DisablePrettyLogging
 }
 
+func resolveEnableProfiler(opts *Options) bool {
+	if opts.EnableProfiler {
+		return opts.EnableProfiler
+	}
+	if opts.IsDebug() {
+		return true
+	}
+	return false
+}
+
 func setDefaultsOpts(opts *Options) {
 	opts.codeMode = resolveMode(opts)
 	opts.Mode = opts.codeMode.String()
@@ -119,6 +137,8 @@ func setDefaultsOpts(opts *Options) {
 	opts.DisablePrettyLogging = resolveDisablePrettyLogging(opts)
 	opts.LoggerLevel = opts.level.String()
 	opts.InternalErrMsg = defaultString(opts.InternalErrMsg, defaultInternalErrMsg)
+	opts.ProfilerRoutePrefix = defaultString(opts.ProfilerRoutePrefix, defaultProfilerRoutePrefix)
+	opts.EnableProfiler = resolveEnableProfiler(opts)
 	if opts.LoggerOutput == nil {
 		opts.LoggerOutput = os.Stdout
 	}
@@ -193,5 +213,23 @@ func LoggerOutput(w io.Writer) Opt {
 func Mode(mode string) Opt {
 	return func(app *Bastion) {
 		app.Mode = mode
+	}
+}
+
+// ProfilerRoutePrefix set the prefix path for the profile router.
+func ProfilerRoutePrefix(prefix string) Opt {
+	return func(app *Bastion) {
+		if !strings.HasPrefix(prefix, "/") {
+			app.ProfilerRoutePrefix = "/" + prefix
+		} else {
+			app.ProfilerRoutePrefix = prefix
+		}
+	}
+}
+
+// EnableProfiler turn on the profiler router.
+func EnableProfiler() Opt {
+	return func(app *Bastion) {
+		app.EnableProfiler = true
 	}
 }
