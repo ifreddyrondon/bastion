@@ -257,6 +257,18 @@ Where the logger output write. Default `os.Stdout`.
 
 - `LoggerOutput(w io.Writer)` set the logger output writer.
 
+### ProfilerRoutePrefix 
+
+Optional path prefix for profiler subrouter. If left unspecified, `/debug/` is used as the default path prefix.
+
+- `ProfilerRoutePrefix(prefix string)` set the prefix path for the profile router.
+
+### EnableProfiler 
+
+Boolean flag to enable the profiler subrouter in production mode.
+
+- `EnableProfiler()` turn on profiler subrouter.
+
 ### Mode
 
 Mode in which the App is running. Default is "debug". 
@@ -264,7 +276,8 @@ Can be set using `Mode(string)` option or with **ENV** vars `GO_ENV` or `GO_ENVI
 than the ENV variables. 
 
 When **production** mode is on, the request logger IP, UserAgent and Referer are enable, the logger level is set 
-to `error` (is not set with LoggerLevel option) and the logging pretty print is disabled.
+to `error` (is not set with LoggerLevel option), the profiler routes are disable (is not set with EnableProfiler option) 
+and the logging pretty print is disabled.
 
 - `Mode(mode string)` set the mode in which the App is running.
 

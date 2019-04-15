@@ -61,7 +61,7 @@ type Options struct {
 	// Mode in which the App is running. Default is "debug".
 	Mode string
 	codeMode
-	// ProfilerRoutePrefix is an optional path prefix. If left unspecified, `/debug/`
+	// ProfilerRoutePrefix is an optional path prefix for profiler subrouter. If left unspecified, `/debug/`
 	// is used as the default path prefix.
 	ProfilerRoutePrefix string
 	// EnableProfiler boolean flag to enable the profiler router in production mode.
