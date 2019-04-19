@@ -1,10 +1,18 @@
 # Changelog
 
+## v3.0.2 (2019-04-19)
+
+refactor: mount handlers before serve with an internal router
+
+* History of changes: see https://github.com/ifreddyrondon/bastion/compare/v3.0.1...v3.0.2
+
 ## v3.0.1 (2019-04-15)
 
 fix: mount middleware in main router after init.
 
 After `bastion.New` and init mux with middlewares, ping and debug handlers if you try to use a middleware the app panic.
+
+* History of changes: see https://github.com/ifreddyrondon/bastion/compare/v3.0.0...v3.0.1
 
 ## v3.0.0 (2019-04-15)
 
