@@ -32,6 +32,7 @@ type OnShutdown func()
 // of mounting an API router, it will define the routes and middleware of the application with the app logic.
 // Without a Bastion you can't do much!
 type Bastion struct {
+	r      *chi.Mux
 	server *http.Server
 	logger zerolog.Logger
 	Options
@@ -48,7 +49,9 @@ func New(opts ...Opt) *Bastion {
 	}
 	setDefaultsOpts(&app.Options)
 	l := getLogger(&app.Options)
-	app.Mux = router(app.Options, *l)
+	app.r = router(app.Options, *l)
+	app.Mux = chi.NewMux()
+	app.r.Mount("/", app.Mux)
 	app.logger = l.With().Str("module", "bastion").Logger()
 
 	if app.IsDebug() {
@@ -64,7 +67,7 @@ func New(opts ...Opt) *Bastion {
 }
 
 func router(opts Options, l zerolog.Logger) *chi.Mux {
-	mux := chi.NewRouter()
+	mux := chi.NewMux()
 	mux.NotFound(notFound)
 	mux.MethodNotAllowed(notAllowed)
 	// logger middleware
@@ -99,6 +102,13 @@ func router(opts Options, l zerolog.Logger) *chi.Mux {
 		mux.Use(recovery)
 	}
 
+	if !opts.DisablePingRouter {
+		mux.Get("/ping", pingHandler)
+	}
+	if opts.EnableProfiler {
+		mux.Mount(opts.ProfilerRoutePrefix, chiMiddleware.Profiler())
+	}
+
 	return mux
 }
 
@@ -111,14 +121,7 @@ func notAllowed(w http.ResponseWriter, r *http.Request) {
 	render.JSON.MethodNotAllowed(w, err)
 }
 
-func mountRoutes(mux *chi.Mux, opts Options, l *zerolog.Logger) {
-	if !opts.DisablePingRouter {
-		mux.Get("/ping", pingHandler)
-	}
-	if opts.EnableProfiler {
-		mux.Mount(opts.ProfilerRoutePrefix, chiMiddleware.Profiler())
-	}
-
+func printRoutes(mux *chi.Mux, opts Options, l *zerolog.Logger) {
 	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		if strings.HasPrefix(route, opts.ProfilerRoutePrefix) {
 			return nil
@@ -156,9 +159,9 @@ func (app *Bastion) Serve(addr ...string) error {
 	address := resolveAddress(addr, &app.logger)
 	app.logger.Info().Msgf("app starting at %v", address)
 	app.server.Addr = address
-	app.server.Handler = app.Mux
+	app.server.Handler = app.r
 
-	mountRoutes(app.Mux, app.Options, &app.logger)
+	printRoutes(app.r, app.Options, &app.logger)
 	if err := app.server.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
 			app.logger.Info().Str("component", "Serve").Msg("http: Server closed")

@@ -61,7 +61,7 @@ func TestPrintRoutes(t *testing.T) {
 		r.Delete("/", handler) // DELETE /todos/{id} - delete a single todo by :id
 	})
 
-	mountRoutes(app.Mux, app.Options, &app.logger)
+	printRoutes(app.r, app.Options, &app.logger)
 	assert.NotContains(t, out.String(), `"/debug"`)
 	assert.Contains(t, out.String(), `"message":"GET /"`)
 	assert.Contains(t, out.String(), `"message":"POST /"`)
@@ -121,16 +121,4 @@ func TestResolveAddressPanic(t *testing.T) {
 		resolveAddress([]string{":3000", ":8080"}, nil)
 	}
 	assert.PanicsWithValue(t, "too much parameters", f)
-}
-
-func TestDefaultBastion(t *testing.T) {
-	t.Parallel()
-
-	app := New()
-	mountRoutes(app.Mux, app.Options, &app.logger)
-	e := Tester(t, app)
-	e.GET("/ping").
-		Expect().
-		Status(http.StatusOK).
-		Text().Equal("pong")
 }
