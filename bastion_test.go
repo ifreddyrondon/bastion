@@ -13,6 +13,17 @@ import (
 	"github.com/ifreddyrondon/bastion"
 )
 
+func TestDefaultBastion(t *testing.T) {
+	t.Parallel()
+
+	app := bastion.New()
+	e := bastion.Tester(t, app)
+	e.GET("/ping").
+		Expect().
+		Status(http.StatusOK).
+		Text().Equal("pong")
+}
+
 func TestBastionHelloWorld(t *testing.T) {
 	t.Parallel()
 
