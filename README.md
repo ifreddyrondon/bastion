@@ -137,6 +137,7 @@ InternalError | Intercept responses to verify if his status code is >= 500. If s
 Name | Description
 ---- | -----------
 Listing | Parses the url from a request and stores a [listing.Listing](https://github.com/ifreddyrondon/bastion/blob/master/middleware/listing/listing.go#L11) on the context, it can be accessed through middleware.GetListing.
+WrapResponseWriter | provides an easy way to capture http related metrics from your application's http.Handlers or event hijack the response. 
 
 Checkout for references, examples, options and docu in [middleware](https://github.com/ifreddyrondon/bastion/blob/master/middleware) or [chi](https://github.com/go-chi/chi/tree/master#middlewares) for more middlewares. 
 
