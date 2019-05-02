@@ -14,7 +14,7 @@ type ByteRenderer interface {
 	Response(w http.ResponseWriter, code int, response []byte)
 }
 
-// Renderer interface for managing response payloads.
+// Renderer describes the interface which needs to be implemented for managing response payloads.
 type Renderer interface {
 	// Response encoded responses in the ResponseWriter with the HTTP status code.
 	Response(w http.ResponseWriter, code int, response interface{})
