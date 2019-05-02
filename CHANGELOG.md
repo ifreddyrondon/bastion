@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.1.0 (2019-05-01)
+
+- feature: Add wrap response writer middleware. WrapResponseWriter, provides an easy way to capture http related 
+metrics from your application's http.Handlers or event hijack the response. [PR](https://github.com/ifreddyrondon/bastion/pull/23)
+- feature: Add binder support with json, xml and yaml options. [PR](https://github.com/ifreddyrondon/bastion/pull/24)
+
+* History of changes: see https://github.com/ifreddyrondon/bastion/compare/v3.0.2...v3.1.0
+
 ## v3.0.2 (2019-04-19)
 
 refactor: mount handlers before serve with an internal router
