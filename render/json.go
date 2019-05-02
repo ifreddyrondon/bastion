@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// DefaultPrettyPrintJSONIndent defines the default number of spaces to pretty print a json
+// DefaultPrettyPrintJSONIndent defines the default number of spaces to pretty print a json.
 const DefaultPrettyPrintJSONIndent = "  "
 
 const jsonContentType = "application/json; charset=utf-8"
@@ -22,7 +22,7 @@ func PrettyPrintJSON() func(*JSONRender) {
 }
 
 // JSONRender encode the response as "application/json" content type
-// and implement the Renderer and APIRenderer interface.
+// It implements the Renderer and APIRenderer interface.
 type JSONRender struct {
 	indentPrefix string
 	indentValue  string

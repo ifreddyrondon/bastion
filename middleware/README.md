@@ -114,7 +114,6 @@ import (
 	"github.com/ifreddyrondon/bastion/middleware"
 )
 
-
 func list(w http.ResponseWriter, r *http.Request) {
 	listing, _ := middleware.GetListing(r.Context())
 	// do something with listing
@@ -128,6 +127,76 @@ func main() {
 }
 ```
 
-## Auxiliary middlewares and more references
+## WrapResponseWriter
 
-For more references check [chi middlewares](https://github.com/go-chi/chi#middlewares)
+What happens when it is necessary to know the http status code or the bytes written or even the response it self?
+WrapResponseWriter provides an easy way to capture http related metrics from your application's http.Handlers or event 
+hijack the response.
+
+Sample usage.. The `defaultMiddleware` capture the metrics http status code and the bytes written, 
+the `copyWriterMiddleware` captures the default metrics and creates a copy of the written content and 
+the `hijackWriterMiddleware` does the same as the previous ones but don't flush the content. 
+
+```go
+package main
+
+import (
+	"bytes"
+	"fmt"
+	"net/http"
+
+	"github.com/ifreddyrondon/bastion"
+	"github.com/ifreddyrondon/bastion/middleware"
+)
+
+func h(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(201)
+	w.Write([]byte("created"))
+}
+
+func defaultMiddleware(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		m, snoop := middleware.WrapResponseWriter(w)
+		next.ServeHTTP(snoop, r)
+		fmt.Println(m.Code)
+		fmt.Println(m.Bytes)
+	}
+	return http.HandlerFunc(fn)
+}
+
+func copyWriterMiddleware(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		var out bytes.Buffer
+		m, snoop := middleware.WrapResponseWriter(w, middleware.WriteHook(middleware.CopyWriterHook(&out)))
+		next.ServeHTTP(snoop, r)
+		fmt.Println(m.Code)
+		fmt.Println(m.Bytes)
+		fmt.Println(out.String())
+	}
+	return http.HandlerFunc(fn)
+}
+
+func hijackWriterMiddleware(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		var out bytes.Buffer
+		m, snoop := middleware.WrapResponseWriter(w, middleware.WriteHook(middleware.HijackWriteHook(&out)))
+		next.ServeHTTP(snoop, r)
+		fmt.Println(m.Code)
+		fmt.Println(m.Bytes)
+		fmt.Println(out.String())
+	}
+	return http.HandlerFunc(fn)
+}
+
+func main() {
+	app := bastion.New()
+	app.With(defaultMiddleware).Get("/", h)
+	app.With(copyWriterMiddleware).Get("/copy", h)
+	app.With(hijackWriterMiddleware).Get("/hijack", h)
+	app.Serve()
+}
+```
+ 
+ ## Auxiliary middlewares and more references
+ 
+ For more references check [chi middlewares](https://github.com/go-chi/chi#middlewares)
