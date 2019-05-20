@@ -2,22 +2,23 @@ package bastion
 
 import (
 	"context"
+	"fmt"
+	"io"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
 
-func getLogger(opts *Options) *zerolog.Logger {
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: opts.LoggerOutput}).
-		With().
-		Timestamp().
-		Logger()
-
-	logger = logger.Level(zerolog.Level(opts.level))
-	if opts.DisablePrettyLogging {
-		logger = logger.Output(opts.LoggerOutput)
+func getLogger(output io.Writer, prettyLogging bool, lvlStr string) (*zerolog.Logger, error) {
+	if prettyLogging {
+		output = zerolog.ConsoleWriter{Out: output}
 	}
-
-	return &logger
+	lvl, err := zerolog.ParseLevel(lvlStr)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("bastion logger level unknown: %v", lvlStr))
+	}
+	l := zerolog.New(output).Level(lvl).With().Timestamp().Logger()
+	return &l, nil
 }
 
 // LoggerFromCtx returns the Logger associated with the ctx.

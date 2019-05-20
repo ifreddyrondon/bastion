@@ -42,7 +42,7 @@ func TestOptionsLoggerLevelBadArg(t *testing.T) {
 	f := func() {
 		bastion.New(bastion.LoggerLevel("bad"))
 	}
-	assert.PanicsWithValue(t, "bastion logger level unknown: bad", f)
+	assert.Panics(t, f)
 }
 
 func TestOptionsInternalErrMsg(t *testing.T) {
