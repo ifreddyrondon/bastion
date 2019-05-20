@@ -56,11 +56,11 @@ func New(opts ...Opt) *Bastion {
 	app.codeMode = resolveMode(app.Mode)
 	if !app.IsDebug() {
 		app.DisablePrettyLogging = true
+		app.DisableProfiler = true
 		app.LoggerLevel = ErrorLevel
 	}
 
 	app.Mode = app.codeMode.String()
-	app.EnableProfiler = resolveEnableProfiler(app.IsDebug(), app.EnableProfiler)
 
 	l, err := getLogger(app.LoggerOutput, !app.DisablePrettyLogging, app.LoggerLevel)
 	if err != nil {
@@ -122,7 +122,7 @@ func router(opts Options, l zerolog.Logger) *chi.Mux {
 	if !opts.DisablePingRouter {
 		mux.Get("/ping", pingHandler)
 	}
-	if opts.EnableProfiler {
+	if !opts.DisableProfiler {
 		mux.Mount(opts.ProfilerRoutePrefix, chiMiddleware.Profiler())
 	}
 

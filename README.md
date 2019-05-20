@@ -264,11 +264,11 @@ Optional path prefix for profiler subrouter. If left unspecified, `/debug/` is u
 
 - `ProfilerRoutePrefix(prefix string)` set the prefix path for the profile router.
 
-### EnableProfiler 
+### DisableProfiler 
 
-Boolean flag to enable the profiler subrouter in production mode.
+Boolean flag to disable the profiler subrouter.
 
-- `EnableProfiler()` turn on profiler subrouter.
+- `DisableProfiler()` turn off profiler subrouter.
 
 ### Mode
 
@@ -277,8 +277,7 @@ Can be set using `Mode(string)` option or with **ENV** vars `GO_ENV` or `GO_ENVI
 than the ENV variables. 
 
 When **production** mode is on, the request logger IP, UserAgent and Referer are enable, the logger level is set 
-to `error` (is not set with LoggerLevel option), the profiler routes are disable (is not set with EnableProfiler option) 
-and the logging pretty print is disabled.
+to `error`, the profiler routes are disabled and the logging pretty print is disabled.
 
 - `Mode(mode string)` set the mode in which the App is running.
 

@@ -61,8 +61,8 @@ type Options struct {
 	// ProfilerRoutePrefix is an optional path prefix for profiler subrouter. If left unspecified, `/debug/`
 	// is used as the default path prefix.
 	ProfilerRoutePrefix string
-	// EnableProfiler boolean flag to enable the profiler router in production mode.
-	EnableProfiler bool
+	// DisableProfiler boolean flag to disable the profiler router.
+	DisableProfiler bool
 }
 
 // IsDebug check if app is running in debug mode
@@ -86,13 +86,6 @@ func resolveMode(mode string) codeMode {
 		panic("bastion mode unknown: " + v)
 	}
 	return codeMode
-}
-
-func resolveEnableProfiler(isDebug, enableProfiler bool) bool {
-	if isDebug {
-		return true
-	}
-	return enableProfiler
 }
 
 func defaultString(s1, s2 string) string {
@@ -178,9 +171,9 @@ func ProfilerRoutePrefix(prefix string) Opt {
 	}
 }
 
-// EnableProfiler turn on the profiler router.
-func EnableProfiler() Opt {
+// DisableProfiler turn on the profiler router.
+func DisableProfiler() Opt {
 	return func(app *Bastion) {
-		app.EnableProfiler = true
+		app.DisableProfiler = true
 	}
 }

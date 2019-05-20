@@ -22,7 +22,7 @@ func TestNewOptions(t *testing.T) {
 	assert.Equal(t, os.Stdout, opts.LoggerOutput)
 	assert.Equal(t, "debug", opts.Mode)
 	assert.Equal(t, "/debug", opts.ProfilerRoutePrefix)
-	assert.True(t, opts.EnableProfiler)
+	assert.False(t, opts.DisableProfiler)
 }
 
 func TestOptionsLoggerLevel(t *testing.T) {
@@ -59,7 +59,7 @@ func TestBooleanFunctionalOptions(t *testing.T) {
 	assert.True(t, bastion.New(bastion.DisablePingRouter()).Options.DisablePingRouter)
 	assert.True(t, bastion.New(bastion.DisableLoggerMiddleware()).Options.DisableLoggerMiddleware)
 	assert.True(t, bastion.New(bastion.DisablePrettyLogging()).Options.DisablePrettyLogging)
-	assert.True(t, bastion.New(bastion.EnableProfiler()).Options.EnableProfiler)
+	assert.True(t, bastion.New(bastion.DisableProfiler()).Options.DisableProfiler)
 }
 
 func TestOptionsDisablePrettyLoggingWhenProd(t *testing.T) {
@@ -122,14 +122,8 @@ func TestOptionsProfilerRoutePrefix(t *testing.T) {
 	assert.Equal(t, "/abc", opts.ProfilerRoutePrefix)
 }
 
-func TestEnableProfilerShouldBeFalseForProd(t *testing.T) {
+func TestDisableProfilerShouldBeTrueForProd(t *testing.T) {
 	t.Parallel()
 	opts := bastion.New(bastion.Mode(bastion.ProductionMode)).Options
-	assert.False(t, opts.EnableProfiler)
-}
-
-func TestEnableProfilerShouldBeTrueWhenOptionForProd(t *testing.T) {
-	t.Parallel()
-	opts := bastion.New(bastion.Mode(bastion.ProductionMode), bastion.EnableProfiler()).Options
-	assert.True(t, opts.EnableProfiler)
+	assert.True(t, opts.DisableProfiler)
 }
