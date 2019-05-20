@@ -270,16 +270,18 @@ Boolean flag to disable the profiler subrouter.
 
 - `DisableProfiler()` turn off profiler subrouter.
 
-### Mode
+### IsProduction()
 
-Mode in which the App is running. Default is "debug". 
-Can be set using `Mode(string)` option or with **ENV** vars `GO_ENV` or `GO_ENVIRONMENT`. `Mode(mode string)` has more priority 
-than the ENV variables. 
+IsProduction check if app is running in production mode.
+ 
+Can be set using `ProductionMode()` option or with **ENV** vars `GO_ENV` or `GO_ENVIRONMENT`. 
+`ProductionMode()` has more priority than the ENV variables. 
 
 When **production** mode is on, the request logger IP, UserAgent and Referer are enable, the logger level is set 
 to `error`, the profiler routes are disabled and the logging pretty print is disabled.
 
-- `Mode(mode string)` set the mode in which the App is running.
+- `ProductionMode()` set the app to production mode.
+- `ProductionMode(false)` or force debug.
 
 ```go
 package main
@@ -289,9 +291,9 @@ import (
 )
 
 func main() {
-	bastion.New(bastion.Mode(bastion.DebugMode))
-	// or
-	bastion.New(bastion.Mode("production"))
+	bastion.New(bastion.ProductionMode())
+	// or with bool param to force debug mode even with env vars.
+	bastion.New(bastion.ProductionMode(false))
 }
 ```
 
