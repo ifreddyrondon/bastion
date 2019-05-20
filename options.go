@@ -4,8 +4,6 @@ import (
 	"io"
 	"os"
 	"strings"
-
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -57,15 +55,14 @@ type Options struct {
 	LoggerOutput io.Writer
 	// LoggerLevel defines log levels. Default "debug".
 	LoggerLevel string
-	level       zerolog.Level
 	// Mode in which the App is running. Default is "debug".
 	Mode string
 	codeMode
 	// ProfilerRoutePrefix is an optional path prefix for profiler subrouter. If left unspecified, `/debug/`
 	// is used as the default path prefix.
 	ProfilerRoutePrefix string
-	// EnableProfiler boolean flag to enable the profiler router in production mode.
-	EnableProfiler bool
+	// DisableProfiler boolean flag to disable the profiler router.
+	DisableProfiler bool
 }
 
 // IsDebug check if app is running in debug mode
@@ -73,75 +70,22 @@ func (opts Options) IsDebug() bool {
 	return opts.codeMode == debugCode
 }
 
-func resolveMode(opts *Options) codeMode {
+func resolveMode(mode string) codeMode {
 	modeEnv := defaultString(os.Getenv("GO_ENV"), "")
 	if modeEnv == "" {
 		modeEnv = defaultString(os.Getenv("GO_ENVIRONMENT"), "")
 	}
-	mode := defaultString(opts.Mode, modeEnv)
-	return findMode(mode)
-}
-
-func findMode(value string) codeMode {
+	v := defaultString(mode, modeEnv)
 	var codeMode = debugCode
-	switch value {
+	switch v {
 	case DebugMode, "":
 		codeMode = debugCode
 	case ProductionMode:
 		codeMode = productionCode
 	default:
-		panic("bastion mode unknown: " + value)
+		panic("bastion mode unknown: " + v)
 	}
 	return codeMode
-}
-
-func resolveLoggerLvl(opts *Options) zerolog.Level {
-	lvl := defaultString(opts.LoggerLevel, "")
-	if lvl == "" && !opts.IsDebug() {
-		lvl = ErrorLevel
-	} else if lvl == "" {
-		lvl = DebugLevel
-	}
-	return findLvl(lvl)
-}
-
-func findLvl(value string) zerolog.Level {
-	lvl, err := zerolog.ParseLevel(value)
-	if err != nil {
-		panic("bastion logger level unknown: " + value)
-	}
-	return lvl
-}
-
-func resolveDisablePrettyLogging(opts *Options) bool {
-	if !opts.IsDebug() {
-		return true
-	}
-	return opts.DisablePrettyLogging
-}
-
-func resolveEnableProfiler(opts *Options) bool {
-	if opts.EnableProfiler {
-		return opts.EnableProfiler
-	}
-	if opts.IsDebug() {
-		return true
-	}
-	return false
-}
-
-func setDefaultsOpts(opts *Options) {
-	opts.codeMode = resolveMode(opts)
-	opts.Mode = opts.codeMode.String()
-	opts.level = resolveLoggerLvl(opts)
-	opts.DisablePrettyLogging = resolveDisablePrettyLogging(opts)
-	opts.LoggerLevel = opts.level.String()
-	opts.InternalErrMsg = defaultString(opts.InternalErrMsg, defaultInternalErrMsg)
-	opts.ProfilerRoutePrefix = defaultString(opts.ProfilerRoutePrefix, defaultProfilerRoutePrefix)
-	opts.EnableProfiler = resolveEnableProfiler(opts)
-	if opts.LoggerOutput == nil {
-		opts.LoggerOutput = os.Stdout
-	}
 }
 
 func defaultString(s1, s2 string) string {
@@ -227,9 +171,9 @@ func ProfilerRoutePrefix(prefix string) Opt {
 	}
 }
 
-// EnableProfiler turn on the profiler router.
-func EnableProfiler() Opt {
+// DisableProfiler turn on the profiler router.
+func DisableProfiler() Opt {
 	return func(app *Bastion) {
-		app.EnableProfiler = true
+		app.DisableProfiler = true
 	}
 }
