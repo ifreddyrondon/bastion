@@ -43,19 +43,36 @@ type Bastion struct {
 func New(opts ...Opt) *Bastion {
 	app := &Bastion{
 		server: &http.Server{},
+		Options: Options{
+			InternalErrMsg:      defaultInternalErrMsg,
+			ProfilerRoutePrefix: defaultProfilerRoutePrefix,
+			LoggerLevel:         DebugLevel,
+			LoggerOutput:        os.Stdout,
+		},
 	}
 	for _, opt := range opts {
 		opt(app)
 	}
-	setDefaultsOpts(&app.Options)
-	l := getLogger(&app.Options)
+	app.codeMode = resolveMode(app.Mode)
+	if !app.IsDebug() {
+		app.DisablePrettyLogging = true
+		app.DisableProfiler = true
+		app.LoggerLevel = ErrorLevel
+	}
+
+	app.Mode = app.codeMode.String()
+
+	l, err := getLogger(app.LoggerOutput, !app.DisablePrettyLogging, app.LoggerLevel)
+	if err != nil {
+		panic(err)
+	}
 	app.r = router(app.Options, *l)
 	app.Mux = chi.NewMux()
 	app.r.Mount("/", app.Mux)
 	app.logger = l.With().Str("module", "bastion").Logger()
 
 	if app.IsDebug() {
-		app.logger.Debug().Msg(`Running in "debug" mode. Switch to "production" mode in production.
+		app.logger.Info().Msg(`Running in "debug" mode. Switch to "production" mode in production.
  - using code:  bastion.New(bastion.Mode("production"))
  - using env: export GO_ENV=production
  - using env: export GO_ENVIRONMENT=production
@@ -105,7 +122,7 @@ func router(opts Options, l zerolog.Logger) *chi.Mux {
 	if !opts.DisablePingRouter {
 		mux.Get("/ping", pingHandler)
 	}
-	if opts.EnableProfiler {
+	if !opts.DisableProfiler {
 		mux.Mount(opts.ProfilerRoutePrefix, chiMiddleware.Profiler())
 	}
 
@@ -127,7 +144,7 @@ func printRoutes(mux *chi.Mux, opts Options, l *zerolog.Logger) {
 			return nil
 		}
 		route = strings.Replace(route, "/*/", "/", -1)
-		l.Debug().Str("component", "route").Msgf("%s %s", method, route)
+		l.Info().Str("component", "route").Msgf("%s %s", method, route)
 		return nil
 	}
 
