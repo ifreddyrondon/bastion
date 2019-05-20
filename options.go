@@ -19,22 +19,6 @@ const (
 	PanicLevel = "panic"
 )
 
-const (
-	DebugMode      = "debug"
-	ProductionMode = "production"
-)
-
-type codeMode uint8
-
-const (
-	debugCode codeMode = iota
-	productionCode
-)
-
-func (mode codeMode) String() string {
-	return [...]string{DebugMode, ProductionMode}[mode]
-}
-
 const defaultProfilerRoutePrefix = "/debug"
 
 // Options are used to define how the application should run.
@@ -55,37 +39,32 @@ type Options struct {
 	LoggerOutput io.Writer
 	// LoggerLevel defines log levels. Default "debug".
 	LoggerLevel string
-	// Mode in which the App is running. Default is "debug".
-	Mode string
-	codeMode
 	// ProfilerRoutePrefix is an optional path prefix for profiler subrouter. If left unspecified, `/debug/`
 	// is used as the default path prefix.
 	ProfilerRoutePrefix string
 	// DisableProfiler boolean flag to disable the profiler router.
-	DisableProfiler bool
+	DisableProfiler      bool
+	enableProductionMode *bool
 }
 
-// IsDebug check if app is running in debug mode
-func (opts Options) IsDebug() bool {
-	return opts.codeMode == debugCode
+// IsProduction check if app is running in production mode
+func (opts Options) IsProduction() bool {
+	return *opts.enableProductionMode
 }
 
-func resolveMode(mode string) codeMode {
+func mode(isProdMode *bool) *bool {
+	if isProdMode != nil {
+		return isProdMode
+	}
+	isProdMode = new(bool)
 	modeEnv := defaultString(os.Getenv("GO_ENV"), "")
 	if modeEnv == "" {
 		modeEnv = defaultString(os.Getenv("GO_ENVIRONMENT"), "")
 	}
-	v := defaultString(mode, modeEnv)
-	var codeMode = debugCode
-	switch v {
-	case DebugMode, "":
-		codeMode = debugCode
-	case ProductionMode:
-		codeMode = productionCode
-	default:
-		panic("bastion mode unknown: " + v)
+	if modeEnv == "production" || modeEnv == "prod" {
+		*isProdMode = true
 	}
-	return codeMode
+	return isProdMode
 }
 
 func defaultString(s1, s2 string) string {
@@ -153,10 +132,19 @@ func LoggerOutput(w io.Writer) Opt {
 	}
 }
 
-// Mode set the mode in which the App is running.
-func Mode(mode string) Opt {
+// ProductionMode set the app to production mode or force debug (false).
+func ProductionMode(on ...bool) Opt {
 	return func(app *Bastion) {
-		app.Mode = mode
+		var enable bool
+		switch len(on) {
+		case 0:
+			enable = true
+		case 1:
+			enable = on[0]
+		default:
+			panic("too much parameters, ProductionMode only accepts one optional param.")
+		}
+		app.enableProductionMode = &enable
 	}
 }
 
