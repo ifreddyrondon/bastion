@@ -129,7 +129,7 @@ Name | Description
 ---- | -----------
 Logger | Logs the start and end of each request with the elapsed processing time.
 RequestID | Injects a request ID into the context of each request.
-Recovery | Gracefully absorb panics and prints the stack trace.
+Recovery | Gracefully absorb panics and returns a HTTP 500 (Internal Server Error) status if possible. By default log panic error and the request (check `RecoveryCallback` func to override it).
 InternalError | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#InternalErrMsg). It allows to response with the same error without disclosure internal information, also log real error (default callback implementation. Check `InternalErrCallback` func to override it).
 
 ### Auxiliary middleware
@@ -197,7 +197,7 @@ Default `looks like something went wrong`.
 
 ### InternalErrCallback
 
-Callback function to handler the real error catched by InternalError middleware.
+Callback function to handler the real error caught by InternalError middleware.
 
 - `InternalErrCallback(f func(int, io.Reader))` sets the callback function when internal error middleware catch a 500 error.
 
@@ -206,6 +206,12 @@ Callback function to handler the real error catched by InternalError middleware.
 Boolean flag to disable the [internal error middleware](https://github.com/go-chi/chi/tree/master#middlewares). Default `false`.
 
 - `DisableInternalErrorMiddleware()` turn off internal error middleware.
+
+### RecoveryCallback
+
+Callback function to handler the panic caught by Recovery middleware.
+
+- `RecoveryCallback(f func(*http.Request, error))` sets the callback function to handler the request when recovers from panics.
 
 ### DisableRecoveryMiddleware
 

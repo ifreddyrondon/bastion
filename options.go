@@ -3,6 +3,7 @@ package bastion
 import (
 	"bytes"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 
@@ -35,6 +36,15 @@ func defaultInternalErrCallbackFn(l zerolog.Logger) func(code int, r io.Reader) 
 	}
 }
 
+func defaultRecoveryCallbackFn(l zerolog.Logger) func(req *http.Request, err error) {
+	return func(req *http.Request, err error) {
+		l.Error().
+			Str("component", "recovery middleware").
+			Err(err).Dict("req", logreq(req)).
+			Msg("Recovery middleware catch an error")
+	}
+}
+
 // Options are used to define how the application should run.
 type Options struct {
 	// InternalErrMsg message returned to the user when catch a 500 status error.
@@ -61,6 +71,7 @@ type Options struct {
 
 	enableProductionMode  *bool
 	internalErrorCallback func(code int, reader io.Reader)
+	recoveryCallback      func(req *http.Request, err error)
 }
 
 // IsProduction check if app is running in production mode
@@ -111,6 +122,13 @@ func InternalErrCallback(f func(int, io.Reader)) Opt {
 func DisableInternalErrorMiddleware() Opt {
 	return func(app *Bastion) {
 		app.DisableInternalErrorMiddleware = true
+	}
+}
+
+// RecoveryCallback sets the callback function to handler the request when recovers from panics.
+func RecoveryCallback(f func(*http.Request, error)) Opt {
+	return func(app *Bastion) {
+		app.recoveryCallback = f
 	}
 }
 

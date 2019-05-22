@@ -1,7 +1,6 @@
 package middleware_test
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -34,15 +33,12 @@ func TestRecovery(t *testing.T) {
 			500,
 		},
 	}
-
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				panic(tc.panicArg)
 			})
-
-			out := &bytes.Buffer{}
-			m := middleware.Recovery(middleware.RecoveryLoggerOutput(out))
+			m := middleware.Recovery()
 			server := httptest.NewServer(m(h))
 			defer server.Close()
 			expectedRes := map[string]interface{}{
@@ -55,77 +51,33 @@ func TestRecovery(t *testing.T) {
 			e.GET("/").Expect().Status(500).
 				JSON().
 				Object().ContainsMap(expectedRes)
-
-			output := out.String()
-			assert.Contains(t, output, `"component":"recovery middleware`)
-			assert.Contains(t, output, `"message":"Recovery middleware catch an error`)
 		})
 	}
 }
 
-func TestRecoveryLogRequestGET(t *testing.T) {
+func TestRecoveryShouldCallTheCallbackFn(t *testing.T) {
 	t.Parallel()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic("test")
 	})
-
-	out := &bytes.Buffer{}
-	m := middleware.Recovery(middleware.RecoveryLoggerOutput(out))
+	callback := func(req *http.Request, err error) {
+		assert.Equal(t, "/", req.URL.RequestURI())
+		assert.Equal(t, "GET", req.Method)
+		assert.Equal(t, "HTTP/1.1", req.Proto)
+		assert.EqualError(t, err, "test")
+	}
+	m := middleware.Recovery(middleware.RecoveryCallback(callback))
 	server := httptest.NewServer(m(h))
 	defer server.Close()
+	expectedRes := map[string]interface{}{
+		"message": "test",
+		"error":   "Internal Server Error",
+		"status":  500,
+	}
 
 	e := httpexpect.New(t, server.URL)
-	e.GET("/").Expect().Status(500).JSON()
-	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"component":"recovery middleware"`)
-	assert.Contains(t, out.String(), `"error":"test"`)
-	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"`)
-	assert.Contains(t, out.String(), `"body":""`)
-	assert.Contains(t, out.String(), `"user-agent":"Go-http-client/1.1"`)
-	assert.Contains(t, out.String(), `"accept-encoding":"gzip"`)
-}
-
-func TestRecoveryLogRequestWithHeaders(t *testing.T) {
-	t.Parallel()
-
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		panic("test")
-	})
-
-	out := &bytes.Buffer{}
-	m := middleware.Recovery(middleware.RecoveryLoggerOutput(out))
-	server := httptest.NewServer(m(h))
-	defer server.Close()
-
-	e := httpexpect.New(t, server.URL)
-	e.GET("/").WithHeader("User-Agent", "Mozilla").Expect().Status(500).JSON()
-	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"component":"recovery middleware"`)
-	assert.Contains(t, out.String(), `"error":"test"`)
-	assert.Contains(t, out.String(), `"req":{"url":"/","method":"GET","proto":"HTTP/1.1","host":"`)
-	assert.Contains(t, out.String(), `"user-agent":"Mozilla"`)
-}
-
-func TestRecoveryLogRequestPOST(t *testing.T) {
-	t.Parallel()
-
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		panic("test")
-	})
-
-	out := &bytes.Buffer{}
-	m := middleware.Recovery(middleware.RecoveryLoggerOutput(out))
-	server := httptest.NewServer(m(h))
-	defer server.Close()
-
-	payload := map[string]string{"hello": "world"}
-	e := httpexpect.New(t, server.URL)
-	e.POST("/").WithJSON(payload).
-		Expect().Status(500).JSON()
-	assert.Contains(t, out.String(), `"level":"error`)
-	assert.Contains(t, out.String(), `"component":"recovery middleware"`)
-	assert.Contains(t, out.String(), `"error":"test"`)
-	assert.Contains(t, out.String(), `"req":{"url":"/","method":"POST","proto":"HTTP/1.1","host":"`)
-	assert.Contains(t, out.String(), `"body":"{\"hello\":\"world\"}"`)
+	e.GET("/").Expect().Status(500).
+		JSON().
+		Object().ContainsMap(expectedRes)
 }

@@ -2,64 +2,32 @@ package middleware
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"os"
-	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/ifreddyrondon/bastion/render"
 )
 
-func logreq(r *http.Request) *zerolog.Event {
-	evt := zerolog.Dict()
-	evt.Str("url", r.URL.RequestURI()).
-		Str("method", r.Method).
-		Str("proto", r.Proto).
-		Str("host", r.Host)
-
-	headers := zerolog.Dict()
-	for name, values := range r.Header {
-		name = strings.ToLower(name)
-		headers.Str(name, strings.Join(values, ","))
+// RecoveryCallback sets the callback function to handler the request when recovers from panics.
+func RecoveryCallback(f func(req *http.Request, err error)) func(*recoveryCfg) {
+	return func(a *recoveryCfg) {
+		a.callback = f
 	}
-	evt.Dict("headers", headers)
-
-	if r.Body != nil {
-		body, _ := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-		evt.Bytes("body", body)
-	}
-
-	return evt
 }
 
 type recoveryCfg struct {
-	render       render.ServerErrRenderer
-	loggerWriter io.Writer
-	logger       zerolog.Logger
-}
-
-// RecoveryLoggerOutput set the output for the logger
-func RecoveryLoggerOutput(w io.Writer) func(*recoveryCfg) {
-	return func(r *recoveryCfg) {
-		r.loggerWriter = w
-	}
+	render   render.ServerErrRenderer
+	callback func(req *http.Request, err error)
 }
 
 func getRecoveryCfg(opts ...func(*recoveryCfg)) *recoveryCfg {
 	r := &recoveryCfg{
-		render:       render.JSON,
-		loggerWriter: os.Stdout,
+		render: render.JSON,
 	}
-
 	for _, opt := range opts {
 		opt(r)
 	}
-
-	r.logger = zerolog.New(r.loggerWriter).With().Timestamp().Logger()
 	return r
 }
 
@@ -82,10 +50,9 @@ func Recovery(opts ...func(*recoveryCfg)) func(http.Handler) http.Handler {
 					default:
 						err = errors.New(fmt.Sprint(t))
 					}
-					cfg.logger.Error().
-						Str("component", "recovery middleware").
-						Err(err).Dict("req", logreq(req)).
-						Msg("Recovery middleware catch an error")
+					if cfg.callback != nil {
+						cfg.callback(req, err)
+					}
 					cfg.render.InternalServerError(w, err)
 					return
 				}

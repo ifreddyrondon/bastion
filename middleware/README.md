@@ -5,18 +5,20 @@ the router and all the tooling is designed to be compatible and friendly with an
 
 ## Recovery 
 
-Gracefully absorb panics and prints the stack trace. It log the panic (and a backtrace) in `os.Stdout` by default, this can be change
-with the `RecoveryLoggerOutput` functional option and returns a HTTP 500 (Internal Server Error) status if possible.
+Gracefully absorb panics and returns a HTTP 500 (Internal Server Error) status if possible.
+The stacktrace can be handled through the callback function set by `RecoveryCallback` which receives the request 
+and the panic arg as a params.
 
 ### Options 
-- `RecoveryLoggerOutput(w io.Writer)` set the logger output writer. Default `os.Stdout`.
+- `RecoveryCallback(f func(req *http.Request, err error))` sets the callback function to handler the request when recovers from panics.
 
 ```go
 package main
 
 import (
-	"os"
-	
+	"fmt"
+	"net/http"
+
 	"github.com/ifreddyrondon/bastion/middleware"
 )
 
@@ -24,10 +26,14 @@ func main() {
 	// default
 	middleware.Recovery()
 
-	// with options
-	middleware.Recovery(
-		middleware.RecoveryLoggerOutput(os.Stdout),
-	)
+	// handler error 
+	callback := func(req *http.Request, err error) {
+		fmt.Printf("url: %v\n", req.URL.RequestURI())
+		fmt.Printf("method: %v\n", req.Method)
+		fmt.Printf("proto: %v\n", req.Proto)
+		fmt.Println(err)
+	}
+	middleware.Recovery(middleware.RecoveryCallback(callback))
 }
 ```
 
