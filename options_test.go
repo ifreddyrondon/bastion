@@ -1,6 +1,9 @@
 package bastion_test
 
 import (
+	"bytes"
+	"io"
+	"net/http"
 	"os"
 	"testing"
 
@@ -122,4 +125,39 @@ func TestDisableProfilerShouldBeTrueForProd(t *testing.T) {
 	t.Parallel()
 	opts := bastion.New(bastion.ProductionMode()).Options
 	assert.True(t, opts.DisableProfiler)
+}
+
+func TestInternalErrCallback(t *testing.T) {
+	t.Parallel()
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+		w.Write([]byte("this should be logged"))
+	})
+	app := bastion.New(
+		bastion.InternalErrCallback(func(code int, reader io.Reader) {
+			assert.Equal(t, 500, code)
+			var buf bytes.Buffer
+			buf.ReadFrom(reader)
+			assert.Contains(t, buf.String(), "this should be logged")
+		}),
+	)
+	app.Mount("/", h)
+	e := bastion.Tester(t, app)
+	e.GET("/").Expect().Status(500).JSON()
+}
+
+func TestRecoveryCallback(t *testing.T) {
+	t.Parallel()
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		panic("test")
+	})
+
+	app := bastion.New(
+		bastion.RecoveryCallback(func(req *http.Request, e error) {
+			assert.EqualError(t, e, "test")
+		}),
+	)
+	app.Mount("/", h)
+	e := bastion.Tester(t, app)
+	e.GET("/").Expect().Status(500).JSON()
 }

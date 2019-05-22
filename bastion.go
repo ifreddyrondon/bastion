@@ -66,6 +66,9 @@ func New(opts ...Opt) *Bastion {
 	if app.internalErrorCallback == nil {
 		app.internalErrorCallback = defaultInternalErrCallbackFn(*l)
 	}
+	if app.recoveryCallback == nil {
+		app.recoveryCallback = defaultRecoveryCallbackFn(*l)
+	}
 	app.r = router(app.Options, *l)
 	app.Mux = chi.NewMux()
 	app.r.Mount("/", app.Mux)
@@ -106,17 +109,15 @@ func router(opts Options, l zerolog.Logger) *chi.Mux {
 
 	// internal error middleware
 	if !opts.DisableInternalErrorMiddleware {
-		internalErr := middleware.InternalError(
+		mux.Use(middleware.InternalError(
 			middleware.InternalErrMsg(errors.New(opts.InternalErrMsg)),
 			middleware.InternalErrCallback(opts.internalErrorCallback),
-		)
-		mux.Use(internalErr)
+		))
 	}
 
 	// recovery middleware
 	if !opts.DisableRecoveryMiddleware {
-		recovery := middleware.Recovery(middleware.RecoveryLoggerOutput(opts.LoggerOutput))
-		mux.Use(recovery)
+		mux.Use(middleware.Recovery(middleware.RecoveryCallback(opts.recoveryCallback)))
 	}
 
 	if !opts.DisablePingRouter {
