@@ -59,10 +59,12 @@ func New(opts ...Opt) *Bastion {
 		app.DisableProfiler = true
 		app.LoggerLevel = ErrorLevel
 	}
-
 	l, err := getLogger(app.LoggerOutput, !app.DisablePrettyLogging, app.LoggerLevel)
 	if err != nil {
 		panic(err)
+	}
+	if app.internalErrorCallback == nil {
+		app.internalErrorCallback = defaultInternalErrCallbackFn(*l)
 	}
 	app.r = router(app.Options, *l)
 	app.Mux = chi.NewMux()
@@ -106,7 +108,7 @@ func router(opts Options, l zerolog.Logger) *chi.Mux {
 	if !opts.DisableInternalErrorMiddleware {
 		internalErr := middleware.InternalError(
 			middleware.InternalErrMsg(errors.New(opts.InternalErrMsg)),
-			middleware.InternalErrLoggerOutput(opts.LoggerOutput),
+			middleware.InternalErrCallback(opts.internalErrorCallback),
 		)
 		mux.Use(internalErr)
 	}

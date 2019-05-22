@@ -4,20 +4,18 @@ import (
 	"bytes"
 	"io"
 	"net/http"
-	"os"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/ifreddyrondon/bastion/render"
 )
 
 var internalErrDefaultMsg = errors.New("looks like something went wrong")
 
-// InternalErrLoggerOutput set the output for the logger
-func InternalErrLoggerOutput(w io.Writer) func(*internalErr) {
+// InternalErrCallback sets the callback function when internal error middleware catch a 500 error.
+func InternalErrCallback(f func(int, io.Reader)) func(*internalErr) {
 	return func(a *internalErr) {
-		a.loggerWriter = w
+		a.callback = f
 	}
 }
 
@@ -29,24 +27,19 @@ func InternalErrMsg(err error) func(*internalErr) {
 }
 
 type internalErr struct {
-	defaultErr   error
-	render       render.ServerErrRenderer
-	loggerWriter io.Writer
-	logger       zerolog.Logger
+	defaultErr error
+	render     render.ServerErrRenderer
+	callback   func(code int, reader io.Reader)
 }
 
 func internalErrCfg(opts ...func(*internalErr)) *internalErr {
 	cfg := &internalErr{
-		defaultErr:   internalErrDefaultMsg,
-		render:       render.JSON,
-		loggerWriter: os.Stdout,
+		defaultErr: internalErrDefaultMsg,
+		render:     render.JSON,
 	}
-
 	for _, opt := range opts {
 		opt(cfg)
 	}
-
-	cfg.logger = zerolog.New(cfg.loggerWriter).With().Timestamp().Logger()
 	return cfg
 }
 
@@ -64,10 +57,9 @@ func InternalError(opts ...func(*internalErr)) func(http.Handler) http.Handler {
 			m, snoop := WrapResponseWriter(w, writeHeaderHook, writeHook)
 			defer func() {
 				if m.Code >= 500 {
-					cfg.logger.Info().
-						Str("component", "internal error middleware").
-						Int("status", m.Code).
-						Msg(buf.String())
+					if cfg.callback != nil {
+						cfg.callback(m.Code, buf)
+					}
 					cfg.render.InternalServerError(w, cfg.defaultErr)
 					return
 				}

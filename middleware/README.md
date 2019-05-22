@@ -34,18 +34,21 @@ func main() {
 ## InternalError
 InternalError intercept responses to verify their status and handle the error. It gets the response code and 
 if it's >= 500 handles the error with a default error message without disclosure internal information. 
-The real error keeps logged.
+The real error can be handled through the callback function `InternalErrCallback`.
 
 ### Options 
 - `InternalErrMsg(s string)` set default error message to be sent. Default "looks like something went wrong".
-- `InternalErrLoggerOutput(w io.Writer)` set the logger output writer. Default `os.Stdout`.
+- `InternalErrCallback(f func(int, io.Reader))` sets the callback function when internal error middleware catch a 500 error.
 
 ```go
 package main
 
 import (
+	"bytes"
 	"errors"
-	
+	"fmt"
+	"io"
+
 	"github.com/ifreddyrondon/bastion/middleware"
 )
 
@@ -57,6 +60,15 @@ func main() {
 	middleware.InternalError(
 		middleware.InternalErrMsg(errors.New("well, this is awkward")),
 	)
+
+	// handler error 
+	handlerErr := func(code int, r io.Reader) {
+		fmt.Printf("code: %v\n", code)
+		var buf bytes.Buffer
+		buf.ReadFrom(r)
+		fmt.Printf(buf.String())
+	}
+	middleware.InternalError(middleware.InternalErrCallback(handlerErr))
 }
 ```
 
