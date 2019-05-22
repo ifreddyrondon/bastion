@@ -130,7 +130,7 @@ Name | Description
 Logger | Logs the start and end of each request with the elapsed processing time.
 RequestID | Injects a request ID into the context of each request.
 Recovery | Gracefully absorb panics and prints the stack trace.
-InternalError | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#InternalErrMsg). IT allows to response with the same error without disclosure internal information, also the real error is logged.
+InternalError | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#InternalErrMsg). It allows to response with the same error without disclosure internal information, also log real error (default callback implementation. Check `InternalErrCallback` func to override it).
 
 ### Auxiliary middleware
 
@@ -194,6 +194,12 @@ Represent the message returned to the user when a http 500 error is caught by th
 Default `looks like something went wrong`.
 
 - `InternalErrMsg(msg string)` set the message returned to the user when catch a 500 status error.
+
+### InternalErrCallback
+
+Callback function to handler the real error catched by InternalError middleware.
+
+- `InternalErrCallback(f func(int, io.Reader))` sets the callback function when internal error middleware catch a 500 error.
 
 ### DisableInternalErrorMiddleware
 

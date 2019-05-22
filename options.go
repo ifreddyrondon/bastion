@@ -1,9 +1,12 @@
 package bastion
 
 import (
+	"bytes"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -20,6 +23,17 @@ const (
 )
 
 const defaultProfilerRoutePrefix = "/debug"
+
+func defaultInternalErrCallbackFn(l zerolog.Logger) func(code int, r io.Reader) {
+	return func(code int, r io.Reader) {
+		var buf bytes.Buffer
+		buf.ReadFrom(r)
+		l.Info().
+			Str("component", "internal error middleware").
+			Int("status", code).
+			Msg(buf.String())
+	}
+}
 
 // Options are used to define how the application should run.
 type Options struct {
@@ -43,8 +57,10 @@ type Options struct {
 	// is used as the default path prefix.
 	ProfilerRoutePrefix string
 	// DisableProfiler boolean flag to disable the profiler router.
-	DisableProfiler      bool
-	enableProductionMode *bool
+	DisableProfiler bool
+
+	enableProductionMode  *bool
+	internalErrorCallback func(code int, reader io.Reader)
 }
 
 // IsProduction check if app is running in production mode
@@ -81,6 +97,13 @@ type Opt func(*Bastion)
 func InternalErrMsg(msg string) Opt {
 	return func(app *Bastion) {
 		app.InternalErrMsg = msg
+	}
+}
+
+// InternalErrCallback sets the callback function when internal error middleware catch a 500 error.
+func InternalErrCallback(f func(int, io.Reader)) Opt {
+	return func(app *Bastion) {
+		app.internalErrorCallback = f
 	}
 }
 
