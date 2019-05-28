@@ -3,6 +3,32 @@
 Bastion's middlewares are just stdlib `net/http` middleware handlers. There is nothing special about them, which means 
 the router and all the tooling is designed to be compatible and friendly with any middleware in the community.
 
+## RequestID
+
+RequestID is a middleware that injects a request ID into the context of each request. 
+A request ID is a UUID string lexically sortable (https://github.com/oklog/ulid). 
+
+### Options 
+
+- `RequestIDHeaderName(headerName string)` set the header name to look out the request id. Default `X-Request-Id`.
+
+```go
+package main
+
+import (
+	"github.com/ifreddyrondon/bastion/middleware"
+)
+
+func main() {
+	// default
+	middleware.RequestID()
+	// with options
+	middleware.RequestID(
+		middleware.RequestIDHeaderName("Header-To-Lookup"),
+	)
+}
+```
+
 ## Recovery 
 
 Gracefully absorb panics and returns a HTTP 500 (Internal Server Error) status if possible.
@@ -10,6 +36,7 @@ The stacktrace can be handled through the callback function set by `RecoveryCall
 and the panic arg as a params.
 
 ### Options 
+
 - `RecoveryCallback(f func(req *http.Request, err error))` sets the callback function to handler the request when recovers from panics.
 
 ```go
@@ -38,11 +65,13 @@ func main() {
 ```
 
 ## InternalError
+
 InternalError intercept responses to verify their status and handle the error. It gets the response code and 
 if it's >= 500 handles the error with a default error message without disclosure internal information. 
 The real error can be handled through the callback function `InternalErrCallback`.
 
 ### Options 
+
 - `InternalErrMsg(s string)` set default error message to be sent. Default "looks like something went wrong".
 - `InternalErrCallback(f func(int, io.Reader))` sets the callback function when internal error middleware catch a 500 error.
 
@@ -79,12 +108,14 @@ func main() {
 ```
 
 ## Logger
+
 Logger is a middleware that logs the start and end of each request, along with some useful data about what was 
 requested, what the response status was, and how long it took to return.
 
 Alternatively, look at https://github.com/rs/zerolog#integration-with-nethttp.
 
-### Options 
+### Options
+ 
 - `AttachLogger(log zerolog.Logger)` chain the logger with the middleware.
 - `EnableLogReqIP()` show the request ip.
 - `EnableLogUserAgent()` show the user agent of the request.

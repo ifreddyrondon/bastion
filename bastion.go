@@ -44,6 +44,7 @@ func New(opts ...Opt) *Bastion {
 	app := &Bastion{
 		server: &http.Server{},
 		Options: Options{
+			RequestIDHeaderName: middleware.DefaultRequestIDHeaderName,
 			InternalErrMsg:      defaultInternalErrMsg,
 			ProfilerRoutePrefix: defaultProfilerRoutePrefix,
 			LoggerLevel:         DebugLevel,
@@ -90,6 +91,8 @@ func router(opts Options, l zerolog.Logger) *chi.Mux {
 	mux := chi.NewMux()
 	mux.NotFound(notFound)
 	mux.MethodNotAllowed(notAllowed)
+	mux.Use(middleware.RequestID(middleware.RequestIDHeaderName(opts.RequestIDHeaderName)))
+
 	// logger middleware
 	if !opts.DisableLoggerMiddleware {
 		logMiddleware := []middleware.LoggerOpt{

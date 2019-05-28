@@ -68,6 +68,8 @@ type Options struct {
 	ProfilerRoutePrefix string
 	// DisableProfiler boolean flag to disable the profiler router.
 	DisableProfiler bool
+	// RequestIDHeaderName header name to look out the request id.
+	RequestIDHeaderName string
 
 	enableProductionMode  *bool
 	internalErrorCallback func(code int, reader io.Reader)
@@ -204,5 +206,12 @@ func ProfilerRoutePrefix(prefix string) Opt {
 func DisableProfiler() Opt {
 	return func(app *Bastion) {
 		app.DisableProfiler = true
+	}
+}
+
+// RequestIDHeaderName set the header name to look out the request id.
+func RequestIDHeaderName(headerName string) Opt {
+	return func(app *Bastion) {
+		app.RequestIDHeaderName = headerName
 	}
 }
