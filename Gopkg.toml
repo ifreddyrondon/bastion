@@ -60,3 +60,11 @@
 [[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "2.2.2"
+
+[[constraint]]
+  name = "github.com/oklog/ulid"
+  version = "2.0.2"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  version = "1.2.0"

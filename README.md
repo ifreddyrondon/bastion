@@ -128,7 +128,7 @@ the tooling is designed to be compatible and friendly with any middleware in the
 Name | Description
 ---- | -----------
 Logger | Logs the start and end of each request with the elapsed processing time.
-RequestID | Injects a request ID into the context of each request.
+RequestID | Injects a request ID into the context of each request. If it is not found, it is created. (optionally) RequestIDHeaderName set the header name to look out the request id.
 Recovery | Gracefully absorb panics and returns a HTTP 500 (Internal Server Error) status if possible. By default log panic error and the request (check `RecoveryCallback` func to override it).
 InternalError | Intercept responses to verify if his status code is >= 500. If status is >= 500, it'll response with a [default error](#InternalErrMsg). It allows to response with the same error without disclosure internal information, also log real error (default callback implementation. Check `InternalErrCallback` func to override it).
 
@@ -281,6 +281,12 @@ Optional path prefix for profiler subrouter. If left unspecified, `/debug/` is u
 Boolean flag to disable the profiler subrouter.
 
 - `DisableProfiler()` turn off profiler subrouter.
+
+### RequestIDHeaderName
+
+Header name to look out the request id.
+
+- `RequestIDHeaderName(headerName string)` set the header name to look out the request id.
 
 ### IsProduction()
 

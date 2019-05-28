@@ -17,6 +17,7 @@ func TestNewOptions(t *testing.T) {
 
 	opts := bastion.New().Options
 	assert.Equal(t, "looks like something went wrong", opts.InternalErrMsg)
+	assert.Equal(t, "X-Request-Id", opts.RequestIDHeaderName)
 	assert.False(t, opts.DisableInternalErrorMiddleware)
 	assert.False(t, opts.DisableRecoveryMiddleware)
 	assert.False(t, opts.DisablePingRouter)
@@ -160,4 +161,10 @@ func TestRecoveryCallback(t *testing.T) {
 	app.Mount("/", h)
 	e := bastion.Tester(t, app)
 	e.GET("/").Expect().Status(500).JSON()
+}
+
+func TestRequestIDHeaderName(t *testing.T) {
+	t.Parallel()
+	opts := bastion.New(bastion.RequestIDHeaderName("CHAMO-Id")).Options
+	assert.Equal(t, "CHAMO-Id", opts.RequestIDHeaderName)
 }
